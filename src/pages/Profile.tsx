@@ -1,23 +1,67 @@
-import { useState } from 'react';
-import { Edit, Settings, Star, Video, Bookmark } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Edit, Settings, Star, Video, Bookmark, LogOut, User, Building2 } from 'lucide-react';
 import Header from '@/components/layout/Header';
 import BottomNavigation from '@/components/layout/BottomNavigation';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
 
 const Profile = () => {
   const [activeTab, setActiveTab] = useState('videos');
+  const [userVideos, setUserVideos] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const { user, profile, signOut } = useAuth();
+  const navigate = useNavigate();
 
-  const userProfile = {
-    name: 'Sarah Chen',
-    role: 'Full-Stack Developer',
-    bio: 'Passionate developer with 3+ years experience building scalable web applications. Love working with React, Node.js, and cloud technologies.',
-    skills: ['React', 'Node.js', 'TypeScript', 'MongoDB', 'AWS', 'Docker'],
-    rating: 4.9,
-    completedProjects: 24,
-    videoCount: 12,
-    savedJobs: 8,
+  useEffect(() => {
+    if (!user) {
+      navigate('/auth');
+      return;
+    }
+    
+    if (profile && !profile.onboarding_completed) {
+      navigate('/onboarding');
+      return;
+    }
+
+    fetchUserVideos();
+  }, [user, profile, navigate]);
+
+  const fetchUserVideos = async () => {
+    if (!user) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('videos')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setUserVideos(data || []);
+    } catch (error) {
+      console.error('Error fetching videos:', error);
+    } finally {
+      setLoading(false);
+    }
   };
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/auth');
+  };
+
+  if (!profile || loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
   const mockVideos = [
     { id: '1', title: 'React Performance Tips', views: 1200, likes: 89 },
@@ -39,20 +83,40 @@ const Profile = () => {
         <div className="profile-header mb-6">
           <div className="flex items-center gap-4 mb-4">
             <Avatar className="w-20 h-20 border-4 border-white/20">
-              <AvatarFallback className="bg-white/20 text-white text-xl font-bold">
-                SC
-              </AvatarFallback>
+              {profile.avatar_url ? (
+                <AvatarImage src={profile.avatar_url} alt={profile.full_name || profile.username || ''} />
+              ) : (
+                <AvatarFallback className="bg-white/20 text-white text-xl font-bold">
+                  {(profile.full_name || profile.username || profile.email)
+                    .split(' ')
+                    .map(n => n[0])
+                    .join('')
+                    .toUpperCase()}
+                </AvatarFallback>
+              )}
             </Avatar>
             <div className="flex-1">
-              <h1 className="text-2xl font-bold text-white">{userProfile.name}</h1>
-              <p className="text-white/90">{userProfile.role}</p>
+              <div className="flex items-center gap-2 mb-1">
+                <h1 className="text-2xl font-bold text-white">
+                  {profile.full_name || profile.username || 'User'}
+                </h1>
+                {profile.account_type === 'freelancer' ? (
+                  <User className="w-5 h-5 text-blue-400" />
+                ) : (
+                  <Building2 className="w-5 h-5 text-green-400" />
+                )}
+              </div>
+              <p className="text-white/90">
+                {profile.account_type === 'freelancer' ? 'Freelancer' : 'Employer'}
+                {profile.company_name && ` at ${profile.company_name}`}
+              </p>
               <div className="flex items-center gap-4 mt-2">
                 <div className="flex items-center gap-1">
                   <Star className="w-4 h-4 text-yellow-400 fill-current" />
-                  <span className="text-white/90 text-sm">{userProfile.rating}</span>
+                  <span className="text-white/90 text-sm">4.8</span>
                 </div>
                 <div className="text-white/90 text-sm">
-                  {userProfile.completedProjects} projects
+                  {userVideos.length} video{userVideos.length !== 1 ? 's' : ''}
                 </div>
               </div>
             </div>
@@ -61,33 +125,42 @@ const Profile = () => {
             </button>
           </div>
           
-          <p className="text-white/90 text-sm mb-4">{userProfile.bio}</p>
+          {profile.bio && (
+            <p className="text-white/90 text-sm mb-4">{profile.bio}</p>
+          )}
           
-          <div className="flex flex-wrap gap-2">
-            {userProfile.skills.map((skill, index) => (
-              <span
-                key={index}
-                className="bg-white/20 text-white px-3 py-1 rounded-full text-sm border border-white/30"
-              >
-                {skill}
-              </span>
-            ))}
-          </div>
+          {profile.skills && profile.skills.length > 0 && (
+            <div className="flex flex-wrap gap-2">
+              {profile.skills.map((skill, index) => (
+                <Badge
+                  key={index}
+                  variant="secondary"
+                  className="bg-white/20 text-white border-white/30 hover:bg-white/30"
+                >
+                  {skill}
+                </Badge>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Stats */}
         <div className="grid grid-cols-3 gap-4 mb-6">
           <div className="bg-card rounded-xl p-4 text-center shadow-soft">
-            <div className="text-2xl font-bold text-primary">{userProfile.videoCount}</div>
+            <div className="text-2xl font-bold text-primary">{userVideos.length}</div>
             <div className="text-sm text-muted-foreground">Videos</div>
           </div>
           <div className="bg-card rounded-xl p-4 text-center shadow-soft">
-            <div className="text-2xl font-bold text-success">{userProfile.completedProjects}</div>
-            <div className="text-sm text-muted-foreground">Projects</div>
+            <div className="text-2xl font-bold text-success">0</div>
+            <div className="text-sm text-muted-foreground">
+              {profile.account_type === 'freelancer' ? 'Projects' : 'Hires'}
+            </div>
           </div>
           <div className="bg-card rounded-xl p-4 text-center shadow-soft">
-            <div className="text-2xl font-bold text-accent">{userProfile.savedJobs}</div>
-            <div className="text-sm text-muted-foreground">Saved</div>
+            <div className="text-2xl font-bold text-accent">0</div>
+            <div className="text-sm text-muted-foreground">
+              {profile.account_type === 'freelancer' ? 'Saved Jobs' : 'Favorites'}
+            </div>
           </div>
         </div>
 
@@ -105,45 +178,70 @@ const Profile = () => {
           </TabsList>
           
           <TabsContent value="videos" className="mt-6">
-            <div className="grid grid-cols-2 gap-4">
-              {mockVideos.map((video) => (
-                <div
-                  key={video.id}
-                  className="bg-card rounded-xl overflow-hidden shadow-soft"
-                >
-                  <div className="aspect-[9/16] bg-gradient-to-br from-primary/20 to-accent/20 relative">
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
-                    <div className="absolute bottom-2 left-2 right-2">
-                      <p className="text-white text-xs font-medium line-clamp-2">
-                        {video.title}
-                      </p>
+            {userVideos.length > 0 ? (
+              <div className="grid grid-cols-2 gap-4">
+                {userVideos.map((video: any) => (
+                  <div
+                    key={video.id}
+                    className="bg-card rounded-xl overflow-hidden shadow-soft"
+                  >
+                    <div className="aspect-[9/16] bg-gradient-to-br from-primary/20 to-accent/20 relative">
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+                      <div className="absolute bottom-2 left-2 right-2">
+                        <p className="text-white text-xs font-medium line-clamp-2">
+                          {video.title}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="p-3">
+                      <div className="flex justify-between text-xs text-muted-foreground">
+                        <span>{video.views_count || 0} views</span>
+                        <span>{video.likes_count || 0} likes</span>
+                      </div>
                     </div>
                   </div>
-                  <div className="p-3">
-                    <div className="flex justify-between text-xs text-muted-foreground">
-                      <span>{video.views} views</span>
-                      <span>{video.likes} likes</span>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-12">
+                <Video className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+                <h3 className="text-lg font-medium text-foreground mb-2">No videos yet</h3>
+                <p className="text-muted-foreground mb-4">
+                  Start showcasing your {profile.account_type === 'freelancer' ? 'skills' : 'job opportunities'} with videos
+                </p>
+                <Button onClick={() => navigate('/upload')}>
+                  Create Your First Video
+                </Button>
+              </div>
+            )}
           </TabsContent>
           
           <TabsContent value="saved" className="mt-6">
-            <div className="space-y-4">
-              {savedJobs.map((job) => (
-                <div
-                  key={job.id}
-                  className="bg-card rounded-xl p-4 shadow-soft border border-border"
-                >
-                  <h3 className="font-semibold text-foreground">{job.role}</h3>
-                  <p className="text-sm text-muted-foreground">{job.company}</p>
-                  <p className="text-sm font-medium text-primary mt-2">{job.salary}</p>
-                </div>
-              ))}
+            <div className="text-center py-12">
+              <Bookmark className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+              <h3 className="text-lg font-medium text-foreground mb-2">
+                No saved {profile.account_type === 'freelancer' ? 'jobs' : 'profiles'} yet
+              </h3>
+              <p className="text-muted-foreground mb-4">
+                Save {profile.account_type === 'freelancer' ? 'job opportunities' : 'freelancer profiles'} you're interested in
+              </p>
+              <Button variant="outline" onClick={() => navigate('/search')}>
+                Start Exploring
+              </Button>
             </div>
           </TabsContent>
+
+          {/* Settings section */}
+          <div className="mt-8 pt-6 border-t border-border">
+            <Button 
+              variant="outline" 
+              onClick={handleSignOut}
+              className="w-full justify-center"
+            >
+              <LogOut className="mr-2 h-4 w-4" />
+              Sign Out
+            </Button>
+          </div>
         </Tabs>
       </main>
       
