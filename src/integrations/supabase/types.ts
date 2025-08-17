@@ -197,51 +197,7 @@ export type Database = {
       }
     }
     Views: {
-      public_profiles: {
-        Row: {
-          account_type: Database["public"]["Enums"]["account_type"] | null
-          avatar_url: string | null
-          bio: string | null
-          company_name: string | null
-          created_at: string | null
-          full_name: string | null
-          id: string | null
-          onboarding_completed: boolean | null
-          skills: string[] | null
-          updated_at: string | null
-          user_id: string | null
-          username: string | null
-        }
-        Insert: {
-          account_type?: Database["public"]["Enums"]["account_type"] | null
-          avatar_url?: string | null
-          bio?: string | null
-          company_name?: string | null
-          created_at?: string | null
-          full_name?: string | null
-          id?: string | null
-          onboarding_completed?: boolean | null
-          skills?: string[] | null
-          updated_at?: string | null
-          user_id?: string | null
-          username?: string | null
-        }
-        Update: {
-          account_type?: Database["public"]["Enums"]["account_type"] | null
-          avatar_url?: string | null
-          bio?: string | null
-          company_name?: string | null
-          created_at?: string | null
-          full_name?: string | null
-          id?: string | null
-          onboarding_completed?: boolean | null
-          skills?: string[] | null
-          updated_at?: string | null
-          user_id?: string | null
-          username?: string | null
-        }
-        Relationships: []
-      }
+      [_ in never]: never
     }
     Functions: {
       [_ in never]: never
