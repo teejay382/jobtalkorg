@@ -102,6 +102,7 @@ const Auth = () => {
           const { data: profile } = await supabase
             .from('profiles')
             .select('onboarding_completed')
+            .eq('user_id', (await supabase.auth.getUser()).data.user?.id)
             .single();
             
           if (profile && !profile.onboarding_completed) {
