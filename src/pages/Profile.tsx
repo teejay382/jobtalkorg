@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Edit, Settings, Star, Video, Bookmark, LogOut, User, Building2 } from 'lucide-react';
@@ -13,11 +14,15 @@ import { supabase } from '@/integrations/supabase/client';
 const Profile = () => {
   const [activeTab, setActiveTab] = useState('videos');
   const [userVideos, setUserVideos] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const { user, profile, signOut } = useAuth();
+  // Rename local loading state to avoid confusion with auth loading
+  const [videosLoading, setVideosLoading] = useState(true);
+  const { user, profile, signOut, loading: authLoading } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
+    // Wait for auth to finish loading before deciding redirects
+    if (authLoading) return;
+
     if (!user) {
       navigate('/auth');
       return;
@@ -29,7 +34,8 @@ const Profile = () => {
     }
 
     fetchUserVideos();
-  }, [user, profile, navigate]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, profile, authLoading, navigate]);
 
   const fetchUserVideos = async () => {
     if (!user) return;
@@ -46,7 +52,7 @@ const Profile = () => {
     } catch (error) {
       console.error('Error fetching videos:', error);
     } finally {
-      setLoading(false);
+      setVideosLoading(false);
     }
   };
 
@@ -55,7 +61,8 @@ const Profile = () => {
     navigate('/auth');
   };
 
-  if (!profile || loading) {
+  // Show a loader until auth is resolved and profile is available
+  if (authLoading || !profile) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
@@ -178,7 +185,11 @@ const Profile = () => {
           </TabsList>
           
           <TabsContent value="videos" className="mt-6">
-            {userVideos.length > 0 ? (
+            {videosLoading ? (
+              <div className="flex items-center justify-center py-12">
+                <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary"></div>
+              </div>
+            ) : userVideos.length > 0 ? (
               <div className="grid grid-cols-2 gap-4">
                 {userVideos.map((video: any) => (
                   <div
