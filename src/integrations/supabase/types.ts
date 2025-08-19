@@ -200,8 +200,8 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      is_profile_query_safe: {
-        Args: Record<PropertyKey, never>
+      can_access_sensitive_profile_data: {
+        Args: { target_user_id: string }
         Returns: boolean
       }
     }
