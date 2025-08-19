@@ -37,20 +37,12 @@ const VideoFeed = () => {
   const fetchVideos = async () => {
     try {
       setLoading(true);
-      
+      console.log('[VideoFeed] Fetching videos');
+
+      // Fetch videos without relational embed since there is no FK between videos and profiles
       const { data: videosData, error: videosError } = await supabase
         .from('videos')
-        .select(`
-          *,
-          profiles!videos_user_id_fkey (
-            id,
-            full_name,
-            username,
-            avatar_url,
-            account_type,
-            company_name
-          )
-        `)
+        .select('*')
         .order('created_at', { ascending: false })
         .limit(20);
 
@@ -61,32 +53,80 @@ const VideoFeed = () => {
       }
 
       if (!videosData || videosData.length === 0) {
+        console.log('[VideoFeed] No videos found');
         setVideos([]);
         setError('No videos available');
         return;
       }
 
-      // Transform the data to match our Video interface
-      const transformedVideos: Video[] = videosData.map((video) => ({
-        id: video.id,
-        title: video.title,
-        description: video.description || '',
-        video_url: video.video_url,
-        thumbnail_url: video.thumbnail_url,
-        tags: video.tags || [],
-        likes_count: video.likes_count || 0,
-        comments_count: video.comments_count || 0,
-        views_count: video.views_count || 0,
-        created_at: video.created_at,
-        user: {
-          id: video.profiles?.id || video.user_id,
-          full_name: video.profiles?.full_name || 'Unknown User',
-          username: video.profiles?.username,
-          avatar_url: video.profiles?.avatar_url,
-          account_type: video.profiles?.account_type,
-          company_name: video.profiles?.company_name,
+      // Collect unique user_ids to fetch profiles
+      const userIds = Array.from(
+        new Set(
+          videosData
+            .map((v: any) => v.user_id)
+            .filter((id: string | null | undefined): id is string => Boolean(id))
+        )
+      );
+
+      console.log('[VideoFeed] Found userIds for profiles:', userIds);
+
+      // Fetch profiles for the user_ids
+      let profilesMap = new Map<
+        string,
+        {
+          user_id: string;
+          full_name: string | null;
+          username: string | null;
+          avatar_url: string | null;
+          account_type: string | null;
+          company_name: string | null;
         }
-      }));
+      >();
+
+      if (userIds.length > 0) {
+        const { data: profilesData, error: profilesError } = await supabase
+          .from('profiles')
+          .select(
+            'user_id, full_name, username, avatar_url, account_type, company_name'
+          )
+          .in('user_id', userIds);
+
+        if (profilesError) {
+          console.warn('Error fetching profiles (continuing with fallbacks):', profilesError);
+        } else if (profilesData) {
+          profilesMap = new Map(
+            profilesData.map((p: any) => [p.user_id as string, p])
+          );
+        }
+      }
+
+      // Transform the data to match our Video interface
+      const transformedVideos: Video[] = videosData.map((video: any) => {
+        const profile = profilesMap.get(video.user_id);
+        return {
+          id: video.id,
+          title: video.title,
+          description: video.description || '',
+          video_url: video.video_url,
+          thumbnail_url: video.thumbnail_url || undefined,
+          tags: video.tags || [],
+          likes_count: video.likes_count || 0,
+          comments_count: video.comments_count || 0,
+          views_count: video.views_count || 0,
+          created_at: video.created_at,
+          user: {
+            // Use profile.user_id when available because it matches auth user id used elsewhere
+            id: (profile?.user_id as string) || (video.user_id as string),
+            full_name: (profile?.full_name as string) || 'Unknown User',
+            username: (profile?.username as string) || undefined,
+            avatar_url: (profile?.avatar_url as string) || undefined,
+            account_type: (profile?.account_type as string) || undefined,
+            company_name: (profile?.company_name as string) || undefined,
+          },
+        };
+      });
+
+      console.log('[VideoFeed] Transformed videos ready:', transformedVideos.length);
 
       setVideos(transformedVideos);
       setError(null);
@@ -117,28 +157,28 @@ const VideoFeed = () => {
 
   const handleTouchStart = (e: React.TouchEvent) => {
     const touchStartY = e.touches[0].clientY;
-    
+
     const handleTouchMove = (moveEvent: TouchEvent) => {
       const touchEndY = moveEvent.touches[0].clientY;
       const diff = touchStartY - touchEndY;
-      
+
       if (Math.abs(diff) > 50) {
         if (diff > 0) {
           handleScroll('down');
         } else {
           handleScroll('up');
         }
-        
+
         document.removeEventListener('touchmove', handleTouchMove);
         document.removeEventListener('touchend', handleTouchEnd);
       }
     };
-    
+
     const handleTouchEnd = () => {
       document.removeEventListener('touchmove', handleTouchMove);
       document.removeEventListener('touchend', handleTouchEnd);
     };
-    
+
     document.addEventListener('touchmove', handleTouchMove);
     document.addEventListener('touchend', handleTouchEnd);
   };
@@ -159,12 +199,11 @@ const VideoFeed = () => {
             {error || 'No videos available'}
           </h3>
           <p className="text-white/70 mb-4">
-            {videos.length === 0 
-              ? 'Be the first to upload a video!' 
-              : 'Please try again later.'
-            }
+            {videos.length === 0
+              ? 'Be the first to upload a video!'
+              : 'Please try again later.'}
           </p>
-          <button 
+          <button
             onClick={fetchVideos}
             className="bg-primary px-6 py-2 rounded-full text-white font-medium hover:bg-primary/80 transition-colors"
           >
@@ -176,26 +215,26 @@ const VideoFeed = () => {
   }
 
   return (
-    <div 
+    <div
       className="h-screen w-full overflow-hidden relative bg-black"
       onWheel={handleWheel}
       onTouchStart={handleTouchStart}
     >
-      <div 
+      <div
         className="flex flex-col transition-transform duration-500 ease-in-out h-full"
         style={{ transform: `translateY(-${currentVideo * 100}vh)` }}
       >
         {videos.map((video, index) => (
           <div key={video.id} className="w-full h-screen flex-shrink-0">
-            <VideoCard 
-              video={video} 
+            <VideoCard
+              video={video}
               isActive={index === currentVideo}
               onRefresh={fetchVideos}
             />
           </div>
         ))}
       </div>
-      
+
       {/* Scroll indicators - only show if there are multiple videos */}
       {videos.length > 1 && (
         <div className="absolute right-2 top-1/2 transform -translate-y-1/2 flex flex-col gap-2 z-20">
@@ -203,9 +242,7 @@ const VideoFeed = () => {
             <button
               key={index}
               className={`w-1 h-6 rounded-full transition-all duration-300 ${
-                index === currentVideo 
-                  ? 'bg-white w-1.5' 
-                  : 'bg-white/40 hover:bg-white/60'
+                index === currentVideo ? 'bg-white w-1.5' : 'bg-white/40 hover:bg-white/60'
               }`}
               onClick={() => setCurrentVideo(index)}
             />
