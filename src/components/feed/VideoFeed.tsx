@@ -42,7 +42,7 @@ const VideoFeed = () => {
         .from('videos')
         .select(`
           *,
-          profiles:user_id (
+          profiles!videos_user_id_fkey (
             id,
             full_name,
             username,
