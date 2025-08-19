@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import VideoCard from './VideoCard';
@@ -39,7 +38,7 @@ const VideoFeed = () => {
       setLoading(true);
       console.log('[VideoFeed] Fetching videos');
 
-      // Fetch videos without relational embed since there is no FK between videos and profiles
+      // Fetch videos first
       const { data: videosData, error: videosError } = await supabase
         .from('videos')
         .select('*')
@@ -58,6 +57,8 @@ const VideoFeed = () => {
         setError('No videos available');
         return;
       }
+
+      console.log('[VideoFeed] Found videos:', videosData.length);
 
       // Collect unique user_ids to fetch profiles
       const userIds = Array.from(
@@ -94,6 +95,7 @@ const VideoFeed = () => {
         if (profilesError) {
           console.warn('Error fetching profiles (continuing with fallbacks):', profilesError);
         } else if (profilesData) {
+          console.log('[VideoFeed] Found profiles:', profilesData.length);
           profilesMap = new Map(
             profilesData.map((p: any) => [p.user_id as string, p])
           );
@@ -115,7 +117,6 @@ const VideoFeed = () => {
           views_count: video.views_count || 0,
           created_at: video.created_at,
           user: {
-            // Use profile.user_id when available because it matches auth user id used elsewhere
             id: (profile?.user_id as string) || (video.user_id as string),
             full_name: (profile?.full_name as string) || 'Unknown User',
             username: (profile?.username as string) || undefined,
