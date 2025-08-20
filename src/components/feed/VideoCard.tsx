@@ -6,6 +6,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
+import { useNavigate } from 'react-router-dom';
 
 interface VideoCardProps {
   video: {
@@ -41,6 +42,7 @@ const VideoCard = ({ video, isActive, onRefresh }: VideoCardProps) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const { user } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   useEffect(() => {
     checkIfLiked();
@@ -168,13 +170,27 @@ const VideoCard = ({ video, isActive, onRefresh }: VideoCardProps) => {
     }
   };
 
+  const handleConnect = () => {
+    if (!user) {
+      toast({
+        title: "Sign in required",
+        description: "Please sign in to connect with other users",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Navigate to chat with the video uploader
+    navigate(`/chat?user=${video.user.id}`);
+  };
+
   const isEmployer = video.user.account_type === 'employer';
-  const displayName = video.user.full_name || video.user.username || video.user.email || 'Anonymous User';
+  const displayName = video.user.full_name || video.user.email || 'Unknown User';
   const userRole = isEmployer ? (video.user.company_name || 'Employer') : 'Job Seeker';
 
   return (
     <div className="relative w-full h-full bg-black overflow-hidden">
-      {/* Video - improved layout for TikTok/Reels style */}
+      {/* Video - improved TikTok/Reels style layout */}
       <div className="absolute inset-0 flex items-center justify-center">
         <video
           ref={videoRef}
@@ -189,7 +205,7 @@ const VideoCard = ({ video, isActive, onRefresh }: VideoCardProps) => {
       </div>
       
       {/* Video overlay gradient */}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent pointer-events-none" />
+      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent pointer-events-none" />
       
       {/* Play indicator when paused */}
       {!isPlaying && (
@@ -201,7 +217,7 @@ const VideoCard = ({ video, isActive, onRefresh }: VideoCardProps) => {
       )}
       
       {/* Right side interactions */}
-      <div className="absolute right-4 bottom-24 flex flex-col gap-4 z-10">
+      <div className="absolute right-4 bottom-32 flex flex-col gap-4 z-10">
         <div className="flex flex-col items-center gap-2">
           <button 
             onClick={handleLike}
@@ -236,48 +252,51 @@ const VideoCard = ({ video, isActive, onRefresh }: VideoCardProps) => {
         )}
       </div>
       
-      {/* Bottom content - improved spacing and layout */}
+      {/* Bottom content - improved layout and readability */}
       <div className="absolute bottom-0 left-0 right-20 p-4 text-white z-10">
         {/* User info */}
-        <div className="flex items-center gap-3 mb-3">
+        <div className="flex items-center gap-3 mb-4">
           <Avatar className="w-12 h-12 border-2 border-white/30">
             <AvatarImage src={video.user.avatar_url} alt={displayName} />
-            <AvatarFallback className="bg-primary text-white text-sm">
+            <AvatarFallback className="bg-primary text-white text-sm font-semibold">
               {displayName.charAt(0).toUpperCase()}
             </AvatarFallback>
           </Avatar>
           <div className="flex-1 min-w-0">
-            <h3 className="font-semibold text-base truncate">{displayName}</h3>
+            <h3 className="font-semibold text-base text-white truncate">{displayName}</h3>
             <p className="text-sm text-white/80 truncate">{userRole}</p>
           </div>
           <Button
+            onClick={handleConnect}
             variant="outline"
             size="sm"
-            className="bg-white/10 backdrop-blur-sm text-white border-white/30 hover:bg-white/20 hover:text-white text-xs px-4 py-2 h-auto"
+            className="bg-white text-black border-white hover:bg-white/90 hover:text-black text-xs px-4 py-2 h-auto font-medium"
           >
-            {isEmployer ? 'View Job' : 'Connect'}
+            Connect
           </Button>
         </div>
         
         {/* Video title */}
-        <h2 className="font-bold text-lg mb-2 line-clamp-2 leading-tight">{video.title}</h2>
+        <h2 className="font-bold text-lg mb-2 text-white leading-tight line-clamp-2">{video.title}</h2>
         
         {/* Description */}
-        <p className="text-sm text-white/90 mb-3 line-clamp-2 leading-relaxed">{video.description}</p>
+        {video.description && (
+          <p className="text-sm text-white/90 mb-3 leading-relaxed line-clamp-3">{video.description}</p>
+        )}
         
         {/* Tags */}
         {video.tags && video.tags.length > 0 && (
-          <div className="flex flex-wrap gap-2 mb-2">
+          <div className="flex flex-wrap gap-2">
             {video.tags.slice(0, 3).map((tag, index) => (
               <span
                 key={index}
-                className="bg-white/20 backdrop-blur-sm text-white border border-white/30 text-xs px-3 py-1 rounded-full"
+                className="bg-white/20 backdrop-blur-sm text-white border border-white/30 text-xs px-3 py-1 rounded-full font-medium"
               >
                 #{tag}
               </span>
             ))}
             {video.tags.length > 3 && (
-              <span className="text-xs text-white/70 flex items-center">
+              <span className="text-xs text-white/70 flex items-center font-medium">
                 +{video.tags.length - 3} more
               </span>
             )}

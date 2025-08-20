@@ -42,7 +42,7 @@ export const useVideoFeedData = () => {
         return;
       }
 
-      // Fetch profile data including email for fallback
+      // Fetch profile data
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('user_id, full_name, username, avatar_url, account_type, company_name, email')
@@ -66,7 +66,7 @@ export const useVideoFeedData = () => {
         created_at: videoData.created_at,
         user: {
           id: profileData?.user_id || videoData.user_id,
-          full_name: profileData?.full_name || profileData?.email || 'Unknown User',
+          full_name: profileData?.full_name || '',
           username: profileData?.username || undefined,
           avatar_url: profileData?.avatar_url || undefined,
           account_type: profileData?.account_type || undefined,
@@ -162,13 +162,13 @@ export const useVideoFeedData = () => {
           views_count: video.views_count || 0,
           created_at: video.created_at,
           user: {
-            id: (profile?.user_id as string) || (video.user_id as string),
-            full_name: (profile?.full_name as string) || (profile?.email as string) || 'Unknown User',
-            username: (profile?.username as string) || undefined,
-            avatar_url: (profile?.avatar_url as string) || undefined,
-            account_type: (profile?.account_type as string) || undefined,
-            company_name: (profile?.company_name as string) || undefined,
-            email: (profile?.email as string) || undefined,
+            id: profile?.user_id || video.user_id,
+            full_name: profile?.full_name || '',
+            username: profile?.username || undefined,
+            avatar_url: profile?.avatar_url || undefined,
+            account_type: profile?.account_type || undefined,
+            company_name: profile?.company_name || undefined,
+            email: profile?.email || undefined,
           },
         };
       });
