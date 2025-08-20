@@ -41,8 +41,12 @@ export const useVideoFeedData = () => {
         return;
       }
 
+      // Use a direct query instead of RPC for profile data
       const { data: profileData, error: profileError } = await supabase
-        .rpc('get_public_profile', { target_user_id: videoData.user_id });
+        .from('profiles')
+        .select('user_id, full_name, username, avatar_url, account_type, company_name')
+        .eq('user_id', videoData.user_id)
+        .single();
 
       if (profileError) {
         console.warn('Error fetching profile for new video:', profileError);
@@ -124,25 +128,19 @@ export const useVideoFeedData = () => {
       >();
 
       if (userIds.length > 0) {
-        const profilePromises = userIds.map(async (userId) => {
-          const { data: profileData, error: profileError } = await supabase
-            .rpc('get_public_profile', { target_user_id: userId });
+        // Fetch profiles using direct query instead of RPC
+        const { data: profilesData, error: profilesError } = await supabase
+          .from('profiles')
+          .select('user_id, full_name, username, avatar_url, account_type, company_name')
+          .in('user_id', userIds);
 
-          if (profileError) {
-            console.warn(`Error fetching profile for user ${userId}:`, profileError);
-            return null;
-          }
-
-          return profileData;
-        });
-
-        const profileResults = await Promise.all(profilePromises);
-        
-        profileResults.forEach((profile) => {
-          if (profile) {
+        if (profilesError) {
+          console.warn('Error fetching profiles:', profilesError);
+        } else if (profilesData) {
+          profilesData.forEach((profile) => {
             profilesMap.set(profile.user_id, profile);
-          }
-        });
+          });
+        }
 
         console.log('[VideoFeed] Found profiles:', profilesMap.size);
       }
