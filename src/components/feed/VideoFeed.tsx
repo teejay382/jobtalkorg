@@ -87,9 +87,14 @@ const VideoFeed = () => {
       if (userIds.length > 0) {
         const { data: profilesData, error: profilesError } = await supabase
           .from('profiles')
-          .select(
-            'user_id, full_name, username, avatar_url, account_type, company_name'
-          )
+          .select(`
+            user_id, 
+            full_name, 
+            username, 
+            avatar_url, 
+            account_type, 
+            company_name
+          `)
           .in('user_id', userIds);
 
         if (profilesError) {
