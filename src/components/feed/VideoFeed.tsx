@@ -68,16 +68,24 @@ const VideoFeed = () => {
 
   return (
     <div
-      className="h-screen w-full overflow-hidden relative bg-black"
+      className="h-screen w-full overflow-hidden relative bg-black select-none"
       onWheel={handleWheel}
       onTouchStart={handleTouchStart}
     >
+      {/* Video container with smooth transitions */}
       <div
-        className="flex flex-col transition-transform duration-500 ease-in-out h-full"
-        style={{ transform: `translateY(-${currentVideo * 100}vh)` }}
+        className="flex flex-col h-full transition-transform duration-500 ease-in-out"
+        style={{ 
+          transform: `translateY(-${currentVideo * 100}vh)`,
+          willChange: 'transform'
+        }}
       >
         {videos.map((video, index) => (
-          <div key={video.id} className="w-full h-screen flex-shrink-0">
+          <div 
+            key={video.id} 
+            className="w-full h-screen flex-shrink-0 relative"
+            style={{ height: '100vh' }}
+          >
             <VideoCard
               video={video}
               isActive={index === currentVideo}
@@ -87,6 +95,7 @@ const VideoFeed = () => {
         ))}
       </div>
 
+      {/* Video indicators */}
       <VideoFeedIndicators
         videoCount={videos.length}
         currentVideo={currentVideo}

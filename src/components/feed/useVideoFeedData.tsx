@@ -20,6 +20,7 @@ export interface Video {
     avatar_url?: string;
     account_type?: string;
     company_name?: string;
+    email?: string;
   };
 }
 
@@ -41,10 +42,10 @@ export const useVideoFeedData = () => {
         return;
       }
 
-      // Use a direct query instead of RPC for profile data
+      // Fetch profile data including email for fallback
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
-        .select('user_id, full_name, username, avatar_url, account_type, company_name')
+        .select('user_id, full_name, username, avatar_url, account_type, company_name, email')
         .eq('user_id', videoData.user_id)
         .single();
 
@@ -65,11 +66,12 @@ export const useVideoFeedData = () => {
         created_at: videoData.created_at,
         user: {
           id: profileData?.user_id || videoData.user_id,
-          full_name: profileData?.full_name || 'Unknown User',
+          full_name: profileData?.full_name || profileData?.email || 'Unknown User',
           username: profileData?.username || undefined,
           avatar_url: profileData?.avatar_url || undefined,
           account_type: profileData?.account_type || undefined,
           company_name: profileData?.company_name || undefined,
+          email: profileData?.email || undefined,
         },
       };
 
@@ -124,14 +126,15 @@ export const useVideoFeedData = () => {
           avatar_url: string | null;
           account_type: string | null;
           company_name: string | null;
+          email: string | null;
         }
       >();
 
       if (userIds.length > 0) {
-        // Fetch profiles using direct query instead of RPC
+        // Fetch profiles including email for fallback
         const { data: profilesData, error: profilesError } = await supabase
           .from('profiles')
-          .select('user_id, full_name, username, avatar_url, account_type, company_name')
+          .select('user_id, full_name, username, avatar_url, account_type, company_name, email')
           .in('user_id', userIds);
 
         if (profilesError) {
@@ -160,11 +163,12 @@ export const useVideoFeedData = () => {
           created_at: video.created_at,
           user: {
             id: (profile?.user_id as string) || (video.user_id as string),
-            full_name: (profile?.full_name as string) || 'Unknown User',
+            full_name: (profile?.full_name as string) || (profile?.email as string) || 'Unknown User',
             username: (profile?.username as string) || undefined,
             avatar_url: (profile?.avatar_url as string) || undefined,
             account_type: (profile?.account_type as string) || undefined,
             company_name: (profile?.company_name as string) || undefined,
+            email: (profile?.email as string) || undefined,
           },
         };
       });
