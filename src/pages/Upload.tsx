@@ -1,11 +1,16 @@
+
 import { useState } from 'react';
 import { Upload as UploadIcon, Video, Camera, X } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import Header from '@/components/layout/Header';
 import BottomNavigation from '@/components/layout/BottomNavigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
+import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 const Upload = () => {
   const [step, setStep] = useState(1);
@@ -14,6 +19,21 @@ const Upload = () => {
   const [description, setDescription] = useState('');
   const [skills, setSkills] = useState<string[]>([]);
   const [skillInput, setSkillInput] = useState('');
+  const [uploading, setUploading] = useState(false);
+  const [videoPreviewUrl, setVideoPreviewUrl] = useState<string | null>(null);
+
+  const { user, profile } = useAuth();
+  const navigate = useNavigate();
+  const { toast } = useToast();
+
+  const handleVideoFileChange = (file: File) => {
+    setVideoFile(file);
+    
+    // Create preview URL
+    const url = URL.createObjectURL(file);
+    setVideoPreviewUrl(url);
+    setStep(2);
+  };
 
   const handleAddSkill = () => {
     if (skillInput.trim() && !skills.includes(skillInput.trim())) {
@@ -26,16 +46,95 @@ const Upload = () => {
     setSkills(skills.filter(skill => skill !== skillToRemove));
   };
 
-  const handleSubmit = () => {
-    // Mock submission
-    console.log('Submitting video:', { title, description, skills, videoFile });
-    // Reset form and go back to feed
-    setStep(1);
-    setVideoFile(null);
-    setTitle('');
-    setDescription('');
-    setSkills([]);
+  const uploadVideoToStorage = async (file: File): Promise<string> => {
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${user?.id}/${Date.now()}.${fileExt}`;
+
+    const { data, error } = await supabase.storage
+      .from('videos')
+      .upload(fileName, file);
+
+    if (error) {
+      throw error;
+    }
+
+    // Get public URL
+    const { data: { publicUrl } } = supabase.storage
+      .from('videos')
+      .getPublicUrl(fileName);
+
+    return publicUrl;
   };
+
+  const handleSubmit = async () => {
+    if (!user || !profile || !videoFile) {
+      toast({
+        title: "Error",
+        description: "Please sign in and ensure all fields are filled",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setUploading(true);
+
+    try {
+      // Upload video to storage
+      const videoUrl = await uploadVideoToStorage(videoFile);
+
+      // Save video data to database
+      const { error } = await supabase
+        .from('videos')
+        .insert({
+          title: title.trim(),
+          description: description.trim(),
+          video_url: videoUrl,
+          tags: skills,
+          user_id: user.id,
+        });
+
+      if (error) {
+        throw error;
+      }
+
+      toast({
+        title: "Success!",
+        description: "Your video has been uploaded successfully",
+      });
+
+      // Reset form
+      setStep(1);
+      setVideoFile(null);
+      setVideoPreviewUrl(null);
+      setTitle('');
+      setDescription('');
+      setSkills([]);
+
+      // Redirect to homepage feed
+      navigate('/');
+    } catch (error) {
+      console.error('Error uploading video:', error);
+      toast({
+        title: "Upload Failed",
+        description: "There was an error uploading your video. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold mb-4">Sign in Required</h2>
+          <p className="text-muted-foreground mb-4">You need to sign in to upload videos.</p>
+          <Button onClick={() => navigate('/auth')}>Sign In</Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -74,6 +173,7 @@ const Upload = () => {
                   <Button
                     variant="outline"
                     className="flex items-center gap-2"
+                    disabled
                   >
                     <Camera className="w-4 h-4" />
                     Camera
@@ -88,8 +188,7 @@ const Upload = () => {
                   onChange={(e) => {
                     const file = e.target.files?.[0];
                     if (file) {
-                      setVideoFile(file);
-                      setStep(2);
+                      handleVideoFileChange(file);
                     }
                   }}
                 />
@@ -118,10 +217,19 @@ const Upload = () => {
 
             {/* Video preview */}
             <div className="bg-card rounded-xl p-4 border border-border">
-              <div className="aspect-[9/16] bg-gradient-to-br from-primary/20 to-accent/20 rounded-xl mb-3 max-w-48 mx-auto">
-                <div className="w-full h-full flex items-center justify-center">
-                  <Video className="w-12 h-12 text-muted-foreground" />
-                </div>
+              <div className="aspect-[9/16] bg-gradient-to-br from-primary/20 to-accent/20 rounded-xl mb-3 max-w-48 mx-auto overflow-hidden">
+                {videoPreviewUrl ? (
+                  <video
+                    src={videoPreviewUrl}
+                    className="w-full h-full object-cover rounded-xl"
+                    controls
+                    muted
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center">
+                    <Video className="w-12 h-12 text-muted-foreground" />
+                  </div>
+                )}
               </div>
               <p className="text-sm text-center text-muted-foreground">
                 {videoFile?.name}
@@ -187,6 +295,7 @@ const Upload = () => {
               <Button
                 variant="outline"
                 onClick={() => setStep(1)}
+                disabled={uploading}
                 className="flex-1"
               >
                 Back
@@ -194,9 +303,9 @@ const Upload = () => {
               <Button
                 onClick={handleSubmit}
                 className="flex-1 btn-hero"
-                disabled={!title.trim() || !description.trim()}
+                disabled={!title.trim() || !description.trim() || uploading}
               >
-                Publish
+                {uploading ? 'Uploading...' : 'Publish'}
               </Button>
             </div>
           </div>

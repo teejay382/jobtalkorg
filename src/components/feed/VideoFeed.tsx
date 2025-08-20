@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import VideoCard from './VideoCard';
@@ -31,14 +32,106 @@ const VideoFeed = () => {
 
   useEffect(() => {
     fetchVideos();
+    
+    // Set up real-time subscription for new videos
+    const channel = supabase
+      .channel('videos-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'videos'
+        },
+        async (payload) => {
+          console.log('[VideoFeed] New video inserted:', payload);
+          // Fetch the complete video data with user profile
+          await fetchAndPrependNewVideo(payload.new.id);
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'videos'
+        },
+        (payload) => {
+          console.log('[VideoFeed] Video updated:', payload);
+          // Update the video in the current list
+          setVideos(prevVideos => 
+            prevVideos.map(video => 
+              video.id === payload.new.id 
+                ? { ...video, likes_count: payload.new.likes_count, comments_count: payload.new.comments_count }
+                : video
+            )
+          );
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
+
+  const fetchAndPrependNewVideo = async (videoId: string) => {
+    try {
+      // Fetch the new video with profile data
+      const { data: videoData, error: videoError } = await supabase
+        .from('videos')
+        .select('*')
+        .eq('id', videoId)
+        .single();
+
+      if (videoError || !videoData) {
+        console.error('Error fetching new video:', videoError);
+        return;
+      }
+
+      // Fetch the user profile using the security definer function
+      const { data: profileData, error: profileError } = await supabase
+        .rpc('get_public_profile', { target_user_id: videoData.user_id });
+
+      if (profileError) {
+        console.warn('Error fetching profile for new video:', profileError);
+      }
+
+      // Transform the video data
+      const transformedVideo: Video = {
+        id: videoData.id,
+        title: videoData.title,
+        description: videoData.description || '',
+        video_url: videoData.video_url,
+        thumbnail_url: videoData.thumbnail_url || undefined,
+        tags: videoData.tags || [],
+        likes_count: videoData.likes_count || 0,
+        comments_count: videoData.comments_count || 0,
+        views_count: videoData.views_count || 0,
+        created_at: videoData.created_at,
+        user: {
+          id: profileData?.user_id || videoData.user_id,
+          full_name: profileData?.full_name || 'Unknown User',
+          username: profileData?.username || undefined,
+          avatar_url: profileData?.avatar_url || undefined,
+          account_type: profileData?.account_type || undefined,
+          company_name: profileData?.company_name || undefined,
+        },
+      };
+
+      // Add the new video to the beginning of the list
+      setVideos(prevVideos => [transformedVideo, ...prevVideos]);
+    } catch (error) {
+      console.error('Error fetching new video:', error);
+    }
+  };
 
   const fetchVideos = async () => {
     try {
       setLoading(true);
       console.log('[VideoFeed] Fetching videos');
 
-      // Fetch videos first
+      // Fetch videos first, ordered by created_at DESC (newest first)
       const { data: videosData, error: videosError } = await supabase
         .from('videos')
         .select('*')
@@ -60,7 +153,7 @@ const VideoFeed = () => {
 
       console.log('[VideoFeed] Found videos:', videosData.length);
 
-      // Collect unique user_ids to fetch profiles
+      // Collect unique user_ids to fetch profiles using the security definer function
       const userIds = Array.from(
         new Set(
           videosData
@@ -71,7 +164,7 @@ const VideoFeed = () => {
 
       console.log('[VideoFeed] Found userIds for profiles:', userIds);
 
-      // Fetch profiles for the user_ids
+      // Fetch profiles using the security definer function
       let profilesMap = new Map<
         string,
         {
@@ -85,26 +178,28 @@ const VideoFeed = () => {
       >();
 
       if (userIds.length > 0) {
-        const { data: profilesData, error: profilesError } = await supabase
-          .from('profiles')
-          .select(`
-            user_id, 
-            full_name, 
-            username, 
-            avatar_url, 
-            account_type, 
-            company_name
-          `)
-          .in('user_id', userIds);
+        // Call the security definer function for each user
+        const profilePromises = userIds.map(async (userId) => {
+          const { data: profileData, error: profileError } = await supabase
+            .rpc('get_public_profile', { target_user_id: userId });
 
-        if (profilesError) {
-          console.warn('Error fetching profiles (continuing with fallbacks):', profilesError);
-        } else if (profilesData) {
-          console.log('[VideoFeed] Found profiles:', profilesData.length);
-          profilesMap = new Map(
-            profilesData.map((p: any) => [p.user_id as string, p])
-          );
-        }
+          if (profileError) {
+            console.warn(`Error fetching profile for user ${userId}:`, profileError);
+            return null;
+          }
+
+          return profileData;
+        });
+
+        const profileResults = await Promise.all(profilePromises);
+        
+        profileResults.forEach((profile) => {
+          if (profile) {
+            profilesMap.set(profile.user_id, profile);
+          }
+        });
+
+        console.log('[VideoFeed] Found profiles:', profilesMap.size);
       }
 
       // Transform the data to match our Video interface
