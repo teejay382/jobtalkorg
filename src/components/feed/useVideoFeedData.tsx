@@ -31,44 +31,45 @@ export const useVideoFeedData = () => {
 
   const fetchAndPrependNewVideo = async (videoId: string) => {
     try {
-      const { data: videoData, error: videoError } = await supabase
+      // Fetch the video row without joins to avoid typed relation issues
+      const { data: videoRow, error: videoError } = await supabase
         .from('videos')
-        .select(`
-          *,
-          profiles!videos_user_id_fkey (
-            user_id,
-            full_name,
-            username,
-            avatar_url,
-            account_type,
-            company_name,
-            email
-          )
-        `)
+        .select('*')
         .eq('id', videoId)
         .single();
 
-      if (videoError || !videoData) {
+      if (videoError || !videoRow) {
         console.error('Error fetching new video:', videoError);
         return;
       }
 
-      const profile = videoData.profiles;
-      const displayName = profile?.full_name || profile?.username || profile?.email || 'Unknown User';
+      // Fetch the uploader profile separately using user_id
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('user_id, full_name, username, avatar_url, account_type, company_name, email')
+        .eq('user_id', videoRow.user_id)
+        .maybeSingle();
+
+      if (profileError) {
+        console.warn('Profile not found or error fetching profile:', profileError);
+      }
+
+      const displayName =
+        profile?.full_name || profile?.username || profile?.email || 'User';
 
       const transformedVideo: Video = {
-        id: videoData.id,
-        title: videoData.title,
-        description: videoData.description || '',
-        video_url: videoData.video_url,
-        thumbnail_url: videoData.thumbnail_url || undefined,
-        tags: videoData.tags || [],
-        likes_count: videoData.likes_count || 0,
-        comments_count: videoData.comments_count || 0,
-        views_count: videoData.views_count || 0,
-        created_at: videoData.created_at,
+        id: videoRow.id,
+        title: videoRow.title,
+        description: videoRow.description || '',
+        video_url: videoRow.video_url,
+        thumbnail_url: videoRow.thumbnail_url || undefined,
+        tags: videoRow.tags || [],
+        likes_count: videoRow.likes_count || 0,
+        comments_count: videoRow.comments_count || 0,
+        views_count: videoRow.views_count || 0,
+        created_at: videoRow.created_at,
         user: {
-          id: profile?.user_id || videoData.user_id,
+          id: profile?.user_id || videoRow.user_id,
           full_name: displayName,
           username: profile?.username || undefined,
           avatar_url: profile?.avatar_url || undefined,
