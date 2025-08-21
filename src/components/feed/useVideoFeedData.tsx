@@ -31,7 +31,7 @@ export const useVideoFeedData = () => {
 
   const fetchAndPrependNewVideo = async (videoId: string) => {
     try {
-      // Fetch the video row without joins to avoid typed relation issues
+      // Fetch video and profile data separately to avoid join issues
       const { data: videoRow, error: videoError } = await supabase
         .from('videos')
         .select('*')
@@ -43,19 +43,18 @@ export const useVideoFeedData = () => {
         return;
       }
 
-      // Fetch the uploader profile separately using user_id
+      // Fetch the uploader profile using profiles.user_id = videos.user_id
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('user_id, full_name, username, avatar_url, account_type, company_name, email')
         .eq('user_id', videoRow.user_id)
-        .maybeSingle();
+        .single();
 
       if (profileError) {
-        console.warn('Profile not found or error fetching profile:', profileError);
+        console.warn('Profile not found for user:', videoRow.user_id, profileError);
       }
 
-      const displayName =
-        profile?.full_name || profile?.username || profile?.email || 'User';
+      const displayName = profile?.full_name || profile?.username || profile?.email || `User ${videoRow.user_id.slice(0, 8)}`;
 
       const transformedVideo: Video = {
         id: videoRow.id,
@@ -90,20 +89,10 @@ export const useVideoFeedData = () => {
       setLoading(true);
       console.log('[VideoFeed] Fetching videos with profiles');
 
+      // Fetch videos first
       const { data: videosData, error: videosError } = await supabase
         .from('videos')
-        .select(`
-          *,
-          profiles!videos_user_id_fkey (
-            user_id,
-            full_name,
-            username,
-            avatar_url,
-            account_type,
-            company_name,
-            email
-          )
-        `)
+        .select('*')
         .order('created_at', { ascending: false })
         .limit(20);
 
@@ -120,11 +109,28 @@ export const useVideoFeedData = () => {
         return;
       }
 
-      console.log('[VideoFeed] Found videos with profiles:', videosData.length);
+      console.log('[VideoFeed] Found videos:', videosData.length);
+
+      // Fetch all unique user profiles
+      const userIds = [...new Set(videosData.map(video => video.user_id))];
+      const { data: profilesData, error: profilesError } = await supabase
+        .from('profiles')
+        .select('user_id, full_name, username, avatar_url, account_type, company_name, email')
+        .in('user_id', userIds);
+
+      if (profilesError) {
+        console.warn('Error fetching profiles:', profilesError);
+      }
+
+      // Create a map for quick profile lookup
+      const profilesMap = new Map();
+      (profilesData || []).forEach(profile => {
+        profilesMap.set(profile.user_id, profile);
+      });
 
       const transformedVideos: Video[] = videosData.map((video: any) => {
-        const profile = video.profiles;
-        const displayName = profile?.full_name || profile?.username || profile?.email || 'Unknown User';
+        const profile = profilesMap.get(video.user_id);
+        const displayName = profile?.full_name || profile?.username || profile?.email || `User ${video.user_id.slice(0, 8)}`;
         
         return {
           id: video.id,

@@ -1,5 +1,6 @@
+
 import { useState, useEffect, useRef } from 'react';
-import { Heart, MessageCircle, Share, Briefcase, User, Play } from 'lucide-react';
+import { Heart, MessageCircle, Share, Briefcase, Play, Volume2, VolumeX } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -37,6 +38,7 @@ const VideoCard = ({ video, isActive, onRefresh }: VideoCardProps) => {
   const [isLiked, setIsLiked] = useState(false);
   const [likesCount, setLikesCount] = useState(video.likes_count);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [isMuted, setIsMuted] = useState(true);
   const [loading, setLoading] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const { user } = useAuth();
@@ -138,6 +140,14 @@ const VideoCard = ({ video, isActive, onRefresh }: VideoCardProps) => {
     }
   };
 
+  const handleMuteToggle = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (videoRef.current) {
+      videoRef.current.muted = !isMuted;
+      setIsMuted(!isMuted);
+    }
+  };
+
   const handleShare = async () => {
     try {
       if (navigator.share) {
@@ -182,14 +192,14 @@ const VideoCard = ({ video, isActive, onRefresh }: VideoCardProps) => {
 
   return (
     <div className="relative w-full h-full bg-black overflow-hidden">
-      {/* Video - improved TikTok/Reels style layout */}
+      {/* Video - improved scaling and audio */}
       <div className="absolute inset-0 flex items-center justify-center">
         <video
           ref={videoRef}
           src={video.video_url}
-          className="w-full h-full object-contain bg-black"
+          className="w-full h-full object-cover bg-black"
           loop
-          muted
+          muted={isMuted}
           playsInline
           poster={video.thumbnail_url}
           onClick={handleVideoClick}
@@ -197,7 +207,7 @@ const VideoCard = ({ video, isActive, onRefresh }: VideoCardProps) => {
       </div>
       
       {/* Video overlay gradient */}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent pointer-events-none" />
+      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent pointer-events-none" />
       
       {/* Play indicator when paused */}
       {!isPlaying && (
@@ -208,8 +218,16 @@ const VideoCard = ({ video, isActive, onRefresh }: VideoCardProps) => {
         </div>
       )}
       
+      {/* Mute/Unmute button */}
+      <button
+        onClick={handleMuteToggle}
+        className="absolute top-4 right-4 w-10 h-10 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center text-white hover:bg-black/70 transition-all duration-300 z-10"
+      >
+        {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
+      </button>
+      
       {/* Right side interactions */}
-      <div className="absolute right-4 bottom-40 flex flex-col gap-4 z-10">
+      <div className="absolute right-4 bottom-32 flex flex-col gap-4 z-10">
         <div className="flex flex-col items-center gap-2">
           <button 
             onClick={handleLike}
@@ -244,8 +262,8 @@ const VideoCard = ({ video, isActive, onRefresh }: VideoCardProps) => {
         )}
       </div>
       
-      {/* Bottom content - positioned to be visible above nav bar */}
-      <div className="absolute bottom-0 left-0 right-20 p-4 pb-24 text-white z-10">
+      {/* Bottom content - positioned higher to be visible above transparent nav */}
+      <div className="absolute bottom-0 left-0 right-20 p-4 pb-28 text-white z-10">
         {/* User info */}
         <div className="flex items-center gap-3 mb-4">
           <Avatar className="w-12 h-12 border-2 border-white/30">
@@ -262,18 +280,18 @@ const VideoCard = ({ video, isActive, onRefresh }: VideoCardProps) => {
             onClick={handleConnect}
             variant="outline"
             size="sm"
-            className="bg-white text-black border-white hover:bg-white/90 hover:text-black text-xs px-4 py-2 h-auto font-medium"
+            className="bg-white text-black border-white hover:bg-white/90 hover:text-black text-xs px-4 py-2 h-auto font-medium shadow-lg"
           >
             Connect
           </Button>
         </div>
         
         {/* Video title */}
-        <h2 className="font-bold text-lg mb-2 text-white leading-tight line-clamp-2">{video.title}</h2>
+        <h2 className="font-bold text-lg mb-2 text-white leading-tight line-clamp-2 drop-shadow-lg">{video.title}</h2>
         
         {/* Description */}
         {video.description && (
-          <p className="text-sm text-white/90 mb-3 leading-relaxed line-clamp-3">{video.description}</p>
+          <p className="text-sm text-white/90 mb-3 leading-relaxed line-clamp-3 drop-shadow-md">{video.description}</p>
         )}
         
         {/* Tags */}
@@ -282,13 +300,13 @@ const VideoCard = ({ video, isActive, onRefresh }: VideoCardProps) => {
             {video.tags.slice(0, 3).map((tag, index) => (
               <span
                 key={index}
-                className="bg-white/20 backdrop-blur-sm text-white border border-white/30 text-xs px-3 py-1 rounded-full font-medium"
+                className="bg-white/20 backdrop-blur-sm text-white border border-white/30 text-xs px-3 py-1 rounded-full font-medium shadow-md"
               >
                 #{tag}
               </span>
             ))}
             {video.tags.length > 3 && (
-              <span className="text-xs text-white/70 flex items-center font-medium">
+              <span className="text-xs text-white/70 flex items-center font-medium drop-shadow-md">
                 +{video.tags.length - 3} more
               </span>
             )}
