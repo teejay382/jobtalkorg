@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -33,7 +32,18 @@ export const useVideoFeedData = () => {
     try {
       const { data: videoData, error: videoError } = await supabase
         .from('videos')
-        .select('*')
+        .select(`
+          *,
+          profiles!videos_user_id_fkey (
+            user_id,
+            full_name,
+            username,
+            avatar_url,
+            account_type,
+            company_name,
+            email
+          )
+        `)
         .eq('id', videoId)
         .single();
 
@@ -42,16 +52,8 @@ export const useVideoFeedData = () => {
         return;
       }
 
-      // Fetch profile data
-      const { data: profileData, error: profileError } = await supabase
-        .from('profiles')
-        .select('user_id, full_name, username, avatar_url, account_type, company_name, email')
-        .eq('user_id', videoData.user_id)
-        .single();
-
-      if (profileError) {
-        console.warn('Error fetching profile for new video:', profileError);
-      }
+      const profile = videoData.profiles;
+      const displayName = profile?.full_name || profile?.username || profile?.email || 'Unknown User';
 
       const transformedVideo: Video = {
         id: videoData.id,
@@ -65,13 +67,13 @@ export const useVideoFeedData = () => {
         views_count: videoData.views_count || 0,
         created_at: videoData.created_at,
         user: {
-          id: profileData?.user_id || videoData.user_id,
-          full_name: profileData?.full_name || '',
-          username: profileData?.username || undefined,
-          avatar_url: profileData?.avatar_url || undefined,
-          account_type: profileData?.account_type || undefined,
-          company_name: profileData?.company_name || undefined,
-          email: profileData?.email || undefined,
+          id: profile?.user_id || videoData.user_id,
+          full_name: displayName,
+          username: profile?.username || undefined,
+          avatar_url: profile?.avatar_url || undefined,
+          account_type: profile?.account_type || undefined,
+          company_name: profile?.company_name || undefined,
+          email: profile?.email || undefined,
         },
       };
 
@@ -84,11 +86,22 @@ export const useVideoFeedData = () => {
   const fetchVideos = async () => {
     try {
       setLoading(true);
-      console.log('[VideoFeed] Fetching videos');
+      console.log('[VideoFeed] Fetching videos with profiles');
 
       const { data: videosData, error: videosError } = await supabase
         .from('videos')
-        .select('*')
+        .select(`
+          *,
+          profiles!videos_user_id_fkey (
+            user_id,
+            full_name,
+            username,
+            avatar_url,
+            account_type,
+            company_name,
+            email
+          )
+        `)
         .order('created_at', { ascending: false })
         .limit(20);
 
@@ -105,51 +118,12 @@ export const useVideoFeedData = () => {
         return;
       }
 
-      console.log('[VideoFeed] Found videos:', videosData.length);
-
-      const userIds = Array.from(
-        new Set(
-          videosData
-            .map((v: any) => v.user_id)
-            .filter((id: string | null | undefined): id is string => Boolean(id))
-        )
-      );
-
-      console.log('[VideoFeed] Found userIds for profiles:', userIds);
-
-      let profilesMap = new Map<
-        string,
-        {
-          user_id: string;
-          full_name: string | null;
-          username: string | null;
-          avatar_url: string | null;
-          account_type: string | null;
-          company_name: string | null;
-          email: string | null;
-        }
-      >();
-
-      if (userIds.length > 0) {
-        // Fetch profiles including email for fallback
-        const { data: profilesData, error: profilesError } = await supabase
-          .from('profiles')
-          .select('user_id, full_name, username, avatar_url, account_type, company_name, email')
-          .in('user_id', userIds);
-
-        if (profilesError) {
-          console.warn('Error fetching profiles:', profilesError);
-        } else if (profilesData) {
-          profilesData.forEach((profile) => {
-            profilesMap.set(profile.user_id, profile);
-          });
-        }
-
-        console.log('[VideoFeed] Found profiles:', profilesMap.size);
-      }
+      console.log('[VideoFeed] Found videos with profiles:', videosData.length);
 
       const transformedVideos: Video[] = videosData.map((video: any) => {
-        const profile = profilesMap.get(video.user_id);
+        const profile = video.profiles;
+        const displayName = profile?.full_name || profile?.username || profile?.email || 'Unknown User';
+        
         return {
           id: video.id,
           title: video.title,
@@ -163,7 +137,7 @@ export const useVideoFeedData = () => {
           created_at: video.created_at,
           user: {
             id: profile?.user_id || video.user_id,
-            full_name: profile?.full_name || '',
+            full_name: displayName,
             username: profile?.username || undefined,
             avatar_url: profile?.avatar_url || undefined,
             account_type: profile?.account_type || undefined,

@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from 'react';
 import { Heart, MessageCircle, Share, Briefcase, User, Play } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -71,7 +70,6 @@ const VideoCard = ({ video, isActive, onRefresh }: VideoCardProps) => {
 
       setIsLiked(!!data);
     } catch (error) {
-      // User hasn't liked this video
       setIsLiked(false);
     }
   };
@@ -90,14 +88,12 @@ const VideoCard = ({ video, isActive, onRefresh }: VideoCardProps) => {
 
     try {
       if (isLiked) {
-        // Remove like
         await supabase
           .from('video_likes')
           .delete()
           .eq('video_id', video.id)
           .eq('user_id', user.id);
 
-        // Update video likes count
         await supabase
           .from('videos')
           .update({ likes_count: Math.max(0, likesCount - 1) })
@@ -106,12 +102,10 @@ const VideoCard = ({ video, isActive, onRefresh }: VideoCardProps) => {
         setIsLiked(false);
         setLikesCount(prev => Math.max(0, prev - 1));
       } else {
-        // Add like
         await supabase
           .from('video_likes')
           .insert({ video_id: video.id, user_id: user.id });
 
-        // Update video likes count
         await supabase
           .from('videos')
           .update({ likes_count: likesCount + 1 })
@@ -153,7 +147,6 @@ const VideoCard = ({ video, isActive, onRefresh }: VideoCardProps) => {
           url: window.location.href,
         });
       } else {
-        // Fallback to clipboard
         await navigator.clipboard.writeText(window.location.href);
         toast({
           title: "Copied!",
@@ -180,12 +173,11 @@ const VideoCard = ({ video, isActive, onRefresh }: VideoCardProps) => {
       return;
     }
 
-    // Navigate to chat with the video uploader
     navigate(`/chat?user=${video.user.id}`);
   };
 
   const isEmployer = video.user.account_type === 'employer';
-  const displayName = video.user.full_name || video.user.email || 'Unknown User';
+  const displayName = video.user.full_name;
   const userRole = isEmployer ? (video.user.company_name || 'Employer') : 'Job Seeker';
 
   return (
@@ -217,7 +209,7 @@ const VideoCard = ({ video, isActive, onRefresh }: VideoCardProps) => {
       )}
       
       {/* Right side interactions */}
-      <div className="absolute right-4 bottom-32 flex flex-col gap-4 z-10">
+      <div className="absolute right-4 bottom-40 flex flex-col gap-4 z-10">
         <div className="flex flex-col items-center gap-2">
           <button 
             onClick={handleLike}
@@ -252,8 +244,8 @@ const VideoCard = ({ video, isActive, onRefresh }: VideoCardProps) => {
         )}
       </div>
       
-      {/* Bottom content - improved layout and readability */}
-      <div className="absolute bottom-0 left-0 right-20 p-4 text-white z-10">
+      {/* Bottom content - positioned to be visible above nav bar */}
+      <div className="absolute bottom-0 left-0 right-20 p-4 pb-24 text-white z-10">
         {/* User info */}
         <div className="flex items-center gap-3 mb-4">
           <Avatar className="w-12 h-12 border-2 border-white/30">
