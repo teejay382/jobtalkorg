@@ -192,12 +192,12 @@ const VideoCard = ({ video, isActive, onRefresh }: VideoCardProps) => {
 
   return (
     <div className="relative w-full h-full bg-black overflow-hidden">
-      {/* Video - improved scaling and audio */}
+      {/* Video - improved scaling to fit naturally */}
       <div className="absolute inset-0 flex items-center justify-center">
         <video
           ref={videoRef}
           src={video.video_url}
-          className="w-full h-full object-cover bg-black"
+          className="w-full h-full object-contain bg-black"
           loop
           muted={isMuted}
           playsInline
