@@ -38,10 +38,10 @@ const VideoCard = ({ video, isActive, onRefresh }: VideoCardProps) => {
   const [isLiked, setIsLiked] = useState(false);
   const [likesCount, setLikesCount] = useState(video.likes_count);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [isMuted, setIsMuted] = useState(true);
+  const [isMuted, setIsMuted] = useState(false); // Changed to false for audible videos
   const [loading, setLoading] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -183,12 +183,20 @@ const VideoCard = ({ video, isActive, onRefresh }: VideoCardProps) => {
       return;
     }
 
+    // Navigate to chat with the video creator's ID
     navigate(`/chat?user=${video.user.id}`);
   };
 
-  const isEmployer = video.user.account_type === 'employer';
+  const isVideoFromEmployer = video.user.account_type === 'employer';
+  const isCurrentUserEmployer = profile?.account_type === 'employer';
   const displayName = video.user.full_name;
-  const userRole = isEmployer ? (video.user.company_name || 'Employer') : 'Job Seeker';
+  const userRole = isVideoFromEmployer ? (video.user.company_name || 'Employer') : 'Job Seeker';
+
+  // Show connect button logic:
+  // - If video is from employer and current user is freelancer: show "Connect" 
+  // - If video is from freelancer and current user is employer: show "Hire"
+  const shouldShowConnectButton = (isVideoFromEmployer && !isCurrentUserEmployer) || (!isVideoFromEmployer && isCurrentUserEmployer);
+  const connectButtonText = isCurrentUserEmployer ? 'Hire' : 'Connect';
 
   return (
     <div className="relative w-full h-full bg-black overflow-hidden">
@@ -255,7 +263,7 @@ const VideoCard = ({ video, isActive, onRefresh }: VideoCardProps) => {
           <Share className="w-6 h-6" />
         </button>
         
-        {isEmployer && (
+        {isVideoFromEmployer && (
           <button className="w-12 h-12 rounded-full bg-success/20 backdrop-blur-sm flex items-center justify-center text-success hover:bg-success/30 transition-all duration-300 hover:scale-110">
             <Briefcase className="w-6 h-6" />
           </button>
@@ -276,14 +284,16 @@ const VideoCard = ({ video, isActive, onRefresh }: VideoCardProps) => {
             <h3 className="font-semibold text-base text-white truncate">{displayName}</h3>
             <p className="text-sm text-white/80 truncate">{userRole}</p>
           </div>
-          <Button
-            onClick={handleConnect}
-            variant="outline"
-            size="sm"
-            className="bg-white text-black border-white hover:bg-white/90 hover:text-black text-xs px-4 py-2 h-auto font-medium shadow-lg"
-          >
-            Connect
-          </Button>
+          {shouldShowConnectButton && (
+            <Button
+              onClick={handleConnect}
+              variant="outline"
+              size="sm"
+              className="bg-white text-black border-white hover:bg-white/90 hover:text-black text-xs px-4 py-2 h-auto font-medium shadow-lg"
+            >
+              {connectButtonText}
+            </Button>
+          )}
         </div>
         
         {/* Video title */}
