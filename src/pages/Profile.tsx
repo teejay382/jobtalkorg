@@ -1,15 +1,27 @@
 
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Edit, Settings, Star, Video, Bookmark, LogOut, User, Building2 } from 'lucide-react';
+import { Edit, Settings, Star, Video, Bookmark, LogOut, User, Building2, Trash2 } from 'lucide-react';
 import Header from '@/components/layout/Header';
 import BottomNavigation from '@/components/layout/BottomNavigation';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 const Profile = () => {
   const [activeTab, setActiveTab] = useState('videos');
@@ -18,6 +30,7 @@ const Profile = () => {
   const [videosLoading, setVideosLoading] = useState(true);
   const { user, profile, signOut, loading: authLoading } = useAuth();
   const navigate = useNavigate();
+  const { toast } = useToast();
 
   useEffect(() => {
     // Wait for auth to finish loading before deciding redirects
@@ -53,6 +66,47 @@ const Profile = () => {
       console.error('Error fetching videos:', error);
     } finally {
       setVideosLoading(false);
+    }
+  };
+
+  const handleDeleteVideo = async (videoId: string, videoUrl: string) => {
+    try {
+      // Delete from database
+      const { error: dbError } = await supabase
+        .from('videos')
+        .delete()
+        .eq('id', videoId);
+
+      if (dbError) throw dbError;
+
+      // Extract file path from video URL for storage deletion
+      const urlParts = videoUrl.split('/');
+      const fileName = urlParts[urlParts.length - 1];
+      
+      // Delete from storage
+      const { error: storageError } = await supabase.storage
+        .from('videos')
+        .remove([fileName]);
+
+      if (storageError) {
+        console.warn('Error deleting from storage:', storageError);
+        // Don't throw here as the DB deletion was successful
+      }
+
+      // Update local state
+      setUserVideos(prev => prev.filter((video: any) => video.id !== videoId));
+      
+      toast({
+        title: "Video deleted",
+        description: "Your video has been successfully deleted.",
+      });
+    } catch (error) {
+      console.error('Error deleting video:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete video. Please try again.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -194,10 +248,37 @@ const Profile = () => {
                 {userVideos.map((video: any) => (
                   <div
                     key={video.id}
-                    className="bg-card rounded-xl overflow-hidden shadow-soft"
+                    className="bg-card rounded-xl overflow-hidden shadow-soft relative group"
                   >
                     <div className="aspect-[9/16] bg-gradient-to-br from-primary/20 to-accent/20 relative">
                       <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+                      
+                      {/* Delete button */}
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <button className="absolute top-2 right-2 w-8 h-8 bg-red-500/80 rounded-full flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-sm">
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Delete Video</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Are you sure you want to delete this video? This action cannot be undone.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction
+                              onClick={() => handleDeleteVideo(video.id, video.video_url)}
+                              className="bg-red-500 hover:bg-red-600"
+                            >
+                              Delete
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+
                       <div className="absolute bottom-2 left-2 right-2">
                         <p className="text-white text-xs font-medium line-clamp-2">
                           {video.title}
