@@ -1,3 +1,4 @@
+
 import { Home, Search, User, MessageCircle, Plus } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 
@@ -11,7 +12,7 @@ const BottomNavigation = () => {
   ];
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-border shadow-strong z-50">
+    <nav className="fixed bottom-0 left-0 right-0 bg-black/20 backdrop-blur-lg border-t border-white/10 z-50">
       <div className="flex items-center justify-around px-4 py-2 max-w-md mx-auto">
         {navItems.map((item) => (
           <NavLink
@@ -29,8 +30,8 @@ const BottomNavigation = () => {
               </div>
             ) : (
               <>
-                <item.icon className="w-6 h-6" />
-                <span className="text-xs font-medium">{item.label}</span>
+                <item.icon className="w-6 h-6 text-white/80" />
+                <span className="text-xs font-medium text-white/80">{item.label}</span>
               </>
             )}
           </NavLink>

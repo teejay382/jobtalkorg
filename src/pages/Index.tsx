@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '@/components/layout/Header';
@@ -46,18 +47,25 @@ const Index = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <Header />
-      <main className="pt-16 pb-16">
+    <div className="min-h-screen bg-black">
+      {/* Header - hidden on mobile for full-screen experience */}
+      <div className="hidden md:block">
+        <Header />
+      </div>
+      
+      {/* Main content - full screen on mobile */}
+      <main className="md:pt-16 md:pb-16">
         <VideoFeed />
       </main>
+      
+      {/* Bottom navigation */}
       <BottomNavigation />
     </div>
   );
