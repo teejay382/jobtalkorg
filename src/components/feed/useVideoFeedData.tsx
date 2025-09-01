@@ -1,5 +1,4 @@
-
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
 export interface Video {
@@ -28,10 +27,11 @@ export const useVideoFeedData = () => {
   const [videos, setVideos] = useState<Video[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [hasMore, setHasMore] = useState(true);
+  const [profileCache, setProfileCache] = useState<Map<string, any>>(new Map());
 
-  const fetchAndPrependNewVideo = async (videoId: string) => {
+  const fetchAndPrependNewVideo = useCallback(async (videoId: string) => {
     try {
-      // Fetch video and profile data separately to avoid join issues
       const { data: videoRow, error: videoError } = await supabase
         .from('videos')
         .select('*')
@@ -43,15 +43,22 @@ export const useVideoFeedData = () => {
         return;
       }
 
-      // Fetch the uploader profile using profiles.user_id = videos.user_id
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('user_id, full_name, username, avatar_url, account_type, company_name, email')
-        .eq('user_id', videoRow.user_id)
-        .single();
-
-      if (profileError) {
-        console.warn('Profile not found for user:', videoRow.user_id, profileError);
+      // Check cache first
+      let profile = profileCache.get(videoRow.user_id);
+      if (!profile) {
+        const { data: profileData, error: profileError } = await supabase
+          .from('profiles')
+          .select('user_id, full_name, username, avatar_url, account_type, company_name, email')
+          .eq('user_id', videoRow.user_id)
+          .single();
+        
+        if (profileError) {
+          console.warn('Profile not found for user:', videoRow.user_id, profileError);
+        } else {
+          profile = profileData;
+          // Cache the profile
+          setProfileCache(prev => new Map(prev).set(videoRow.user_id, profile));
+        }
       }
 
       const displayName = profile?.full_name || profile?.username || profile?.email || `User ${videoRow.user_id.slice(0, 8)}`;
@@ -82,54 +89,69 @@ export const useVideoFeedData = () => {
     } catch (error) {
       console.error('Error fetching new video:', error);
     }
-  };
+  }, [profileCache]);
 
-  const fetchVideos = async () => {
+  const fetchVideos = useCallback(async (offset = 0, limit = 10) => {
     try {
-      setLoading(true);
-      console.log('[VideoFeed] Fetching videos with profiles');
+      if (offset === 0) setLoading(true);
+      console.log('[VideoFeed] Fetching videos with profiles', { offset, limit });
 
-      // Fetch videos first
+      // Fetch videos with pagination
       const { data: videosData, error: videosError } = await supabase
         .from('videos')
         .select('*')
         .order('created_at', { ascending: false })
-        .limit(20);
+        .range(offset, offset + limit - 1);
 
       if (videosError) {
         console.error('Error fetching videos:', videosError);
         setError('Failed to load videos');
-        return;
+        return [];
       }
 
       if (!videosData || videosData.length === 0) {
         console.log('[VideoFeed] No videos found');
-        setVideos([]);
-        setError('No videos available');
-        return;
+        if (offset === 0) {
+          setVideos([]);
+          setError('No videos available');
+        }
+        return [];
       }
 
       console.log('[VideoFeed] Found videos:', videosData.length);
 
-      // Fetch all unique user profiles
-      const userIds = [...new Set(videosData.map(video => video.user_id))];
-      const { data: profilesData, error: profilesError } = await supabase
-        .from('profiles')
-        .select('user_id, full_name, username, avatar_url, account_type, company_name, email')
-        .in('user_id', userIds);
+      // Get unique user IDs from videos that aren't already cached
+      const uncachedUserIds = [...new Set(videosData.map(video => video.user_id))]
+        .filter(userId => !profileCache.has(userId));
 
-      if (profilesError) {
-        console.warn('Error fetching profiles:', profilesError);
+      // Fetch only uncached profiles
+      let newProfiles: any[] = [];
+      if (uncachedUserIds.length > 0) {
+        const { data: profilesData, error: profilesError } = await supabase
+          .from('profiles')
+          .select('user_id, full_name, username, avatar_url, account_type, company_name, email')
+          .in('user_id', uncachedUserIds);
+
+        if (profilesError) {
+          console.warn('Error fetching profiles:', profilesError);
+        } else {
+          newProfiles = profilesData || [];
+        }
       }
 
-      // Create a map for quick profile lookup
-      const profilesMap = new Map();
-      (profilesData || []).forEach(profile => {
-        profilesMap.set(profile.user_id, profile);
-      });
+      // Update profile cache with new profiles
+      if (newProfiles.length > 0) {
+        setProfileCache(prev => {
+          const newCache = new Map(prev);
+          newProfiles.forEach(profile => {
+            newCache.set(profile.user_id, profile);
+          });
+          return newCache;
+        });
+      }
 
       const transformedVideos: Video[] = videosData.map((video: any) => {
-        const profile = profilesMap.get(video.user_id);
+        const profile = profileCache.get(video.user_id) || newProfiles.find(p => p.user_id === video.user_id);
         const displayName = profile?.full_name || profile?.username || profile?.email || `User ${video.user_id.slice(0, 8)}`;
         
         return {
@@ -157,17 +179,23 @@ export const useVideoFeedData = () => {
 
       console.log('[VideoFeed] Transformed videos ready:', transformedVideos.length);
 
-      setVideos(transformedVideos);
+      if (offset === 0) {
+        setVideos(transformedVideos);
+      } else {
+        setVideos(prev => [...prev, ...transformedVideos]);
+      }
       setError(null);
+      return transformedVideos;
     } catch (error) {
       console.error('Error in fetchVideos:', error);
       setError('An error occurred while loading videos');
+      return [];
     } finally {
-      setLoading(false);
+      if (offset === 0) setLoading(false);
     }
-  };
+  }, [profileCache]);
 
-  const updateVideoStats = (videoId: string, updates: { likes_count?: number; comments_count?: number }) => {
+  const updateVideoStats = useCallback((videoId: string, updates: { likes_count?: number; comments_count?: number }) => {
     setVideos(prevVideos => 
       prevVideos.map(video => 
         video.id === videoId 
@@ -175,7 +203,16 @@ export const useVideoFeedData = () => {
           : video
       )
     );
-  };
+  }, []);
+
+  const loadMore = useCallback(async () => {
+    if (!hasMore || loading) return;
+    
+    const newVideos = await fetchVideos(videos.length);
+    if (newVideos.length < 10) {
+      setHasMore(false);
+    }
+  }, [videos.length, hasMore, loading, fetchVideos]);
 
   useEffect(() => {
     fetchVideos();
@@ -214,12 +251,16 @@ export const useVideoFeedData = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, []);
+  }, [fetchAndPrependNewVideo, updateVideoStats, fetchVideos]);
+
+  const memoizedVideos = useMemo(() => videos, [videos]);
 
   return {
-    videos,
+    videos: memoizedVideos,
     loading,
     error,
-    fetchVideos
+    fetchVideos: () => fetchVideos(),
+    loadMore,
+    hasMore
   };
 };
