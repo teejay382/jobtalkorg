@@ -276,10 +276,13 @@ const OptimizedVideoCard = memo(({ video, isActive, onRefresh, isVisible }: Vide
         </div>
         
         <div className="flex flex-col items-center gap-2">
-          <button className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center text-white hover:bg-white/30 transition-smooth hover-scale">
+          <button 
+            onClick={handleConnect}
+            className="w-12 h-12 rounded-full bg-blue-500/20 backdrop-blur-sm flex items-center justify-center text-blue-400 hover:bg-blue-500/30 transition-smooth hover-scale"
+          >
             <MessageCircle className="w-6 h-6" />
           </button>
-          <span className="text-white text-xs font-medium">{video.comments_count}</span>
+          <span className="text-white text-xs font-medium">DM</span>
         </div>
         
         <button 

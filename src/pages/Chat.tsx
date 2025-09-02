@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Search } from 'lucide-react';
 import Header from '@/components/layout/Header';
 import BottomNavigation from '@/components/layout/BottomNavigation';
@@ -6,22 +7,69 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ChatRoom } from '@/components/chat/ChatRoom';
 import { useChat } from '@/hooks/useChat';
 import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
 
 const Chat = () => {
   const [selectedConversation, setSelectedConversation] = useState<string | null>(null);
   const [selectedUser, setSelectedUser] = useState<any>(null);
+  const [searchParams] = useSearchParams();
   const { user } = useAuth();
-  const { conversations, loading } = useChat();
+  const { conversations, loading, createOrGetConversation } = useChat();
 
-  // Mock function to get user profile (replace with actual profile fetch)
+  // Actual function to get user profile from profiles table
   const getUserProfile = async (userId: string) => {
-    // This should fetch from profiles table
-    return {
-      id: userId,
-      username: 'User',
-      avatar_url: null
-    };
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('user_id, full_name, username, avatar_url, account_type, company_name, email')
+        .eq('user_id', userId)
+        .single();
+      
+      if (error || !data) {
+        console.warn('Profile not found:', error);
+        return {
+          id: userId,
+          username: `User ${userId.slice(0, 8)}`,
+          avatar_url: null
+        };
+      }
+      
+      return {
+        id: data.user_id,
+        username: data.username || data.full_name || data.email || `User ${userId.slice(0, 8)}`,
+        avatar_url: data.avatar_url,
+        account_type: data.account_type,
+        company_name: data.company_name
+      };
+    } catch (error) {
+      console.error('Error fetching profile:', error);
+      return {
+        id: userId,
+        username: `User ${userId.slice(0, 8)}`,
+        avatar_url: null
+      };
+    }
   };
+
+  // Handle URL parameter for starting new conversation
+  useEffect(() => {
+    const otherUserId = searchParams.get('user');
+    if (otherUserId && user && otherUserId !== user.id) {
+      const startConversation = async () => {
+        try {
+          const conversation = await createOrGetConversation(otherUserId);
+          if (conversation) {
+            setSelectedConversation(conversation.id);
+            const otherUser = await getUserProfile(otherUserId);
+            setSelectedUser(otherUser);
+          }
+        } catch (error) {
+          console.error('Error starting conversation:', error);
+        }
+      };
+      startConversation();
+    }
+  }, [searchParams, user, createOrGetConversation]);
 
   const handleConversationClick = async (conversation: any) => {
     setSelectedConversation(conversation.id);
