@@ -1,157 +1,52 @@
-import { useState } from 'react';
-import { Send, Search, MoreVertical } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Search } from 'lucide-react';
 import Header from '@/components/layout/Header';
 import BottomNavigation from '@/components/layout/BottomNavigation';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
+import { ChatRoom } from '@/components/chat/ChatRoom';
+import { useChat } from '@/hooks/useChat';
+import { useAuth } from '@/hooks/useAuth';
 
 const Chat = () => {
-  const [selectedChat, setSelectedChat] = useState<string | null>(null);
-  const [message, setMessage] = useState('');
+  const [selectedConversation, setSelectedConversation] = useState<string | null>(null);
+  const [selectedUser, setSelectedUser] = useState<any>(null);
+  const { user } = useAuth();
+  const { conversations, loading } = useChat();
 
-  const conversations = [
-    {
-      id: '1',
-      name: 'TechCorp',
-      lastMessage: 'Thanks for your application! We\'d love to schedule an interview.',
-      timestamp: '2 min ago',
-      unread: 2,
-      isEmployer: true,
-    },
-    {
-      id: '2',
-      name: 'Marcus Johnson',
-      lastMessage: 'Hey! Saw your React video, really impressive work.',
-      timestamp: '1 hour ago',
-      unread: 0,
-      isEmployer: false,
-    },
-    {
-      id: '3',
-      name: 'StartupXYZ',
-      lastMessage: 'Are you available for a quick call tomorrow?',
-      timestamp: '3 hours ago',
-      unread: 1,
-      isEmployer: true,
-    },
-  ];
-
-  const currentChatMessages = [
-    {
-      id: '1',
-      sender: 'TechCorp',
-      message: 'Hi Sarah! We saw your video showcasing your React skills.',
-      timestamp: '10:30 AM',
-      isOwn: false,
-    },
-    {
-      id: '2',
-      sender: 'You',
-      message: 'Thank you for reaching out! I\'m very interested in learning more about the position.',
-      timestamp: '10:32 AM',
-      isOwn: true,
-    },
-    {
-      id: '3',
-      sender: 'TechCorp',
-      message: 'Great! We have a senior React developer position that seems perfect for your background. Would you be interested in a brief interview?',
-      timestamp: '10:35 AM',
-      isOwn: false,
-    },
-    {
-      id: '4',
-      sender: 'You',
-      message: 'Absolutely! I\'d love to discuss the opportunity.',
-      timestamp: '10:36 AM',
-      isOwn: true,
-    },
-    {
-      id: '5',
-      sender: 'TechCorp',
-      message: 'Thanks for your application! We\'d love to schedule an interview.',
-      timestamp: '10:40 AM',
-      isOwn: false,
-    },
-  ];
-
-  const handleSendMessage = () => {
-    if (message.trim()) {
-      // Mock sending message
-      console.log('Sending message:', message);
-      setMessage('');
-    }
+  // Mock function to get user profile (replace with actual profile fetch)
+  const getUserProfile = async (userId: string) => {
+    // This should fetch from profiles table
+    return {
+      id: userId,
+      username: 'User',
+      avatar_url: null
+    };
   };
 
-  if (selectedChat) {
+  const handleConversationClick = async (conversation: any) => {
+    setSelectedConversation(conversation.id);
+    
+    // Get the other participant
+    const otherUserId = conversation.participant_1 === user?.id 
+      ? conversation.participant_2 
+      : conversation.participant_1;
+      
+    const otherUser = await getUserProfile(otherUserId);
+    setSelectedUser(otherUser);
+  };
+
+  const handleBack = () => {
+    setSelectedConversation(null);
+    setSelectedUser(null);
+  };
+
+  if (selectedConversation && selectedUser) {
     return (
-      <div className="min-h-screen bg-background flex flex-col">
-        {/* Chat header */}
-        <div className="fixed top-0 left-0 right-0 bg-white border-b border-border shadow-soft z-40">
-          <div className="flex items-center justify-between px-4 py-4 max-w-md mx-auto">
-            <div className="flex items-center gap-3">
-              <button
-                onClick={() => setSelectedChat(null)}
-                className="text-muted-foreground hover:text-foreground"
-              >
-                ←
-              </button>
-              <Avatar className="w-10 h-10">
-                <AvatarFallback className="bg-primary text-white text-sm font-bold">
-                  TC
-                </AvatarFallback>
-              </Avatar>
-              <div>
-                <h2 className="font-semibold text-foreground">TechCorp</h2>
-                <p className="text-xs text-muted-foreground">Online</p>
-              </div>
-            </div>
-            <button className="w-8 h-8 flex items-center justify-center text-muted-foreground">
-              <MoreVertical className="w-5 h-5" />
-            </button>
-          </div>
-        </div>
-
-        {/* Messages */}
-        <div className="flex-1 pt-20 pb-20 px-4 max-w-md mx-auto w-full">
-          <div className="space-y-4">
-            {currentChatMessages.map((msg) => (
-              <div
-                key={msg.id}
-                className={`flex ${msg.isOwn ? 'justify-end' : 'justify-start'}`}
-              >
-                <div className={msg.isOwn ? 'chat-bubble-sent' : 'chat-bubble-received'}>
-                  <p className="text-sm">{msg.message}</p>
-                  <p className={`text-xs mt-1 ${msg.isOwn ? 'text-white/70' : 'text-muted-foreground'}`}>
-                    {msg.timestamp}
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Message input */}
-        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-border p-4 z-40">
-          <div className="flex gap-3 max-w-md mx-auto">
-            <Input
-              placeholder="Type a message..."
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-              className="flex-1"
-            />
-            <Button
-              onClick={handleSendMessage}
-              size="sm"
-              className="w-10 h-10 p-0 rounded-full"
-              disabled={!message.trim()}
-            >
-              <Send className="w-4 h-4" />
-            </Button>
-          </div>
-        </div>
-      </div>
+      <ChatRoom
+        conversationId={selectedConversation}
+        otherUser={selectedUser}
+        onBack={handleBack}
+      />
     );
   }
 
@@ -169,46 +64,48 @@ const Chat = () => {
 
         {/* Conversations list */}
         <div className="space-y-2">
-          {conversations.map((conv) => (
-            <button
-              key={conv.id}
-              onClick={() => setSelectedChat(conv.id)}
-              className="w-full bg-card rounded-xl p-4 shadow-soft border border-border hover:shadow-medium transition-shadow text-left"
-            >
-              <div className="flex items-center gap-3">
-                <Avatar className="w-12 h-12">
-                  <AvatarFallback className={`text-white text-sm font-bold ${
-                    conv.isEmployer ? 'bg-primary' : 'bg-accent'
-                  }`}>
-                    {conv.name.substring(0, 2).toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between mb-1">
-                    <h3 className="font-semibold text-foreground truncate">
-                      {conv.name}
-                      {conv.isEmployer && (
-                        <span className="ml-2 text-xs bg-primary/10 text-primary px-2 py-1 rounded-full">
-                          Employer
-                        </span>
-                      )}
-                    </h3>
-                    <span className="text-xs text-muted-foreground">{conv.timestamp}</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <p className="text-sm text-muted-foreground truncate pr-2">
-                      {conv.lastMessage}
-                    </p>
-                    {conv.unread > 0 && (
-                      <span className="bg-accent text-white text-xs w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0">
-                        {conv.unread}
+          {loading ? (
+            <div className="text-center py-8">
+              <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto"></div>
+              <p className="text-sm text-muted-foreground mt-2">Loading conversations...</p>
+            </div>
+          ) : conversations.length === 0 ? (
+            <div className="text-center py-8">
+              <p className="text-muted-foreground">No conversations yet</p>
+              <p className="text-sm text-muted-foreground mt-1">Start chatting by messaging someone!</p>
+            </div>
+          ) : (
+            conversations.map((conv) => (
+              <button
+                key={conv.id}
+                onClick={() => handleConversationClick(conv)}
+                className="w-full bg-card rounded-xl p-4 shadow-soft border border-border hover:shadow-medium transition-shadow text-left"
+              >
+                <div className="flex items-center gap-3">
+                  <Avatar className="w-12 h-12">
+                    <AvatarFallback className="bg-primary text-white text-sm font-bold">
+                      U
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between mb-1">
+                      <h3 className="font-semibold text-foreground truncate">
+                        User
+                      </h3>
+                      <span className="text-xs text-muted-foreground">
+                        {new Date(conv.last_message_at).toLocaleDateString()}
                       </span>
-                    )}
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm text-muted-foreground truncate pr-2">
+                        Tap to start chatting
+                      </p>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </button>
-          ))}
+              </button>
+            ))
+          )}
         </div>
       </main>
       
