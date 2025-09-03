@@ -1,140 +1,170 @@
-import { useState } from 'react';
-import { Search as SearchIcon, Filter, Briefcase, User } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Search as SearchIcon } from 'lucide-react';
 import Header from '@/components/layout/Header';
 import BottomNavigation from '@/components/layout/BottomNavigation';
 import { Input } from '@/components/ui/input';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { useSearch } from '@/hooks/useSearch';
+import { JobCard } from '@/components/search/JobCard';
+import { FreelancerCard } from '@/components/search/FreelancerCard';
+import { SearchFilters } from '@/components/search/SearchFilters';
 
 const Search = () => {
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeFilter, setActiveFilter] = useState('all');
+  const [activeTab, setActiveTab] = useState<'jobs' | 'freelancers'>('freelancers');
+  const { 
+    jobs, 
+    freelancers, 
+    loading, 
+    filters, 
+    searchJobs, 
+    searchFreelancers, 
+    updateFilters, 
+    clearFilters 
+  } = useSearch();
 
-  const mockResults = [
-    {
-      id: '1',
-      type: 'freelancer',
-      name: 'Alex Rivera',
-      role: 'Frontend Developer',
-      skills: ['React', 'TypeScript', 'Tailwind'],
-      rating: 4.9,
-      price: '$50/hr',
-    },
-    {
-      id: '2',
-      type: 'job',
-      company: 'StartupXYZ',
-      title: 'Senior React Developer',
-      location: 'Remote',
-      salary: '$90k-120k',
-      skills: ['React', 'Node.js', 'AWS'],
-    },
-    {
-      id: '3',
-      type: 'freelancer',
-      name: 'Maria Santos',
-      role: 'UX Designer',
-      skills: ['Figma', 'Prototyping', 'User Research'],
-      rating: 4.8,
-      price: '$45/hr',
-    },
+  // Update search query in filters when input changes
+  useEffect(() => {
+    updateFilters({ query: searchQuery });
+  }, [searchQuery, updateFilters]);
+
+  // Perform search when filters change
+  useEffect(() => {
+    if (filters.query || Object.keys(filters).length > 1) {
+      if (activeTab === 'jobs') {
+        searchJobs(filters);
+      } else {
+        searchFreelancers(filters);
+      }
+    }
+  }, [filters, activeTab, searchJobs, searchFreelancers]);
+
+  const handleTabChange = (tab: 'jobs' | 'freelancers') => {
+    setActiveTab(tab);
+    clearFilters();
+    setSearchQuery('');
+  };
+
+  const handleFiltersChange = (newFilters: Partial<typeof filters>) => {
+    updateFilters(newFilters);
+  };
+
+  const tabs = [
+    { id: 'freelancers' as const, label: 'Freelancers' },
+    { id: 'jobs' as const, label: 'Jobs' },
   ];
 
-  const filters = [
-    { id: 'all', label: 'All' },
-    { id: 'freelancers', label: 'Freelancers' },
-    { id: 'jobs', label: 'Jobs' },
-  ];
+  const hasResults = activeTab === 'jobs' ? jobs.length > 0 : freelancers.length > 0;
+  const hasSearched = filters.query || Object.keys(filters).length > 1;
 
   return (
     <div className="min-h-screen bg-background">
       <Header />
       
-      <main className="pt-20 pb-20 px-4 max-w-md mx-auto">
-        {/* Search bar */}
-        <div className="relative mb-6">
-          <SearchIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-          <Input
-            placeholder="Search skills, jobs, or people..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10 pr-12 h-12 rounded-full border-primary/20 focus:border-primary"
-          />
-          <button className="absolute right-3 top-1/2 transform -translate-y-1/2 w-6 h-6 text-muted-foreground">
-            <Filter className="w-5 h-5" />
-          </button>
-        </div>
+      <main className="pt-20 pb-20 px-4 max-w-4xl mx-auto">
+        {/* Search Header */}
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold text-foreground mb-4">
+            Find Your Perfect {activeTab === 'jobs' ? 'Job' : 'Freelancer'}
+          </h1>
+          
+          {/* Search bar */}
+          <div className="relative mb-4">
+            <SearchIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+            <Input
+              placeholder={`Search ${activeTab === 'jobs' ? 'jobs' : 'freelancers'}...`}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10 pr-4 h-12 rounded-full border-primary/20 focus:border-primary text-base"
+            />
+          </div>
 
-        {/* Filter tabs */}
-        <div className="flex gap-2 mb-6">
-          {filters.map((filter) => (
-            <button
-              key={filter.id}
-              onClick={() => setActiveFilter(filter.id)}
-              className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                activeFilter === filter.id
-                  ? 'bg-gradient-to-r from-primary to-accent text-white'
-                  : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
-              }`}
-            >
-              {filter.label}
-            </button>
-          ))}
+          {/* Tabs and Filters */}
+          <div className="flex items-center justify-between">
+            {/* Tab toggles */}
+            <div className="flex gap-2">
+              {tabs.map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => handleTabChange(tab.id)}
+                  className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${
+                    activeTab === tab.id
+                      ? 'bg-gradient-to-r from-primary to-accent text-white shadow-lg'
+                      : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Search Filters */}
+            <SearchFilters
+              filters={filters}
+              onFiltersChange={handleFiltersChange}
+              onClearFilters={clearFilters}
+              searchType={activeTab}
+            />
+          </div>
         </div>
 
         {/* Results */}
         <div className="space-y-4">
-          {mockResults.map((result) => (
-            <div
-              key={result.id}
-              className="bg-card rounded-2xl p-4 shadow-soft border border-border hover:shadow-medium transition-shadow"
-            >
-              {result.type === 'freelancer' ? (
-                <div className="flex items-center gap-3">
-                  <Avatar className="w-12 h-12">
-                    <AvatarFallback className="bg-primary text-white">
-                      <User className="w-6 h-6" />
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1">
-                    <h3 className="font-semibold text-foreground">{result.name}</h3>
-                    <p className="text-sm text-muted-foreground">{result.role}</p>
-                    <div className="flex flex-wrap gap-1 mt-2">
-                      {result.skills.map((skill, index) => (
-                        <span key={index} className="skill-tag text-xs">
-                          {skill}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-sm font-semibold text-success">{result.price}</div>
-                    <div className="text-xs text-muted-foreground">⭐ {result.rating}</div>
-                  </div>
-                </div>
-              ) : (
-                <div className="flex items-start gap-3">
-                  <div className="w-12 h-12 bg-gradient-to-br from-primary to-accent rounded-xl flex items-center justify-center">
-                    <Briefcase className="w-6 h-6 text-white" />
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="font-semibold text-foreground">{result.title}</h3>
-                    <p className="text-sm text-muted-foreground">{result.company}</p>
-                    <p className="text-sm text-muted-foreground">{result.location}</p>
-                    <div className="flex flex-wrap gap-1 mt-2">
-                      {result.skills.map((skill, index) => (
-                        <span key={index} className="skill-tag text-xs">
-                          {skill}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-sm font-semibold text-primary">{result.salary}</div>
-                  </div>
-                </div>
-              )}
+          {loading && (
+            <div className="text-center py-12">
+              <div className="animate-spin w-8 h-8 border-2 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
+              <p className="text-muted-foreground">Searching...</p>
             </div>
-          ))}
+          )}
+
+          {!loading && !hasSearched && (
+            <div className="text-center py-12">
+              <SearchIcon className="w-16 h-16 text-muted-foreground mx-auto mb-4 opacity-50" />
+              <h3 className="text-lg font-semibold text-foreground mb-2">
+                Start Your Search
+              </h3>
+              <p className="text-muted-foreground">
+                Enter keywords to find {activeTab === 'jobs' ? 'job opportunities' : 'talented freelancers'}
+              </p>
+            </div>
+          )}
+
+          {!loading && hasSearched && !hasResults && (
+            <div className="text-center py-12">
+              <div className="w-16 h-16 bg-secondary rounded-full flex items-center justify-center mx-auto mb-4">
+                <SearchIcon className="w-8 h-8 text-muted-foreground" />
+              </div>
+              <h3 className="text-lg font-semibold text-foreground mb-2">
+                No Results Found
+              </h3>
+              <p className="text-muted-foreground mb-4">
+                Try adjusting your search terms or filters
+              </p>
+              <button
+                onClick={clearFilters}
+                className="text-primary hover:text-primary/80 font-medium"
+              >
+                Clear all filters
+              </button>
+            </div>
+          )}
+
+          {/* Job Results */}
+          {activeTab === 'jobs' && jobs.length > 0 && (
+            <div className="grid gap-4">
+              {jobs.map((job) => (
+                <JobCard key={job.id} job={job} />
+              ))}
+            </div>
+          )}
+
+          {/* Freelancer Results */}
+          {activeTab === 'freelancers' && freelancers.length > 0 && (
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {freelancers.map((freelancer) => (
+                <FreelancerCard key={freelancer.id} freelancer={freelancer} />
+              ))}
+            </div>
+          )}
         </div>
       </main>
       

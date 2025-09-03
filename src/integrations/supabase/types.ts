@@ -38,6 +38,57 @@ export type Database = {
         }
         Relationships: []
       }
+      jobs: {
+        Row: {
+          budget_max: number | null
+          budget_min: number | null
+          category: string | null
+          created_at: string
+          deadline: string | null
+          description: string
+          employer_id: string
+          id: string
+          job_type: string | null
+          location: string | null
+          requirements: string[] | null
+          title: string
+          updated_at: string
+          video_url: string | null
+        }
+        Insert: {
+          budget_max?: number | null
+          budget_min?: number | null
+          category?: string | null
+          created_at?: string
+          deadline?: string | null
+          description: string
+          employer_id: string
+          id?: string
+          job_type?: string | null
+          location?: string | null
+          requirements?: string[] | null
+          title: string
+          updated_at?: string
+          video_url?: string | null
+        }
+        Update: {
+          budget_max?: number | null
+          budget_min?: number | null
+          category?: string | null
+          created_at?: string
+          deadline?: string | null
+          description?: string
+          employer_id?: string
+          id?: string
+          job_type?: string | null
+          location?: string | null
+          requirements?: string[] | null
+          title?: string
+          updated_at?: string
+          video_url?: string | null
+        }
+        Relationships: []
+      }
       messages: {
         Row: {
           content: string
