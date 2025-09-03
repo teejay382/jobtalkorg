@@ -112,16 +112,16 @@ export const SearchFilters = ({
               Category
             </label>
             <Select 
-              value={filters.category || ''} 
+              value={filters.category || 'all'} 
               onValueChange={(value) => onFiltersChange({ 
-                category: value || undefined 
+                category: value === 'all' ? undefined : value 
               })}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Select category" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Categories</SelectItem>
+                <SelectItem value="all">All Categories</SelectItem>
                 {jobCategories.map((category) => (
                   <SelectItem key={category} value={category}>
                     {category}
@@ -138,16 +138,16 @@ export const SearchFilters = ({
                 Work Type
               </label>
               <Select 
-                value={filters.jobType || ''} 
+                value={filters.jobType || 'all'} 
                 onValueChange={(value) => onFiltersChange({ 
-                  jobType: value || undefined 
+                  jobType: value === 'all' ? undefined : value 
                 })}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select work type" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Types</SelectItem>
+                  <SelectItem value="all">All Types</SelectItem>
                   <SelectItem value="remote">Remote</SelectItem>
                   <SelectItem value="local">Local</SelectItem>
                   <SelectItem value="hybrid">Hybrid</SelectItem>
