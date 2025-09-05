@@ -11,6 +11,7 @@ interface ChatRoomProps {
   otherUser: {
     id: string;
     username?: string;
+    full_name?: string;
     avatar_url?: string;
   };
   onBack: () => void;
@@ -89,11 +90,11 @@ export const ChatRoom = ({ conversationId, otherUser, onBack }: ChatRoomProps) =
             <Avatar className="w-10 h-10">
               <AvatarImage src={otherUser.avatar_url} />
               <AvatarFallback className="bg-primary text-white text-sm font-bold">
-                {(otherUser.username || 'U').substring(0, 2).toUpperCase()}
+                {(otherUser.full_name || otherUser.username || 'U').substring(0, 2).toUpperCase()}
               </AvatarFallback>
             </Avatar>
             <div>
-              <h2 className="font-semibold text-foreground">{otherUser.username || 'User'}</h2>
+              <h2 className="font-semibold text-foreground">{otherUser.full_name || otherUser.username || 'Anonymous'}</h2>
               <p className="text-xs text-muted-foreground">Online</p>
             </div>
           </div>

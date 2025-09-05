@@ -27,16 +27,18 @@ const Chat = () => {
       
       if (error || !data) {
         console.warn('Profile not found:', error);
-        return {
-          id: userId,
-          username: `User ${userId.slice(0, 8)}`,
-          avatar_url: null
-        };
+      return {
+        id: userId,
+        username: `User ${userId.slice(0, 8)}`,
+        full_name: undefined,
+        avatar_url: null
+      };
       }
       
       return {
         id: data.user_id,
         username: data.username || data.full_name || data.email || `User ${userId.slice(0, 8)}`,
+        full_name: data.full_name,
         avatar_url: data.avatar_url,
         account_type: data.account_type,
         company_name: data.company_name
@@ -46,6 +48,7 @@ const Chat = () => {
       return {
         id: userId,
         username: `User ${userId.slice(0, 8)}`,
+        full_name: undefined,
         avatar_url: null
       };
     }
