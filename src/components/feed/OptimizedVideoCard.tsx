@@ -210,7 +210,7 @@ const OptimizedVideoCard = memo(({ video, isActive, onRefresh, isVisible }: Vide
   // Memoized computed values
   const isVideoFromEmployer = video.user.account_type === 'employer';
   const isCurrentUserEmployer = profile?.account_type === 'employer';
-  const displayName = video.user.full_name;
+  const displayName = video.user.full_name || video.user.username || `User ${video.user.id.slice(0, 8)}`;
   const userRole = isVideoFromEmployer ? (video.user.company_name || 'Employer') : 'Job Seeker';
   const shouldShowConnectButton = (isVideoFromEmployer && !isCurrentUserEmployer) || (!isVideoFromEmployer && isCurrentUserEmployer);
   const connectButtonText = isCurrentUserEmployer ? 'Hire' : 'Connect';

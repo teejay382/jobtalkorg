@@ -69,9 +69,38 @@ export const useAuth = () => {
         .eq('user_id', userId)
         .single();
 
-      if (error && error.code !== 'PGRST116') {
-        console.error('Error fetching profile:', error);
-        return;
+      if (error) {
+        if (error.code === 'PGRST116') {
+          // No profile exists yet - create a minimal one
+          const authUser = (await supabase.auth.getUser()).data.user;
+          if (!authUser) {
+            setProfile(null);
+            return;
+          }
+
+          const { data: created, error: insertError } = await supabase
+            .from('profiles')
+            .insert({
+              user_id: authUser.id,
+              email: authUser.email || '',
+              full_name: (authUser.user_metadata && (authUser.user_metadata.full_name || authUser.user_metadata.name)) || null,
+              onboarding_completed: false
+            })
+            .select()
+            .single();
+
+          if (insertError) {
+            console.error('Error creating profile:', insertError);
+            setProfile(null);
+            return;
+          }
+
+          setProfile(created as unknown as Profile);
+          return;
+        } else {
+          console.error('Error fetching profile:', error);
+          return;
+        }
       }
 
       setProfile(data);

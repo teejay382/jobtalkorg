@@ -48,7 +48,7 @@ export const useVideoFeedData = () => {
       if (!profile) {
         const { data: profileData, error: profileError } = await supabase
           .from('profiles')
-          .select('user_id, full_name, username, avatar_url, account_type, company_name, email')
+          .select('user_id, full_name, username, avatar_url, account_type, company_name')
           .eq('user_id', videoRow.user_id)
           .single();
         
@@ -61,7 +61,7 @@ export const useVideoFeedData = () => {
         }
       }
 
-      const displayName = profile?.full_name || profile?.username || profile?.email || `User ${videoRow.user_id.slice(0, 8)}`;
+      const displayName = profile?.full_name || profile?.username || `User ${videoRow.user_id.slice(0, 8)}`;
 
       const transformedVideo: Video = {
         id: videoRow.id,
@@ -81,7 +81,7 @@ export const useVideoFeedData = () => {
           avatar_url: profile?.avatar_url || undefined,
           account_type: profile?.account_type || undefined,
           company_name: profile?.company_name || undefined,
-          email: profile?.email || undefined,
+          
         },
       };
 
@@ -129,7 +129,7 @@ export const useVideoFeedData = () => {
       if (uncachedUserIds.length > 0) {
         const { data: profilesData, error: profilesError } = await supabase
           .from('profiles')
-          .select('user_id, full_name, username, avatar_url, account_type, company_name, email')
+          .select('user_id, full_name, username, avatar_url, account_type, company_name')
           .in('user_id', uncachedUserIds);
 
         if (profilesError) {
@@ -152,7 +152,7 @@ export const useVideoFeedData = () => {
 
       const transformedVideos: Video[] = videosData.map((video: any) => {
         const profile = profileCache.get(video.user_id) || newProfiles.find(p => p.user_id === video.user_id);
-        const displayName = profile?.full_name || profile?.username || profile?.email || `User ${video.user_id.slice(0, 8)}`;
+        const displayName = profile?.full_name || profile?.username || `User ${video.user_id.slice(0, 8)}`;
         
         return {
           id: video.id,
@@ -172,7 +172,7 @@ export const useVideoFeedData = () => {
             avatar_url: profile?.avatar_url || undefined,
             account_type: profile?.account_type || undefined,
             company_name: profile?.company_name || undefined,
-            email: profile?.email || undefined,
+            
           },
         };
       });
