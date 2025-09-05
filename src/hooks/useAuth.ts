@@ -84,6 +84,7 @@ export const useAuth = () => {
               user_id: authUser.id,
               email: authUser.email || '',
               full_name: (authUser.user_metadata && (authUser.user_metadata.full_name || authUser.user_metadata.name)) || null,
+              username: (authUser.user_metadata && (authUser.user_metadata.user_name || authUser.user_metadata.full_name)) || (authUser.email ? authUser.email.split('@')[0] : null),
               onboarding_completed: false
             })
             .select()
@@ -104,6 +105,31 @@ export const useAuth = () => {
       }
 
       setProfile(data);
+
+      // Enrich missing display fields from auth metadata if needed
+      const authUser = (await supabase.auth.getUser()).data.user;
+      if (authUser && data) {
+        const meta = authUser.user_metadata || {};
+        const emailPrefix = authUser.email ? authUser.email.split('@')[0] : null;
+        const suggestedFull = data.full_name || meta.full_name || meta.name || null;
+        const suggestedUsername = data.username || meta.user_name || suggestedFull || emailPrefix || null;
+        if ((!data.full_name && suggestedFull) || (!data.username && suggestedUsername)) {
+          try {
+            const { data: updated } = await supabase
+              .from('profiles')
+              .update({
+                full_name: data.full_name || suggestedFull,
+                username: data.username || suggestedUsername,
+              })
+              .eq('user_id', authUser.id)
+              .select()
+              .single();
+            if (updated) setProfile(updated as unknown as Profile);
+          } catch (e) {
+            // ignore enrichment errors
+          }
+        }
+      }
     } catch (error) {
       console.error('Error fetching profile:', error);
     }

@@ -35,6 +35,23 @@ const Auth = () => {
       }
     };
     checkUser();
+
+    // Upsert profile on OAuth sign-in
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'SIGNED_IN' && session?.user) {
+        const user = session.user;
+        await supabase
+          .from('profiles')
+          .upsert({
+            user_id: user.id,
+            email: user.email ?? '',
+            username: (user.user_metadata && (user.user_metadata.user_name || user.user_metadata.full_name)) || user.email || null,
+            full_name: (user.user_metadata && (user.user_metadata.full_name || user.user_metadata.name)) || null
+          });
+      }
+    });
+
+    return () => subscription.unsubscribe();
   }, [navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -125,7 +142,7 @@ const Auth = () => {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/onboarding`
+          redirectTo: `${window.location.origin}`
         }
       });
       

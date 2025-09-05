@@ -15,6 +15,7 @@ const Chat = () => {
   const [searchParams] = useSearchParams();
   const { user } = useAuth();
   const { conversations, loading, createOrGetConversation } = useChat();
+  const [participantNames, setParticipantNames] = useState<Record<string, { display: string; avatar_url?: string }>>({});
 
   // Actual function to get user profile from profiles table
   const getUserProfile = async (userId: string) => {
@@ -86,6 +87,30 @@ const Chat = () => {
     setSelectedUser(otherUser);
   };
 
+  // Populate names for conversation list
+  useEffect(() => {
+    const loadNames = async () => {
+      if (!user || conversations.length === 0) return;
+      const updates: Record<string, { display: string; avatar_url?: string }> = {};
+      await Promise.all(
+        conversations.map(async (conv) => {
+          const otherUserId = conv.participant_1 === user.id ? conv.participant_2 : conv.participant_1;
+          if (!participantNames[otherUserId]) {
+            const prof = await getUserProfile(otherUserId);
+            updates[otherUserId] = {
+              display: prof.full_name || prof.username || `User ${otherUserId.slice(0, 8)}`,
+              avatar_url: prof.avatar_url || undefined,
+            };
+          }
+        })
+      );
+      if (Object.keys(updates).length > 0) {
+        setParticipantNames((prev) => ({ ...prev, ...updates }));
+      }
+    };
+    loadNames();
+  }, [conversations, user]);
+
   const handleBack = () => {
     setSelectedConversation(null);
     setSelectedUser(null);
@@ -134,14 +159,15 @@ const Chat = () => {
               >
                 <div className="flex items-center gap-3">
                   <Avatar className="w-12 h-12">
+                    <AvatarImage src={participantNames[(conv.participant_1 === user?.id ? conv.participant_2 : conv.participant_1)]?.avatar_url} />
                     <AvatarFallback className="bg-primary text-white text-sm font-bold">
-                      U
+                      {(participantNames[(conv.participant_1 === user?.id ? conv.participant_2 : conv.participant_1)]?.display || 'U').substring(0,2).toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between mb-1">
                       <h3 className="font-semibold text-foreground truncate">
-                        User
+                        {participantNames[(conv.participant_1 === user?.id ? conv.participant_2 : conv.participant_1)]?.display || 'User'}
                       </h3>
                       <span className="text-xs text-muted-foreground">
                         {new Date(conv.last_message_at).toLocaleDateString()}
