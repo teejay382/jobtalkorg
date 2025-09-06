@@ -7,6 +7,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
+import { CommentSection } from './CommentSection';
 
 interface VideoCardProps {
   video: {
@@ -37,9 +38,11 @@ interface VideoCardProps {
 const VideoCard = ({ video, isActive, onRefresh }: VideoCardProps) => {
   const [isLiked, setIsLiked] = useState(false);
   const [likesCount, setLikesCount] = useState(video.likes_count);
+  const [commentsCount, setCommentsCount] = useState(video.comments_count);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(false); // Changed to false for audible videos
   const [loading, setLoading] = useState(false);
+  const [showComments, setShowComments] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const { user, profile } = useAuth();
   const { toast } = useToast();
@@ -173,11 +176,11 @@ const VideoCard = ({ video, isActive, onRefresh }: VideoCardProps) => {
     }
   };
 
-  const handleConnect = () => {
+  const handleHire = () => {
     if (!user) {
       toast({
         title: "Sign in required",
-        description: "Please sign in to connect with other users",
+        description: "Please sign in to hire freelancers",
         variant: "destructive",
       });
       return;
@@ -187,16 +190,30 @@ const VideoCard = ({ video, isActive, onRefresh }: VideoCardProps) => {
     navigate(`/chat?user=${video.user.id}`);
   };
 
+  const handleComment = () => {
+    if (!user) {
+      toast({
+        title: "Sign in required",
+        description: "Please sign in to comment",
+        variant: "destructive",
+      });
+      return;
+    }
+    setShowComments(true);
+  };
+
+  const handleCommentAdded = () => {
+    setCommentsCount(prev => prev + 1);
+    onRefresh();
+  };
+
   const isVideoFromEmployer = video.user.account_type === 'employer';
   const isCurrentUserEmployer = profile?.account_type === 'employer';
   const displayName = video.user.full_name;
   const userRole = isVideoFromEmployer ? (video.user.company_name || 'Employer') : 'Job Seeker';
 
-  // Show connect button logic:
-  // - If video is from employer and current user is freelancer: show "Connect" 
-  // - If video is from freelancer and current user is employer: show "Hire"
-  const shouldShowConnectButton = (isVideoFromEmployer && !isCurrentUserEmployer) || (!isVideoFromEmployer && isCurrentUserEmployer);
-  const connectButtonText = isCurrentUserEmployer ? 'Hire' : 'Connect';
+  // Show hire button only to employers viewing freelancer content
+  const shouldShowHireButton = !isVideoFromEmployer && isCurrentUserEmployer;
 
   return (
     <div className="relative w-full h-full bg-black overflow-hidden">
@@ -250,10 +267,13 @@ const VideoCard = ({ video, isActive, onRefresh }: VideoCardProps) => {
         </div>
         
         <div className="flex flex-col items-center gap-2">
-          <button className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center text-white hover:bg-white/30 transition-all duration-300 hover:scale-110">
+          <button 
+            onClick={handleComment}
+            className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center text-white hover:bg-white/30 transition-all duration-300 hover:scale-110"
+          >
             <MessageCircle className="w-6 h-6" />
           </button>
-          <span className="text-white text-xs font-medium">{video.comments_count}</span>
+          <span className="text-white text-xs font-medium">{commentsCount}</span>
         </div>
         
         <button 
@@ -284,14 +304,14 @@ const VideoCard = ({ video, isActive, onRefresh }: VideoCardProps) => {
             <h3 className="font-semibold text-base text-white truncate">{displayName}</h3>
             <p className="text-sm text-white/80 truncate">{userRole}</p>
           </div>
-          {shouldShowConnectButton && (
+          {shouldShowHireButton && (
             <Button
-              onClick={handleConnect}
+              onClick={handleHire}
               variant="outline"
               size="sm"
               className="bg-white text-black border-white hover:bg-white/90 hover:text-black text-xs px-4 py-2 h-auto font-medium shadow-lg"
             >
-              {connectButtonText}
+              Hire
             </Button>
           )}
         </div>
@@ -323,6 +343,14 @@ const VideoCard = ({ video, isActive, onRefresh }: VideoCardProps) => {
           </div>
         )}
       </div>
+
+      {/* Comment Section */}
+      <CommentSection
+        videoId={video.id}
+        isOpen={showComments}
+        onClose={() => setShowComments(false)}
+        onCommentAdded={handleCommentAdded}
+      />
     </div>
   );
 };

@@ -6,6 +6,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
+import { CommentSection } from './CommentSection';
 
 interface VideoCardProps {
   video: {
@@ -37,10 +38,12 @@ interface VideoCardProps {
 const OptimizedVideoCard = memo(({ video, isActive, onRefresh, isVisible }: VideoCardProps) => {
   const [isLiked, setIsLiked] = useState(false);
   const [likesCount, setLikesCount] = useState(video.likes_count);
+  const [commentsCount, setCommentsCount] = useState(video.comments_count);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [videoLoaded, setVideoLoaded] = useState(false);
+  const [showComments, setShowComments] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const { user, profile } = useAuth();
   const { toast } = useToast();
@@ -195,11 +198,11 @@ const OptimizedVideoCard = memo(({ video, isActive, onRefresh, isVisible }: Vide
     }
   }, [video.title, video.description, toast]);
 
-  const handleConnect = useCallback(() => {
+  const handleHire = useCallback(() => {
     if (!user) {
       toast({
         title: "Sign in required",
-        description: "Please sign in to connect with other users",
+        description: "Please sign in to hire freelancers",
         variant: "destructive",
       });
       return;
@@ -207,13 +210,29 @@ const OptimizedVideoCard = memo(({ video, isActive, onRefresh, isVisible }: Vide
     navigate(`/chat?user=${video.user.id}`);
   }, [user, video.user.id, navigate, toast]);
 
+  const handleComment = useCallback(() => {
+    if (!user) {
+      toast({
+        title: "Sign in required",
+        description: "Please sign in to comment",
+        variant: "destructive",
+      });
+      return;
+    }
+    setShowComments(true);
+  }, [user, toast]);
+
+  const handleCommentAdded = useCallback(() => {
+    setCommentsCount(prev => prev + 1);
+    onRefresh();
+  }, [onRefresh]);
+
   // Memoized computed values
   const isVideoFromEmployer = video.user.account_type === 'employer';
   const isCurrentUserEmployer = profile?.account_type === 'employer';
   const displayName = video.user.full_name || video.user.username || `User ${video.user.id.slice(0, 8)}`;
   const userRole = isVideoFromEmployer ? (video.user.company_name || 'Employer') : 'Job Seeker';
-  const shouldShowConnectButton = (isVideoFromEmployer && !isCurrentUserEmployer) || (!isVideoFromEmployer && isCurrentUserEmployer);
-  const connectButtonText = isCurrentUserEmployer ? 'Hire' : 'Connect';
+  const shouldShowHireButton = !isVideoFromEmployer && isCurrentUserEmployer;
 
   return (
     <div className="relative w-full h-full bg-black overflow-hidden">
@@ -277,12 +296,12 @@ const OptimizedVideoCard = memo(({ video, isActive, onRefresh, isVisible }: Vide
         
         <div className="flex flex-col items-center gap-2">
           <button 
-            onClick={handleConnect}
-            className="w-12 h-12 rounded-full bg-blue-500/20 backdrop-blur-sm flex items-center justify-center text-blue-400 hover:bg-blue-500/30 transition-smooth hover-scale"
+            onClick={handleComment}
+            className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center text-white hover:bg-white/30 transition-smooth hover-scale"
           >
             <MessageCircle className="w-6 h-6" />
           </button>
-          <span className="text-white text-xs font-medium">DM</span>
+          <span className="text-white text-xs font-medium">{commentsCount}</span>
         </div>
         
         <button 
@@ -313,14 +332,14 @@ const OptimizedVideoCard = memo(({ video, isActive, onRefresh, isVisible }: Vide
             <h3 className="font-semibold text-base text-white truncate">{displayName}</h3>
             <p className="text-sm text-white/80 truncate">{userRole}</p>
           </div>
-          {shouldShowConnectButton && (
+          {shouldShowHireButton && (
             <Button
-              onClick={handleConnect}
+              onClick={handleHire}
               variant="outline"
               size="sm"
               className="bg-white text-black border-white hover:bg-white/90 hover:text-black text-xs px-4 py-2 h-auto font-medium shadow-lg hover-scale"
             >
-              {connectButtonText}
+              Hire
             </Button>
           )}
         </div>
@@ -352,6 +371,14 @@ const OptimizedVideoCard = memo(({ video, isActive, onRefresh, isVisible }: Vide
           </div>
         )}
       </div>
+
+      {/* Comment Section */}
+      <CommentSection
+        videoId={video.id}
+        isOpen={showComments}
+        onClose={() => setShowComments(false)}
+        onCommentAdded={handleCommentAdded}
+      />
     </div>
   );
 });
