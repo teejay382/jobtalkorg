@@ -307,11 +307,13 @@ const VideoCard = ({ video, isActive, onRefresh }: VideoCardProps) => {
           {shouldShowHireButton && (
             <Button
               onClick={handleHire}
-              variant="outline"
+              className="hire-btn group relative overflow-hidden"
               size="sm"
-              className="bg-white text-black border-white hover:bg-white/90 hover:text-black text-xs px-4 py-2 h-auto font-medium shadow-lg"
             >
-              Hire
+              <span className="relative z-10 text-sm font-semibold tracking-wide">
+                Hire Now
+              </span>
+              <div className="absolute inset-0 bg-gradient-to-r from-accent to-warning opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
             </Button>
           )}
         </div>

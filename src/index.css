@@ -207,6 +207,38 @@
   .skill-tag {
     @apply bg-gradient-to-r from-accent/20 to-primary/20 text-primary px-3 py-1 rounded-full text-sm font-medium border border-primary/20;
   }
+
+  /* Enhanced Hire Button */
+  .hire-btn {
+    @apply bg-gradient-to-r from-primary to-accent text-white border-0 hover:shadow-glow transition-all duration-300 hover:scale-105 font-semibold tracking-wide px-6 py-2.5 rounded-full shadow-medium;
+  }
+
+  /* Processing animations for video upload */
+  .processing-card {
+    @apply bg-gradient-to-br from-primary/5 to-accent/5 rounded-xl p-5 border border-primary/20 shadow-soft backdrop-blur-sm;
+  }
+
+  .upload-card {
+    @apply bg-gradient-to-br from-accent/5 to-warning/5 rounded-xl p-5 border border-accent/20 shadow-soft backdrop-blur-sm;
+  }
+
+  .compression-spinner {
+    @apply w-8 h-8 rounded-full bg-gradient-to-r from-primary to-accent animate-spin;
+    background: conic-gradient(from 0deg, hsl(var(--primary)), hsl(var(--accent)), hsl(var(--primary)));
+  }
+
+  .upload-spinner {
+    @apply w-8 h-8 rounded-full bg-gradient-to-r from-accent to-warning animate-spin;
+    background: conic-gradient(from 0deg, hsl(var(--accent)), hsl(var(--warning)), hsl(var(--accent)));
+  }
+
+  .processing-progress .bg-primary {
+    @apply bg-gradient-to-r from-primary to-accent;
+  }
+
+  .upload-progress .bg-primary {
+    @apply bg-gradient-to-r from-accent to-warning;
+  }
 }
 
 @layer utilities {

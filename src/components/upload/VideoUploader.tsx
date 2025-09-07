@@ -234,29 +234,49 @@ export const VideoUploader = ({ onSuccess }: VideoUploaderProps) => {
 
       {/* Compression Progress */}
       {isCompressing && (
-        <div className="bg-card rounded-xl p-4 border border-border">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
-            <span className="text-sm font-medium">Compressing video...</span>
+        <div className="processing-card animate-fade-in">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="compression-spinner"></div>
+            <div>
+              <span className="text-sm font-semibold text-primary">Optimizing your video</span>
+              <p className="text-xs text-muted-foreground">Making it perfect for streaming</p>
+            </div>
           </div>
-          <Progress value={compressionProgress} className="h-2" />
-          <p className="text-xs text-muted-foreground mt-1">
-            {compressionProgress.toFixed(0)}% complete
-          </p>
+          <div className="relative">
+            <Progress value={compressionProgress} className="h-3 processing-progress" />
+            <div className="flex justify-between items-center mt-2">
+              <span className="text-xs text-muted-foreground">
+                {compressionProgress.toFixed(0)}% optimized
+              </span>
+              <span className="text-xs font-medium text-primary">
+                {compressionProgress < 50 ? 'Analyzing...' : compressionProgress < 80 ? 'Compressing...' : 'Finalizing...'}
+              </span>
+            </div>
+          </div>
         </div>
       )}
 
       {/* Upload Progress */}
       {uploading && (
-        <div className="bg-card rounded-xl p-4 border border-border">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
-            <span className="text-sm font-medium">Uploading video...</span>
+        <div className="upload-card animate-scale-in">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="upload-spinner"></div>
+            <div>
+              <span className="text-sm font-semibold text-accent">Publishing your story</span>
+              <p className="text-xs text-muted-foreground">Sharing with the world</p>
+            </div>
           </div>
-          <Progress value={uploadProgress} className="h-2" />
-          <p className="text-xs text-muted-foreground mt-1">
-            {uploadProgress.toFixed(0)}% uploaded
-          </p>
+          <div className="relative">
+            <Progress value={uploadProgress} className="h-3 upload-progress" />
+            <div className="flex justify-between items-center mt-2">
+              <span className="text-xs text-muted-foreground">
+                {uploadProgress.toFixed(0)}% uploaded
+              </span>
+              <span className="text-xs font-medium text-accent">
+                {uploadProgress < 30 ? 'Preparing...' : uploadProgress < 70 ? 'Uploading...' : 'Almost done!'}
+              </span>
+            </div>
+          </div>
         </div>
       )}
 
