@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
-import { VideoCompressor } from './VideoCompressor';
+
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -17,15 +17,12 @@ interface VideoUploaderProps {
 export const VideoUploader = ({ onSuccess }: VideoUploaderProps) => {
   const [step, setStep] = useState(1);
   const [videoFile, setVideoFile] = useState<File | null>(null);
-  const [compressedFile, setCompressedFile] = useState<File | null>(null);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [skills, setSkills] = useState<string[]>([]);
   const [skillInput, setSkillInput] = useState('');
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
-  const [compressionProgress, setCompressionProgress] = useState(0);
-  const [isCompressing, setIsCompressing] = useState(false);
   const [videoPreviewUrl, setVideoPreviewUrl] = useState<string | null>(null);
 
   const { user } = useAuth();
@@ -34,18 +31,9 @@ export const VideoUploader = ({ onSuccess }: VideoUploaderProps) => {
   const handleVideoFileChange = (file: File) => {
     setVideoFile(file);
     setVideoPreviewUrl(URL.createObjectURL(file));
-    setIsCompressing(true);
     setStep(2);
   };
 
-  const handleCompressed = (compressed: File) => {
-    setCompressedFile(compressed);
-    setIsCompressing(false);
-    toast({
-      title: "Video Compressed",
-      description: `Reduced from ${(videoFile!.size / 1024 / 1024).toFixed(1)}MB to ${(compressed.size / 1024 / 1024).toFixed(1)}MB`,
-    });
-  };
 
   const handleAddSkill = () => {
     if (skillInput.trim() && !skills.includes(skillInput.trim())) {
@@ -59,7 +47,7 @@ export const VideoUploader = ({ onSuccess }: VideoUploaderProps) => {
   };
 
   const uploadVideoToStorage = async (file: File): Promise<string> => {
-    const fileExt = 'webm'; // Always webm after compression
+    const fileExt = file.name.split('.').pop() || 'mp4';
     const fileName = `${user?.id}/${Date.now()}.${fileExt}`;
 
     // Create a custom upload with progress tracking
@@ -105,7 +93,7 @@ export const VideoUploader = ({ onSuccess }: VideoUploaderProps) => {
   };
 
   const handleSubmit = async () => {
-    const fileToUpload = compressedFile || videoFile;
+    const fileToUpload = videoFile;
     
     if (!user || !fileToUpload) {
       toast({
@@ -232,31 +220,28 @@ export const VideoUploader = ({ onSuccess }: VideoUploaderProps) => {
         <p className="text-muted-foreground">Tell us about your video</p>
       </div>
 
-      {/* Compression Progress */}
-      {isCompressing && (
-        <div className="bg-card rounded-xl p-4 border border-border">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
-            <span className="text-sm font-medium">Compressing video...</span>
-          </div>
-          <Progress value={compressionProgress} className="h-2" />
-          <p className="text-xs text-muted-foreground mt-1">
-            {compressionProgress.toFixed(0)}% complete
-          </p>
-        </div>
-      )}
 
       {/* Upload Progress */}
       {uploading && (
-        <div className="bg-card rounded-xl p-4 border border-border">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
-            <span className="text-sm font-medium">Uploading video...</span>
+        <div className="upload-card animate-scale-in">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="upload-spinner"></div>
+            <div>
+              <span className="text-sm font-semibold text-accent">Publishing your story</span>
+              <p className="text-xs text-muted-foreground">Sharing with the world</p>
+            </div>
           </div>
-          <Progress value={uploadProgress} className="h-2" />
-          <p className="text-xs text-muted-foreground mt-1">
-            {uploadProgress.toFixed(0)}% uploaded
-          </p>
+          <div className="relative">
+            <Progress value={uploadProgress} className="h-3 upload-progress" />
+            <div className="flex justify-between items-center mt-2">
+              <span className="text-xs text-muted-foreground">
+                {uploadProgress.toFixed(0)}% uploaded
+              </span>
+              <span className="text-xs font-medium text-accent">
+                {uploadProgress < 30 ? 'Preparing...' : uploadProgress < 70 ? 'Uploading...' : 'Almost done!'}
+              </span>
+            </div>
+          </div>
         </div>
       )}
 
@@ -278,9 +263,9 @@ export const VideoUploader = ({ onSuccess }: VideoUploaderProps) => {
         </div>
         <div className="text-center space-y-1">
           <p className="text-sm text-muted-foreground">{videoFile?.name}</p>
-          {videoFile && compressedFile && (
-            <p className="text-xs text-green-600">
-              Compressed: {(videoFile.size / 1024 / 1024).toFixed(1)}MB → {(compressedFile.size / 1024 / 1024).toFixed(1)}MB
+          {videoFile && (
+            <p className="text-xs text-muted-foreground">
+              Size: {(videoFile.size / 1024 / 1024).toFixed(1)}MB
             </p>
           )}
         </div>
@@ -345,7 +330,7 @@ export const VideoUploader = ({ onSuccess }: VideoUploaderProps) => {
         <Button
           variant="outline"
           onClick={() => setStep(1)}
-          disabled={uploading || isCompressing}
+          disabled={uploading}
           className="flex-1"
         >
           Back
@@ -353,20 +338,12 @@ export const VideoUploader = ({ onSuccess }: VideoUploaderProps) => {
         <Button
           onClick={handleSubmit}
           className="flex-1 btn-hero"
-          disabled={!title.trim() || !description.trim() || uploading || isCompressing || !compressedFile}
+          disabled={!title.trim() || !description.trim() || uploading || !videoFile}
         >
           {uploading ? `Uploading ${uploadProgress.toFixed(0)}%` : 'Publish'}
         </Button>
       </div>
 
-      {/* Video Compressor */}
-      {videoFile && isCompressing && (
-        <VideoCompressor
-          file={videoFile}
-          onCompressed={handleCompressed}
-          onProgress={setCompressionProgress}
-        />
-      )}
     </div>
   );
 };
