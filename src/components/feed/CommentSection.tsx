@@ -53,7 +53,7 @@ export const CommentSection = ({ videoId, isOpen, onClose, onCommentAdded }: Com
           user_id
         `)
         .eq('video_id', videoId)
-        .order('created_at', { ascending: true });
+        .order('created_at', { ascending: false });
 
       if (error) throw error;
 
@@ -174,8 +174,8 @@ export const CommentSection = ({ videoId, isOpen, onClose, onCommentAdded }: Com
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-end">
-      <div className="w-full max-w-md mx-auto bg-background rounded-t-3xl max-h-[80vh] flex flex-col">
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-end md:items-center">
+      <div className="w-full max-w-md md:max-w-2xl lg:max-w-3xl mx-auto bg-background rounded-t-3xl md:rounded-3xl max-h-[80vh] flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-border">
           <h3 className="font-semibold text-lg">Comments</h3>
