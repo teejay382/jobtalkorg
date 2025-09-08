@@ -82,7 +82,7 @@ export const useVideoFeedData = () => {
           avatar_url: profile?.avatar_url || undefined,
           account_type: profile?.account_type || undefined,
           company_name: profile?.company_name || undefined,
-          username: profile?.username || undefined,
+          email: profile?.email || undefined,
         },
       };
 
@@ -174,7 +174,7 @@ export const useVideoFeedData = () => {
             avatar_url: profile?.avatar_url || undefined,
             account_type: profile?.account_type || undefined,
             company_name: profile?.company_name || undefined,
-            username: profile?.username || undefined,
+            email: profile?.email || undefined,
           },
         };
       });

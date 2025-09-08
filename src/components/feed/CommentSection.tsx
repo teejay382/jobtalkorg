@@ -53,7 +53,7 @@ export const CommentSection = ({ videoId, isOpen, onClose, onCommentAdded }: Com
           user_id
         `)
         .eq('video_id', videoId)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: true });
 
       if (error) throw error;
 
@@ -89,17 +89,47 @@ export const CommentSection = ({ videoId, isOpen, onClose, onCommentAdded }: Com
   const handleSubmitComment = async () => {
     if (!user || !newComment.trim()) return;
 
+    const commentContent = newComment.trim();
+    const tempId = `temp-${Date.now()}`;
+    
+    // Optimistic update - add comment immediately to UI
+    const tempComment = {
+      id: tempId,
+      content: commentContent,
+      created_at: new Date().toISOString(),
+      user_id: user.id,
+      user: {
+        full_name: user.user_metadata?.full_name,
+        username: user.user_metadata?.username,
+        avatar_url: user.user_metadata?.avatar_url
+      }
+    };
+    
+    setComments(prev => [...prev, tempComment]);
+    setNewComment('');
     setSubmitting(true);
+
     try {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('comments')
         .insert({
           video_id: videoId,
           user_id: user.id,
-          content: newComment.trim()
-        });
+          content: commentContent
+        })
+        .select()
+        .single();
 
       if (error) throw error;
+
+      // Replace temp comment with real one
+      setComments(prev => 
+        prev.map(comment => 
+          comment.id === tempId 
+            ? { ...data, user: tempComment.user }
+            : comment
+        )
+      );
 
       // Update video comments count
       await supabase
@@ -109,16 +139,14 @@ export const CommentSection = ({ videoId, isOpen, onClose, onCommentAdded }: Com
         })
         .eq('id', videoId);
 
-      setNewComment('');
-      fetchComments();
       onCommentAdded();
       
-      toast({
-        title: "Success",
-        description: "Comment added successfully",
-      });
     } catch (error) {
       console.error('Error adding comment:', error);
+      // Remove temp comment on error
+      setComments(prev => prev.filter(comment => comment.id !== tempId));
+      setNewComment(commentContent); // Restore comment text
+      
       toast({
         title: "Error",
         description: "Failed to add comment",
@@ -201,42 +229,53 @@ export const CommentSection = ({ videoId, isOpen, onClose, onCommentAdded }: Com
           )}
         </ScrollArea>
 
-        {/* Comment Input */}
-        {user ? (
-          <div className="p-4 border-t border-border">
-            <div className="flex gap-3">
-              <Avatar className="w-8 h-8 flex-shrink-0">
-                <AvatarImage src={user.user_metadata?.avatar_url} />
-                <AvatarFallback className="bg-primary text-white text-xs">
-                  {(user.user_metadata?.full_name || user.email || 'U').charAt(0).toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
-              <div className="flex-1 flex gap-2">
-                <Input
-                  placeholder="Add a comment..."
-                  value={newComment}
-                  onChange={(e) => setNewComment(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && !submitting && handleSubmitComment()}
-                  className="flex-1"
-                />
-                <Button
-                  onClick={handleSubmitComment}
-                  disabled={!newComment.trim() || submitting}
-                  size="sm"
-                  className="px-3"
-                >
-                  <Send className="w-4 h-4" />
-                </Button>
+        {/* Comment Input - Fixed at bottom */}
+        <div className="mt-auto bg-background border-t border-border">
+          {user ? (
+            <div className="p-4">
+              <div className="flex gap-3">
+                <Avatar className="w-8 h-8 flex-shrink-0">
+                  <AvatarImage src={user.user_metadata?.avatar_url} />
+                  <AvatarFallback className="bg-primary text-white text-xs">
+                    {(user.user_metadata?.full_name || user.email || 'U').charAt(0).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex-1 flex gap-2">
+                  <Input
+                    placeholder="Add a comment..."
+                    value={newComment}
+                    onChange={(e) => setNewComment(e.target.value)}
+                    onKeyPress={(e) => e.key === 'Enter' && !submitting && handleSubmitComment()}
+                    className="flex-1 border-input focus:ring-2 focus:ring-primary"
+                    disabled={submitting}
+                  />
+                  <Button
+                    onClick={handleSubmitComment}
+                    disabled={!newComment.trim() || submitting}
+                    size="sm"
+                    className="px-3 bg-primary hover:bg-primary/90"
+                  >
+                    {submitting ? (
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      <Send className="w-4 h-4" />
+                    )}
+                  </Button>
+                </div>
               </div>
             </div>
-          </div>
-        ) : (
-          <div className="p-4 border-t border-border text-center">
-            <p className="text-sm text-muted-foreground">
-              Sign in to add a comment
-            </p>
-          </div>
-        )}
+          ) : (
+            <div className="p-4 text-center">
+              <Button 
+                variant="outline" 
+                className="text-sm"
+                onClick={() => window.location.href = '/login'}
+              >
+                Sign in to comment
+              </Button>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
