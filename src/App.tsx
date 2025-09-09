@@ -15,6 +15,7 @@ import Auth from "./pages/Auth";
 import Onboarding from "./pages/Onboarding";
 import NotFound from "./pages/NotFound";
 import LoginPage from "./pages/LoginPage";
+import ProfileSettings from "./pages/ProfileSettings";
 
 const queryClient = new QueryClient();
 
@@ -44,6 +45,7 @@ const App = () => {
               <Route path="/upload" element={<Upload />} />
               <Route path="/chat" element={<Chat />} />
               <Route path="/profile" element={<Profile />} />
+              <Route path="/settings" element={<ProfileSettings />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/login" element={<LoginPage />} />
               <Route path="/onboarding" element={<Onboarding />} />
