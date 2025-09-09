@@ -1,4 +1,5 @@
-import React, { Component, ReactNode } from 'react';
+import React, { Component, ReactNode, Suspense } from 'react';
+import LazyErrorDisplay from './LazyErrorDisplay.tsx';
 
 interface Props {
   children: ReactNode;
@@ -20,18 +21,23 @@ class ErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    console.error('ErrorBoundary caught an error', error, errorInfo);
+    // Send error to an external logging service asynchronously
+    setTimeout(() => {
+      console.error('ErrorBoundary caught an error', error, errorInfo);
+    }, 0);
+  }
+
+  shouldComponentUpdate(nextProps: Props, nextState: State) {
+    // Only update if the error state changes
+    return this.state.hasError !== nextState.hasError || this.state.error !== nextState.error;
   }
 
   render() {
     if (this.state.hasError) {
       return (
-        <div className="min-h-screen flex items-center justify-center bg-red-100 p-4">
-          <div className="max-w-md text-center bg-white p-6 rounded shadow">
-            <h1 className="text-2xl font-bold mb-4 text-red-700">Something went wrong.</h1>
-            <pre className="text-sm text-red-600 whitespace-pre-wrap">{this.state.error?.message}</pre>
-          </div>
-        </div>
+        <Suspense fallback={<div>Loading...</div>}>
+          <LazyErrorDisplay error={this.state.error} />
+        </Suspense>
       );
     }
 
