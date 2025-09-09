@@ -35,12 +35,6 @@ export const CommentSection = ({ videoId, isOpen, onClose, onCommentAdded }: Com
   const { user } = useAuth();
   const { toast } = useToast();
 
-  useEffect(() => {
-    if (isOpen) {
-      fetchComments();
-    }
-  }, [isOpen, fetchComments]);
-
   const fetchComments = useCallback(async () => {
     setLoading(true);
     try {
@@ -85,6 +79,12 @@ export const CommentSection = ({ videoId, isOpen, onClose, onCommentAdded }: Com
       setLoading(false);
     }
   }, [videoId, toast]);
+
+  useEffect(() => {
+    if (isOpen) {
+      fetchComments();
+    }
+  }, [isOpen, fetchComments]);
 
   const handleSubmitComment = async () => {
     if (!user || !newComment.trim()) return;

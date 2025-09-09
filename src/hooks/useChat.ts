@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 
@@ -27,9 +27,9 @@ export const useChat = () => {
   const [typingUsers, setTypingUsers] = useState<{ [key: string]: string[] }>({});
 
   // Fetch conversations
-  const fetchConversations = async () => {
+  const fetchConversations = useCallback(async () => {
     if (!user) return;
-    
+
     const { data, error } = await supabase
       .from('conversations')
       .select('*')
@@ -39,7 +39,7 @@ export const useChat = () => {
     if (!error && data) {
       setConversations(data);
     }
-  };
+  }, [user]);
 
   // Fetch messages for a conversation
   const fetchMessages = async (conversationId: string) => {
@@ -177,7 +177,7 @@ export const useChat = () => {
       supabase.removeChannel(messageChannel);
       supabase.removeChannel(conversationChannel);
     };
-  }, [user]);
+  }, [user, fetchConversations]);
 
   // Initial load
   useEffect(() => {
@@ -186,7 +186,7 @@ export const useChat = () => {
     } else {
       setLoading(false);
     }
-  }, [user]);
+  }, [user, fetchConversations]);
 
   return {
     conversations,
