@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 import { toast } from '@/hooks/use-toast';
+import type { Database } from '@/integrations/supabase/types';
 
 // Subscribes to comments, likes and messages and triggers UI/browser notifications
 export const useNotifications = () => {
@@ -16,7 +17,7 @@ export const useNotifications = () => {
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'comments' },
         (payload) => {
-          const comment = payload.new as any;
+          const comment = payload.new as Database['public']['Tables']['comments']['Row'];
           try {
             if (comment.user_id !== user.id) {
               const text = comment.content || 'New comment';
@@ -38,7 +39,7 @@ export const useNotifications = () => {
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'likes' },
         (payload) => {
-          const like = payload.new as any;
+          const like = payload.new as Database['public']['Tables']['video_likes']['Row'] | Database['public']['Tables']['videos']['Row'] | any;
           try {
             if (like.user_id !== user.id) {
               const text = like.description || 'Someone liked your content';
@@ -60,7 +61,7 @@ export const useNotifications = () => {
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'messages' },
         (payload) => {
-          const msg = payload.new as any;
+          const msg = payload.new as Database['public']['Tables']['messages']['Row'];
           try {
             if (msg.sender_id !== user.id) {
               const text = msg.content || 'New message';
