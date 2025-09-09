@@ -37,12 +37,13 @@ export const useNotifications = () => {
       .channel('notifications-likes')
       .on(
         'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'likes' },
+        { event: 'INSERT', schema: 'public', table: 'video_likes' },
         (payload) => {
-          const like = payload.new as Database['public']['Tables']['video_likes']['Row'] | Database['public']['Tables']['videos']['Row'] | any;
+          const like = payload.new as unknown;
           try {
-            if (like.user_id !== user.id) {
-              const text = like.description || 'Someone liked your content';
+            const userId = (like as { user_id?: string }).user_id;
+            if (userId && userId !== user.id) {
+              const text = (like as { description?: string }).description || 'Someone liked your content';
               toast({ title: 'New like', description: text });
               if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
                 new Notification('New like', { body: text });

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Send, X } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
@@ -39,9 +39,9 @@ export const CommentSection = ({ videoId, isOpen, onClose, onCommentAdded }: Com
     if (isOpen) {
       fetchComments();
     }
-  }, [isOpen, videoId]);
+  }, [isOpen, fetchComments]);
 
-  const fetchComments = async () => {
+  const fetchComments = useCallback(async () => {
     setLoading(true);
     try {
       const { data, error } = await supabase
@@ -84,7 +84,7 @@ export const CommentSection = ({ videoId, isOpen, onClose, onCommentAdded }: Com
     } finally {
       setLoading(false);
     }
-  };
+  }, [videoId, toast]);
 
   const handleSubmitComment = async () => {
     if (!user || !newComment.trim()) return;
