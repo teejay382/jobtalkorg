@@ -197,14 +197,17 @@ export const CommentSection = ({ videoId, isOpen, onClose, onCommentAdded }: Com
 
   return (
     <div
-      className={`fixed inset-x-0 bottom-0 top-[var(--bottom-nav-height)] z-50 flex justify-center bg-black/50 backdrop-blur-sm transition-transform duration-300 ease-in-out ${
+      className={`fixed inset-x-0 bottom-0 top-0 z-50 flex justify-center bg-black/50 backdrop-blur-sm transition-transform duration-300 ease-in-out ${
         isOpen ? 'translate-y-0' : 'translate-y-full'
       }`}
-      style={{ WebkitTapHighlightColor: 'transparent' }}
+      style={{
+        WebkitTapHighlightColor: 'transparent',
+        paddingBottom: 'var(--bottom-nav-height, 4rem)'
+      }}
       role="dialog"
       aria-modal="true"
     >
-      <div className="flex w-full max-w-md flex-col rounded-t-3xl bg-background shadow-lg md:max-w-2xl lg:max-w-3xl">
+      <div className="flex w-full max-w-md flex-col rounded-t-3xl bg-background shadow-lg md:max-w-2xl lg:max-w-3xl mt-safe">
         {/* Header */}
         <div className="flex items-center justify-between border-b border-border p-4">
           <h3 className="font-semibold text-lg">Comments</h3>

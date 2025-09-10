@@ -92,6 +92,9 @@
     --sidebar-border: 220 13% 91%;
 
     --sidebar-ring: 217.2 91.2% 59.8%;
+
+    /* Bottom navigation height for modal positioning */
+    --bottom-nav-height: 4rem; /* 64px - matches py-2 + nav height */
   }
 
   .dark {

@@ -61,7 +61,7 @@ const Index = () => {
       </div>
       
       {/* Main content - full screen on mobile */}
-      <main className="md:pt-16 md:pb-16">
+      <main className="md:pt-16 pb-16">
         <VideoFeed />
       </main>
       
