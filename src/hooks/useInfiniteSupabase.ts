@@ -19,18 +19,16 @@ export function useInfiniteSupabase<T>(opts: {
 }) {
   const { key, supabase, fetchPage, pageSize = 20 } = opts;
 
-  return useInfiniteQuery(
-    key,
-    async ({ pageParam = null }: QueryFunctionContext) => {
+  return useInfiniteQuery({
+    queryKey: key,
+    queryFn: async ({ pageParam = null }: QueryFunctionContext) => {
       const page = await fetchPage({ supabase, pageParam, pageSize });
       return page;
     },
-    {
-      getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
-      staleTime: 1000 * 60 * 5,
-      cacheTime: 1000 * 60 * 30,
-    }
-  );
+    getNextPageParam: (lastPage: { data: T[]; nextCursor?: any }) => lastPage.nextCursor ?? undefined,
+    staleTime: 1000 * 60 * 5,
+    cacheTime: 1000 * 60 * 30,
+  });
 }
 
 /*
