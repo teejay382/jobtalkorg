@@ -17,7 +17,7 @@
 
 ### 2. Optimize Supabase Queries
 - [ ] Fetch only 10 videos at a time (id, username, video_url only)
-- [ ] Optimize comment queries to avoid N+1 problem
+- [x] Optimize comment queries to avoid N+1 problem
 - [ ] Add console.log to confirm queries don't re-fetch unnecessarily
 - [ ] Select specific fields instead of '*' in all queries
 

@@ -196,26 +196,38 @@ export const CommentSection = ({ videoId, isOpen, onClose, onCommentAdded }: Com
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-end md:items-center">
-      <div className="w-full max-w-md md:max-w-2xl lg:max-w-3xl mx-auto bg-background rounded-t-3xl md:rounded-3xl max-h-[80vh] flex flex-col">
+    <div
+      className={`fixed inset-x-0 bottom-0 top-[var(--bottom-nav-height)] z-50 flex justify-center bg-black/50 backdrop-blur-sm transition-transform duration-300 ease-in-out ${
+        isOpen ? 'translate-y-0' : 'translate-y-full'
+      }`}
+      style={{ WebkitTapHighlightColor: 'transparent' }}
+      role="dialog"
+      aria-modal="true"
+    >
+      <div className="flex w-full max-w-md flex-col rounded-t-3xl bg-background shadow-lg md:max-w-2xl lg:max-w-3xl">
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-border">
+        <div className="flex items-center justify-between border-b border-border p-4">
           <h3 className="font-semibold text-lg">Comments</h3>
           <Button
             variant="ghost"
             size="sm"
             onClick={onClose}
             className="w-8 h-8 p-0"
+            aria-label="Close comments modal"
           >
             <X className="w-4 h-4" />
           </Button>
         </div>
 
         {/* Comments List */}
-        <div id="comments-scrollable-div" className="flex-1 overflow-auto p-4">
+        <div
+          id="comments-scrollable-div"
+          className="flex-1 overflow-auto p-4"
+          style={{ WebkitOverflowScrolling: 'touch' }}
+        >
           {loading && comments.length === 0 ? (
             <div className="flex justify-center py-8">
-              <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+              <div className="w-6 h-6 animate-spin rounded-full border-2 border-primary border-t-transparent"></div>
             </div>
           ) : comments.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
@@ -229,12 +241,12 @@ export const CommentSection = ({ videoId, isOpen, onClose, onCommentAdded }: Com
               hasMore={hasMore}
               loader={
                 <div className="flex justify-center py-4">
-                  <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+                  <div className="w-6 h-6 animate-spin rounded-full border-2 border-primary border-t-transparent"></div>
                 </div>
               }
               scrollableTarget="comments-scrollable-div"
               endMessage={
-                <p className="text-center text-muted-foreground text-sm py-4">
+                <p className="text-center py-4 text-sm text-muted-foreground">
                   No more comments to load
                 </p>
               }
@@ -257,7 +269,7 @@ export const CommentSection = ({ videoId, isOpen, onClose, onCommentAdded }: Com
                           {formatTime(comment.created_at)}
                         </span>
                       </div>
-                      <p className="text-sm text-foreground leading-relaxed">
+                      <p className="text-sm leading-relaxed text-foreground">
                         {comment.content}
                       </p>
                     </div>
@@ -268,45 +280,43 @@ export const CommentSection = ({ videoId, isOpen, onClose, onCommentAdded }: Com
           )}
         </div>
 
-        {/* Comment Input - Fixed at bottom */}
-        <div className="mt-auto bg-background border-t border-border">
+        {/* Comment Input - Sticky at bottom */}
+        <div className="sticky bottom-0 z-10 border-t border-border bg-background p-4">
           {user ? (
-            <div className="p-4">
-              <div className="flex gap-3">
-                <Avatar className="w-8 h-8 flex-shrink-0">
-                  <AvatarImage src={user.user_metadata?.avatar_url} />
-                  <AvatarFallback className="bg-primary text-white text-xs">
-                    {(user.user_metadata?.full_name || user.email || 'U').charAt(0).toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="flex-1 flex gap-2">
-                  <Input
-                    placeholder="Add a comment..."
-                    value={newComment}
-                    onChange={(e) => setNewComment(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && !submitting && handleSubmitComment()}
-                    className="flex-1 border-input focus:ring-2 focus:ring-primary"
-                    disabled={submitting}
-                  />
-                  <Button
-                    onClick={handleSubmitComment}
-                    disabled={!newComment.trim() || submitting}
-                    size="sm"
-                    className="px-3 bg-primary hover:bg-primary/90"
-                  >
-                    {submitting ? (
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    ) : (
-                      <Send className="w-4 h-4" />
-                    )}
-                  </Button>
-                </div>
+            <div className="flex gap-3">
+              <Avatar className="w-8 h-8 flex-shrink-0">
+                <AvatarImage src={user.user_metadata?.avatar_url} />
+                <AvatarFallback className="bg-primary text-white text-xs">
+                  {(user.user_metadata?.full_name || user.email || 'U').charAt(0).toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+              <div className="flex-1 flex gap-2">
+                <Input
+                  placeholder="Add a comment..."
+                  value={newComment}
+                  onChange={(e) => setNewComment(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && !submitting && handleSubmitComment()}
+                  className="flex-1 border-input focus:ring-2 focus:ring-primary"
+                  disabled={submitting}
+                />
+                <Button
+                  onClick={handleSubmitComment}
+                  disabled={!newComment.trim() || submitting}
+                  size="sm"
+                  className="px-3 bg-primary hover:bg-primary/90"
+                >
+                  {submitting ? (
+                    <div className="w-4 h-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
+                  ) : (
+                    <Send className="w-4 h-4" />
+                  )}
+                </Button>
               </div>
             </div>
           ) : (
-            <div className="p-4 text-center">
-              <Button 
-                variant="outline" 
+            <div className="text-center p-4">
+              <Button
+                variant="outline"
                 className="text-sm"
                 onClick={() => window.location.href = '/login'}
               >
