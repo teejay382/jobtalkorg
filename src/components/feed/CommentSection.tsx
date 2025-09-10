@@ -1,12 +1,13 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Send, X } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { ScrollArea } from '@/components/ui/scroll-area';
+
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
+import InfiniteScroll from 'react-infinite-scroll-component';
 
 interface Comment {
   id: string;
@@ -32,48 +33,54 @@ export const CommentSection = ({ videoId, isOpen, onClose, onCommentAdded }: Com
   const [newComment, setNewComment] = useState('');
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+  const [offset, setOffset] = useState(0);
   const { user } = useAuth();
   const { toast } = useToast();
+  const COMMENTS_PER_PAGE = 10;
 
-  useEffect(() => {
-    if (isOpen) {
-      fetchComments();
-    }
-  }, [isOpen, videoId]);
-
-  const fetchComments = async () => {
-    setLoading(true);
+  const fetchComments = useCallback(async (currentOffset = 0, append = false) => {
+    if (!append) setLoading(true);
     try {
+      console.log('[CommentSection] Fetching comments', { videoId, offset: currentOffset, limit: COMMENTS_PER_PAGE });
+
       const { data, error } = await supabase
         .from('comments')
-        .select(`
-          id,
-          content,
-          created_at,
-          user_id
-        `)
+        .select('id, content, created_at, user_id')
         .eq('video_id', videoId)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .range(currentOffset, currentOffset + COMMENTS_PER_PAGE - 1);
 
       if (error) throw error;
 
-      // Fetch user profiles for each comment
-      const commentsWithUsers = await Promise.all(
-        (data || []).map(async (comment) => {
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('full_name, username, avatar_url')
-            .eq('user_id', comment.user_id)
-            .single();
+      if (!data || data.length === 0) {
+        if (!append) setComments([]);
+        setHasMore(false);
+        return;
+      }
 
-          return {
-            ...comment,
-            user: profile || undefined
-          };
-        })
-      );
+      // Batch fetch user profiles to avoid N+1 queries
+      const userIds = data.map(comment => comment.user_id);
+      const { data: profiles } = await supabase
+        .from('profiles')
+        .select('user_id, full_name, username, avatar_url')
+        .in('user_id', userIds);
 
-      setComments(commentsWithUsers);
+      const profileMap = new Map(profiles?.map(profile => [profile.user_id, profile]) || []);
+
+      const commentsWithUsers = data.map(comment => ({
+        ...comment,
+        user: profileMap.get(comment.user_id) || undefined
+      }));
+
+      if (append) {
+        setComments(prev => [...prev, ...commentsWithUsers]);
+      } else {
+        setComments(commentsWithUsers);
+      }
+
+      setHasMore(data.length === COMMENTS_PER_PAGE);
+      setOffset(currentOffset + data.length);
     } catch (error) {
       console.error('Error fetching comments:', error);
       toast({
@@ -82,9 +89,24 @@ export const CommentSection = ({ videoId, isOpen, onClose, onCommentAdded }: Com
         variant: "destructive",
       });
     } finally {
-      setLoading(false);
+      if (!append) setLoading(false);
     }
-  };
+  }, [videoId, toast, COMMENTS_PER_PAGE]);
+
+  useEffect(() => {
+    if (isOpen) {
+      setComments([]);
+      setOffset(0);
+      setHasMore(true);
+      fetchComments(0, false);
+    }
+  }, [isOpen, fetchComments]);
+
+  const loadMoreComments = useCallback(() => {
+    if (hasMore && !loading) {
+      fetchComments(offset, true);
+    }
+  }, [hasMore, loading, offset, fetchComments]);
 
   const handleSubmitComment = async () => {
     if (!user || !newComment.trim()) return;
@@ -190,8 +212,8 @@ export const CommentSection = ({ videoId, isOpen, onClose, onCommentAdded }: Com
         </div>
 
         {/* Comments List */}
-        <ScrollArea className="flex-1 p-4">
-          {loading ? (
+        <div id="comments-scrollable-div" className="flex-1 overflow-auto p-4">
+          {loading && comments.length === 0 ? (
             <div className="flex justify-center py-8">
               <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
             </div>
@@ -201,33 +223,50 @@ export const CommentSection = ({ videoId, isOpen, onClose, onCommentAdded }: Com
               <p className="text-sm">Be the first to comment!</p>
             </div>
           ) : (
-            <div className="space-y-4">
-              {comments.map((comment) => (
-                <div key={comment.id} className="flex gap-3">
-                  <Avatar className="w-8 h-8 flex-shrink-0">
-                    <AvatarImage src={comment.user?.avatar_url} />
-                    <AvatarFallback className="bg-primary text-white text-xs">
-                      {(comment.user?.full_name || comment.user?.username || 'U').charAt(0).toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <h4 className="font-medium text-sm truncate">
-                        {comment.user?.full_name || comment.user?.username || 'Anonymous'}
-                      </h4>
-                      <span className="text-xs text-muted-foreground">
-                        {formatTime(comment.created_at)}
-                      </span>
-                    </div>
-                    <p className="text-sm text-foreground leading-relaxed">
-                      {comment.content}
-                    </p>
-                  </div>
+            <InfiniteScroll
+              dataLength={comments.length}
+              next={loadMoreComments}
+              hasMore={hasMore}
+              loader={
+                <div className="flex justify-center py-4">
+                  <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
                 </div>
-              ))}
-            </div>
+              }
+              scrollableTarget="comments-scrollable-div"
+              endMessage={
+                <p className="text-center text-muted-foreground text-sm py-4">
+                  No more comments to load
+                </p>
+              }
+            >
+              <div className="space-y-4">
+                {comments.map((comment) => (
+                  <div key={comment.id} className="flex gap-3">
+                    <Avatar className="w-8 h-8 flex-shrink-0">
+                      <AvatarImage src={comment.user?.avatar_url} />
+                      <AvatarFallback className="bg-primary text-white text-xs">
+                        {(comment.user?.full_name || comment.user?.username || 'U').charAt(0).toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <h4 className="font-medium text-sm truncate">
+                          {comment.user?.full_name || comment.user?.username || 'Anonymous'}
+                        </h4>
+                        <span className="text-xs text-muted-foreground">
+                          {formatTime(comment.created_at)}
+                        </span>
+                      </div>
+                      <p className="text-sm text-foreground leading-relaxed">
+                        {comment.content}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </InfiniteScroll>
           )}
-        </ScrollArea>
+        </div>
 
         {/* Comment Input - Fixed at bottom */}
         <div className="mt-auto bg-background border-t border-border">
@@ -245,7 +284,7 @@ export const CommentSection = ({ videoId, isOpen, onClose, onCommentAdded }: Com
                     placeholder="Add a comment..."
                     value={newComment}
                     onChange={(e) => setNewComment(e.target.value)}
-                    onKeyPress={(e) => e.key === 'Enter' && !submitting && handleSubmitComment()}
+                    onKeyDown={(e) => e.key === 'Enter' && !submitting && handleSubmitComment()}
                     className="flex-1 border-input focus:ring-2 focus:ring-primary"
                     disabled={submitting}
                   />

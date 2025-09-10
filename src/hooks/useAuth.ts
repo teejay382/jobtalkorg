@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 
-interface Profile {
+export interface Profile {
   id: string;
   user_id: string;
   email: string;
@@ -16,6 +16,11 @@ interface Profile {
   onboarding_completed: boolean;
   created_at: string;
   updated_at: string;
+  // optional extended fields
+  location?: string | null;
+  portfolio?: string | null;
+  available?: boolean | null;
+  company_logo?: string | null;
 }
 
 export const useAuth = () => {
@@ -147,8 +152,8 @@ export const useAuth = () => {
     }
   };
 
-  const updateProfile = async (updates: Partial<Profile>) => {
-    if (!user) return { error: 'No user logged in' };
+  const updateProfile = async (updates: Partial<Profile>): Promise<{ data: Profile | null; error: unknown }> => {
+    if (!user) return { data: null, error: 'No user logged in' };
 
     try {
       const { data, error } = await supabase
@@ -160,8 +165,8 @@ export const useAuth = () => {
 
       if (error) throw error;
 
-      setProfile(data);
-      return { data, error: null };
+      setProfile(data as Profile);
+      return { data: data as Profile, error: null };
     } catch (error) {
       console.error('Error updating profile:', error);
       return { data: null, error };
