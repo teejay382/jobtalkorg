@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, type KeyboardEvent } from 'react';
 import { Send, X } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
@@ -60,13 +60,14 @@ export const CommentSection = ({ videoId, isOpen, onClose, onCommentAdded }: Com
       }
 
       // Batch fetch user profiles to avoid N+1 queries
-      const userIds = data.map(comment => comment.user_id);
-      const { data: profiles } = await supabase
+      // dedupe ids
+      const userIds = Array.from(new Set(data.map(comment => comment.user_id)));
+      const { data: profiles = [] } = await supabase
         .from('profiles')
         .select('user_id, full_name, username, avatar_url')
-        .in('user_id', userIds);
+        .in('user_id', userIds as any);
 
-      const profileMap = new Map(profiles?.map(profile => [profile.user_id, profile]) || []);
+      const profileMap = new Map((profiles || []).map((profile: any) => [profile.user_id, profile]));
 
       const commentsWithUsers = data.map(comment => ({
         ...comment,
@@ -185,7 +186,8 @@ export const CommentSection = ({ videoId, isOpen, onClose, onCommentAdded }: Com
     const diffInHours = (now.getTime() - date.getTime()) / (1000 * 60 * 60);
 
     if (diffInHours < 1) {
-      return `${Math.floor(diffInHours * 60)}m ago`;
+      const mins = Math.max(1, Math.floor(diffInHours * 60));
+      return `${mins}m ago`;
     } else if (diffInHours < 24) {
       return `${Math.floor(diffInHours)}h ago`;
     } else {
@@ -298,7 +300,7 @@ export const CommentSection = ({ videoId, isOpen, onClose, onCommentAdded }: Com
                   placeholder="Add a comment..."
                   value={newComment}
                   onChange={(e) => setNewComment(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && !submitting && handleSubmitComment()}
+                  onKeyDown={(e: KeyboardEvent<HTMLInputElement>) => e.key === 'Enter' && !submitting && handleSubmitComment()}
                   className="flex-1 border-input focus:ring-2 focus:ring-primary"
                   disabled={submitting}
                 />
