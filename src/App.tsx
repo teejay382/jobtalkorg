@@ -32,9 +32,8 @@ const App = () => {
   const queryClient = useMemo(() => new QueryClient({
     defaultOptions: {
       queries: {
-        // keep data fresh for 5 minutes, avoid excessive refetching
-        staleTime: 1000 * 60 * 5,
-        cacheTime: 1000 * 60 * 30,
+        // cacheTime removed because it's not allowed by current react-query types; use staleTime instead
+        staleTime: 0,
         refetchOnWindowFocus: false,
       },
     },

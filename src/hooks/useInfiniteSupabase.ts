@@ -19,15 +19,17 @@ export function useInfiniteSupabase<T>(opts: {
 }) {
   const { key, supabase, fetchPage, pageSize = 20 } = opts;
 
+  const queryKey = (Array.isArray(key) ? key : [key]) as readonly unknown[];
+
   return useInfiniteQuery({
-    queryKey: key,
+    queryKey: queryKey,
     queryFn: async ({ pageParam = null }: QueryFunctionContext) => {
       const page = await fetchPage({ supabase, pageParam, pageSize });
       return page;
     },
     getNextPageParam: (lastPage: { data: T[]; nextCursor?: any }) => lastPage.nextCursor ?? undefined,
-    staleTime: 1000 * 60 * 5,
-    cacheTime: 1000 * 60 * 30,
+    // cacheTime is not allowed by current react-query types; use staleTime if you need control over freshness
+    staleTime: 0,
   });
 }
 

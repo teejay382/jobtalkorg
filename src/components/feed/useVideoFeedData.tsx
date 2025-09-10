@@ -34,7 +34,7 @@ export const useVideoFeedData = () => {
     try {
       const { data: videoRow, error: videoError } = await supabase
         .from('videos')
-        .select('*')
+        .select('id, title, description, video_url, thumbnail_url, tags, likes_count, comments_count, views_count, created_at, user_id')
         .eq('id', videoId)
         .single();
 
@@ -96,11 +96,12 @@ export const useVideoFeedData = () => {
     try {
       if (offset === 0) setLoading(true);
       console.log('[VideoFeed] Fetching videos with profiles', { offset, limit });
+      console.log('[VideoFeed] Performance check - Query starting at:', new Date().toISOString());
 
-      // Fetch videos with pagination
+      // Fetch videos with pagination - select only needed fields
       const { data: videosData, error: videosError } = await supabase
         .from('videos')
-        .select('*')
+        .select('id, title, description, video_url, thumbnail_url, tags, likes_count, comments_count, views_count, created_at, user_id')
         .order('created_at', { ascending: false })
         .range(offset, offset + limit - 1);
 
