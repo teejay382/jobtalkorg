@@ -21,13 +21,14 @@ export function useInfiniteSupabase<T>(opts: {
 
   const queryKey = (Array.isArray(key) ? key : [key]) as readonly unknown[];
 
-  return useInfiniteQuery({
+  return useInfiniteQuery<{ data: T[]; nextCursor?: any }, Error, { data: T[]; nextCursor?: any }, readonly unknown[]>({
     queryKey: queryKey,
     queryFn: async ({ pageParam = null }: QueryFunctionContext) => {
       const page = await fetchPage({ supabase, pageParam, pageSize });
       return page;
     },
     getNextPageParam: (lastPage: { data: T[]; nextCursor?: any }) => lastPage.nextCursor ?? undefined,
+    initialPageParam: null,
     // cacheTime is not allowed by current react-query types; use staleTime if you need control over freshness
     staleTime: 0,
   });
