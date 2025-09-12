@@ -93,6 +93,7 @@ export const useVideoFeedData = () => {
   }, [profileCache]);
 
   const fetchVideos = useCallback(async (offset = 0, limit = 10) => {
+    const startTime = performance.now();
     try {
       if (offset === 0) setLoading(true);
       console.log('[VideoFeed] Fetching videos with profiles', { offset, limit });
