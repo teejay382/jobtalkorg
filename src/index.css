@@ -1,5 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
+/* Tailwind directives (likely already present) */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -241,6 +242,31 @@
 
   .upload-progress .bg-primary {
     @apply bg-gradient-to-r from-accent to-warning;
+  }
+}
+
+/* Add these minimal utility definitions so @apply can expand semantic utilities
+   like `border-border`, `bg-background`, `text-foreground`, etc.
+   Tailwind requires custom utilities referenced by @apply to be defined inside a @layer. */
+@layer utilities {
+  /* semantic border color utility used in @apply */
+  .border-border {
+    border-color: var(--border);
+  }
+
+  /* semantic background utility used in @apply */
+  .bg-background {
+    background-color: var(--background);
+  }
+
+  /* semantic text color utility used in @apply */
+  .text-foreground {
+    color: var(--foreground);
+  }
+
+  /* semantic placeholder color utility (if used) */
+  .placeholder-muted::placeholder {
+    color: var(--muted);
   }
 }
 
