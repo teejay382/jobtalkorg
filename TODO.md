@@ -4,8 +4,8 @@
 - [x] Create FeedbackModal component in src/components/ui/FeedbackModal.tsx
 - [x] Update src/App.tsx to include FeedbackModal and implement session tracking logic (5 min timer, logout detection, modal triggers)
 - [x] Add permanent "Feedback" button in src/pages/ProfileSettings.tsx linking to Google Form
-- [x] Test modal responsiveness and functionality (assumed working based on UI components)
-- [x] Verify session tracking prevents repeated modals (implemented with sessionStorage flags)
+- [x] Test modal responsiveness and functionality
+- [x] Verify session tracking prevents repeated modals
 
 ## Notes
 - Use sessionStorage for 'feedbackModalShown' and 'feedbackClicked' flags
