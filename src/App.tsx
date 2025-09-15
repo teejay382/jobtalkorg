@@ -81,6 +81,11 @@ const App = () => {
     }
   }, [hasLoggedInRef.current, hasShownModal, hasClickedFeedback]);
 
+  // DEBUG: Log modal open state changes
+  useEffect(() => {
+    console.log('Feedback modal open state:', feedbackModalOpen);
+  }, [feedbackModalOpen]);
+
   // Handle logout detection by checking session change
   useEffect(() => {
     const prevSession = hasLoggedInRef.current;
