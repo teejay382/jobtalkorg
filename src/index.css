@@ -167,21 +167,47 @@
 
   /* Profile components */
   .profile-header {
-    @apply bg-gradient-to-br from-primary to-accent text-white p-6 rounded-2xl shadow-strong;
+    background: var(--gradient-hero);
+    color: white;
+    padding: 1.5rem;
+    border-radius: 1rem;
+    box-shadow: var(--shadow-strong);
   }
 
   /* Upload components */
   .upload-area {
-    @apply border-2 border-dashed border-primary/30 rounded-2xl p-8 text-center hover:border-primary/50 transition-colors bg-gradient-to-br from-primary/5 to-accent/5;
+    border: 2px dashed rgba(229, 84, 28, 0.3);
+    border-radius: 1rem;
+    padding: 2rem;
+    text-align: center;
+    background: linear-gradient(to bottom right, rgba(229, 84, 28, 0.05), rgba(217, 91, 60, 0.05));
+    transition: border-color 0.2s;
+  }
+
+  .upload-area:hover {
+    border-color: rgba(229, 84, 28, 0.5);
   }
 
   /* Chat components */
   .chat-bubble-sent {
-    @apply bg-gradient-to-r from-primary to-primary-light text-white rounded-2xl rounded-br-md p-3 max-w-[80%] ml-auto shadow-soft;
+    background: var(--gradient-primary);
+    color: white;
+    padding: 0.75rem;
+    border-radius: 1rem;
+    border-bottom-right-radius: 0.25rem;
+    margin-left: auto;
+    max-width: 80%;
+    box-shadow: var(--shadow-soft);
   }
 
   .chat-bubble-received {
-    @apply bg-white border border-border rounded-2xl rounded-bl-md p-3 max-w-[80%] shadow-soft;
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 1rem;
+    border-bottom-left-radius: 0.25rem;
+    padding: 0.75rem;
+    max-width: 80%;
+    box-shadow: var(--shadow-soft);
   }
 
   /* Navigation */
@@ -200,7 +226,18 @@
 
   /* Button variants */
   .btn-hero {
-    @apply bg-gradient-to-r from-primary to-accent text-white px-8 py-3 rounded-full font-semibold shadow-medium hover:shadow-strong transition-all duration-300 hover:scale-105;
+    background: var(--gradient-primary);
+    color: white;
+    padding: 0.5rem 2rem;
+    border-radius: 9999px;
+    font-weight: 600;
+    box-shadow: var(--shadow-medium);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .btn-hero:hover {
+    box-shadow: var(--shadow-strong);
+    transform: scale(1.05);
   }
 
   .btn-ghost {
@@ -209,39 +246,76 @@
 
   /* Skill tags */
   .skill-tag {
-    @apply bg-gradient-to-r from-accent/20 to-primary/20 text-primary px-3 py-1 rounded-full text-sm font-medium border border-primary/20;
+    background: linear-gradient(to right, rgba(229, 84, 28, 0.2), rgba(217, 91, 60, 0.2));
+    color: hsl(var(--primary));
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    border: 1px solid rgba(229, 84, 28, 0.2);
   }
 
   /* Enhanced Hire Button */
   .hire-btn {
-    @apply bg-gradient-to-r from-primary to-accent text-white border-0 hover:shadow-glow transition-all duration-300 hover:scale-105 font-semibold tracking-wide px-6 py-2.5 rounded-full shadow-medium;
+    background: var(--gradient-primary);
+    color: white;
+    border: 0;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    font-weight: 600;
+    letter-spacing: 0.025em;
+    padding: 0.625rem 1.5rem;
+    border-radius: 9999px;
+    box-shadow: var(--shadow-medium);
+  }
+
+  .hire-btn:hover {
+    box-shadow: var(--shadow-glow);
+    transform: scale(1.05);
   }
 
   /* Processing animations for video upload */
   .processing-card {
-    @apply bg-gradient-to-br from-primary/5 to-accent/5 rounded-xl p-5 border border-primary/20 shadow-soft backdrop-blur-sm;
+    background: linear-gradient(to bottom right, rgba(229, 84, 28, 0.05), rgba(217, 91, 60, 0.05));
+    padding: 1.25rem;
+    border-radius: 0.75rem;
+    border: 1px solid rgba(229, 84, 28, 0.2);
+    box-shadow: var(--shadow-soft);
+    backdrop-filter: blur(0.5rem);
   }
 
   .upload-card {
-    @apply bg-gradient-to-br from-accent/5 to-warning/5 rounded-xl p-5 border border-accent/20 shadow-soft backdrop-blur-sm;
+    background: linear-gradient(to bottom right, rgba(217, 91, 60, 0.05), rgba(38, 92, 50, 0.05));
+    padding: 1.25rem;
+    border-radius: 0.75rem;
+    border: 1px solid rgba(217, 91, 60, 0.2);
+    box-shadow: var(--shadow-soft);
+    backdrop-filter: blur(0.5rem);
   }
 
   .compression-spinner {
-    @apply w-8 h-8 rounded-full bg-gradient-to-r from-primary to-accent animate-spin;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 9999px;
+    background: linear-gradient(to right, hsl(var(--primary)), hsl(var(--accent)));
+    animation: spin 1s linear infinite;
     background: conic-gradient(from 0deg, hsl(var(--primary)), hsl(var(--accent)), hsl(var(--primary)));
   }
 
   .upload-spinner {
-    @apply w-8 h-8 rounded-full bg-gradient-to-r from-accent to-warning animate-spin;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 9999px;
+    background: linear-gradient(to right, hsl(var(--accent)), hsl(var(--warning)));
+    animation: spin 1s linear infinite;
     background: conic-gradient(from 0deg, hsl(var(--accent)), hsl(var(--warning)), hsl(var(--accent)));
   }
 
   .processing-progress .bg-primary {
-    @apply bg-gradient-to-r from-primary to-accent;
+    background: var(--gradient-primary);
   }
 
   .upload-progress .bg-primary {
-    @apply bg-gradient-to-r from-accent to-warning;
+    background: var(--gradient-accent);
   }
 }
 
@@ -315,68 +389,28 @@
     transition: var(--transition-bounce);
   }
 
-  /* Gradient stop utilities for custom CSS colors so `@apply from-primary to-accent` works */
+  /* Add missing gradient utilities */
   .from-primary {
     --tw-gradient-from: hsl(var(--primary));
-    --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, rgba(0,0,0,0));
+    --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, rgba(255, 255, 255, 0));
   }
+
   .to-primary {
     --tw-gradient-to: hsl(var(--primary));
-  }
-  .from-primary-light {
-    --tw-gradient-from: hsl(var(--primary-light));
-    --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, rgba(0,0,0,0));
-  }
-  .to-primary-light {
-    --tw-gradient-to: hsl(var(--primary-light));
   }
 
   .from-accent {
     --tw-gradient-from: hsl(var(--accent));
-    --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, rgba(0,0,0,0));
+    --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, rgba(255, 255, 255, 0));
   }
+
   .to-accent {
     --tw-gradient-to: hsl(var(--accent));
   }
-  .to-accent-light {
-    --tw-gradient-to: hsl(var(--accent-light));
-  }
 
-  .to-warning {
-    --tw-gradient-to: hsl(var(--warning));
-  }
-
-  /* Opacity variants (escaped slashes) used in this file (e.g. from-primary/5, from-accent/20) */
-  .from-primary\/5 {
-    --tw-gradient-from: hsl(var(--primary) / 0.05);
-    --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, rgba(0,0,0,0));
-  }
-  .to-accent\/5 {
-    --tw-gradient-to: hsl(var(--accent) / 0.05);
-  }
-
-  .from-accent\/5 {
-    --tw-gradient-from: hsl(var(--accent) / 0.05);
-    --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, rgba(0,0,0,0));
-  }
-  .to-warning\/5 {
-    --tw-gradient-to: hsl(var(--warning) / 0.05);
-  }
-
-  .from-accent\/20 {
-    --tw-gradient-from: hsl(var(--accent) / 0.2);
-    --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, rgba(0,0,0,0));
-  }
-  .to-primary\/20 {
-    --tw-gradient-to: hsl(var(--primary) / 0.2);
-  }
-
-  /* Fallback tiny-opacity variants used in a few places (e.g. /5 mapped to 5%) */
-  .from-primary\/20 {
-    --tw-gradient-from: hsl(var(--primary) / 0.2);
-    --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, rgba(0,0,0,0));
-  }
-  .to-accent\/20 {
-    --tw-gradient-to: hsl(var(--accent) / 0.2);
+  /* Neon border effect */
+  .neon-border {
+    border: 2px solid hsl(var(--primary));
+    box-shadow: 0 0 10px hsl(var(--primary)), 0 0 20px hsl(var(--primary)), 0 0 30px hsl(var(--primary));
   }
 }
