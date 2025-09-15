@@ -314,4 +314,69 @@
   .transition-bounce {
     transition: var(--transition-bounce);
   }
+
+  /* Gradient stop utilities for custom CSS colors so `@apply from-primary to-accent` works */
+  .from-primary {
+    --tw-gradient-from: hsl(var(--primary));
+    --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, rgba(0,0,0,0));
+  }
+  .to-primary {
+    --tw-gradient-to: hsl(var(--primary));
+  }
+  .from-primary-light {
+    --tw-gradient-from: hsl(var(--primary-light));
+    --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, rgba(0,0,0,0));
+  }
+  .to-primary-light {
+    --tw-gradient-to: hsl(var(--primary-light));
+  }
+
+  .from-accent {
+    --tw-gradient-from: hsl(var(--accent));
+    --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, rgba(0,0,0,0));
+  }
+  .to-accent {
+    --tw-gradient-to: hsl(var(--accent));
+  }
+  .to-accent-light {
+    --tw-gradient-to: hsl(var(--accent-light));
+  }
+
+  .to-warning {
+    --tw-gradient-to: hsl(var(--warning));
+  }
+
+  /* Opacity variants (escaped slashes) used in this file (e.g. from-primary/5, from-accent/20) */
+  .from-primary\/5 {
+    --tw-gradient-from: hsl(var(--primary) / 0.05);
+    --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, rgba(0,0,0,0));
+  }
+  .to-accent\/5 {
+    --tw-gradient-to: hsl(var(--accent) / 0.05);
+  }
+
+  .from-accent\/5 {
+    --tw-gradient-from: hsl(var(--accent) / 0.05);
+    --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, rgba(0,0,0,0));
+  }
+  .to-warning\/5 {
+    --tw-gradient-to: hsl(var(--warning) / 0.05);
+  }
+
+  .from-accent\/20 {
+    --tw-gradient-from: hsl(var(--accent) / 0.2);
+    --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, rgba(0,0,0,0));
+  }
+  .to-primary\/20 {
+    --tw-gradient-to: hsl(var(--primary) / 0.2);
+  }
+
+  /* Fallback tiny-opacity variants used in a few places (e.g. /5 mapped to 5%) */
+  .from-primary\/20 {
+    --tw-gradient-from: hsl(var(--primary) / 0.2);
+    --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, rgba(0,0,0,0));
+  }
+  .to-accent\/20 {
+    --tw-gradient-to: hsl(var(--accent) / 0.2);
+  }
 }
