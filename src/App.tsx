@@ -69,13 +69,13 @@ const App = () => {
     }
   }, [session]);
 
-  // Show modal after 5 minutes if logged in and not shown or clicked
+  // Show modal after 30 seconds if logged in and not shown or clicked (reduced from 5 minutes)
   useEffect(() => {
     if (hasLoggedInRef.current && !hasShownModal && !hasClickedFeedback) {
       const timer = setTimeout(() => {
         setFeedbackModalOpen(true);
         sessionStorage.setItem('feedbackModalShown', 'true');
-      }, 5 * 60 * 1000); // 5 minutes
+      }, 30 * 1000); // 30 seconds
 
       return () => clearTimeout(timer);
     }
