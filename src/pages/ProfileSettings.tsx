@@ -232,9 +232,12 @@ const ProfileSettings: React.FC = () => {
               </div>
             </section>
 
-            <div className="flex gap-3">
+            <div className="flex gap-3 flex-col">
               <Button type="submit" className="flex-1" disabled={saving}>{saving ? 'Saving...' : 'Save Profile'}</Button>
               <Button variant="outline" className="flex-1" onClick={() => signOut()}>Sign Out</Button>
+              <Button variant="link" className="flex-1" onClick={() => window.open('https://docs.google.com/forms/e/1FAIpQLSdsbSoo4B3Vg1k7dW3KVY1tyVYnqzGKBPE518k9Kn6ue7ni4Q/viewform?usp=dialog', '_blank', 'noopener,noreferrer')}>
+                Feedback
+              </Button>
             </div>
 
             <div className="text-sm text-muted-foreground">
