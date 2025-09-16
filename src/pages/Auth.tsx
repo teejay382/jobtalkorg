@@ -294,54 +294,19 @@ const Auth = () => {
             Continue with Google
           </Button>
 
-          <div className="text-center text-sm space-y-2">
-            {/* Primary CTA for switching to sign up - clearly visible as a button when on sign in */}
-            {!isSignUp && (
-              <div className="flex flex-col items-center">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsSignUp(true);
-                    setError('');
-                    setFormData({ email: '', password: '', confirmPassword: '', fullName: '' });
-                  }}
-                  className="mt-2 w-full max-w-xs inline-flex items-center justify-center rounded-md bg-primary text-primary-foreground px-4 py-2 text-sm font-semibold shadow-sm hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2"
-                >
-                  Create an account
-                </button>
-
-                <div className="mt-3 text-muted-foreground">Already have an account?</div>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsSignUp(false);
-                    setError('');
-                    setFormData({ email: '', password: '', confirmPassword: '', fullName: '' });
-                  }}
-                  className="mt-1 text-primary hover:underline font-medium"
-                >
-                  Sign In
-                </button>
-              </div>
-            )}
-
-            {/* When on Sign Up view, show a small link to Sign In */}
-            {isSignUp && (
-              <div>
-                <span className="text-muted-foreground">Already have an account?</span>{' '}
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsSignUp(false);
-                    setError('');
-                    setFormData({ email: '', password: '', confirmPassword: '', fullName: '' });
-                  }}
-                  className="ml-1 text-primary hover:underline font-medium"
-                >
-                  Sign In
-                </button>
-              </div>
-            )}
+          <div className="text-center text-sm">
+            {isSignUp ? 'Already have an account?' : "Don't have an account?"}{' '}
+            <button
+              type="button"
+              onClick={() => {
+                setIsSignUp(!isSignUp);
+                setError('');
+                setFormData({ email: '', password: '', confirmPassword: '', fullName: '' });
+              }}
+              className="text-blue-600 dark:text-blue-400 hover:underline font-medium"
+            >
+              {isSignUp ? 'Sign In' : 'Sign Up'}
+            </button>
           </div>
         </CardContent>
       </Card>
