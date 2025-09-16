@@ -22,8 +22,8 @@ const Index = () => {
   // Show welcome screen for non-authenticated users
   if (!loading && !user) {
     return (
-      <div className="min-h-screen bg-gradient-elegant flex items-center justify-center p-4">
-        <Card className="w-full max-w-md text-center">
+      <div className="min-h-screen bg-white dark:bg-gray-900 flex items-center justify-center p-4">
+        <Card className="w-full max-w-md text-center bg-white dark:bg-gray-800">
           <CardHeader className="space-y-4">
             <div className="flex justify-center">
               <img src={logoImage} alt="Job Talk" className="h-20 w-20" />
