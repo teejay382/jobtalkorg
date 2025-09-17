@@ -83,7 +83,10 @@ const MobileMenu = ({ isOpen, onClose }: MobileMenuProps) => {
 
             <div className="border-t border-border my-4"></div>
 
-            <button className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-secondary transition-colors">
+            <button
+              onClick={() => handleNavigation('/settings')}
+              className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-secondary transition-colors"
+            >
               <Settings className="w-5 h-5" />
               <span>Settings</span>
             </button>

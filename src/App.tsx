@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, lazy, Suspense, useState, useCallback, useRef } from 'react';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, useLocation, useNavigate } from 'react-router-dom';
 import ErrorBoundary from "./components/ErrorBoundary";
 import { useNotifications } from '@/hooks/useNotifications';
 import FeedbackModal from '@/components/ui/FeedbackModal';
@@ -14,6 +14,7 @@ const Upload = lazy(() => import('./pages/Upload'));
 const Chat = lazy(() => import('./pages/Chat'));
 const Profile = lazy(() => import('./pages/Profile'));
 const ProfileSettings = lazy(() => import('./pages/ProfileSettings'));
+const Settings = lazy(() => import('./pages/Settings'));
 const Auth = lazy(() => import('./pages/Auth'));
 const Onboarding = lazy(() => import('./pages/Onboarding'));
 const NotFound = lazy(() => import('./pages/NotFound'));
@@ -28,6 +29,26 @@ const LoadingSkeleton = () => (
 );
 
 const FEEDBACK_FORM_URL = 'https://docs.google.com/forms/d/e/1FAIpQLSdsbSoo4B3Vg1k7dW3KVY1tyVYnqzGKBPE518k9Kn6ue7ni4Q/viewform?usp=dialog';
+
+const RouteTracker = () => {
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    // On mount, check if there's a saved path and redirect if different from current
+    const savedPath = localStorage.getItem('lastVisitedPath');
+    if (savedPath && savedPath !== location.pathname && location.pathname === '/') {
+      navigate(savedPath);
+    }
+  }, []);
+
+  useEffect(() => {
+    // Save current path to localStorage on route change
+    localStorage.setItem('lastVisitedPath', location.pathname);
+  }, [location.pathname]);
+
+  return null;
+};
 
 const App = () => {
   console.log("App component is loading...");
@@ -116,6 +137,7 @@ const App = () => {
           </Suspense>
 
           <BrowserRouter>
+            <RouteTracker />
             <Suspense fallback={<LoadingSkeleton />}>
               <Routes>
                 <Route path="/" element={<Index />} />
@@ -123,7 +145,8 @@ const App = () => {
                 <Route path="/upload" element={<Upload />} />
                 <Route path="/chat" element={<Chat />} />
                 <Route path="/profile" element={<Profile />} />
-                <Route path="/settings" element={<ProfileSettings />} />
+                <Route path="/settings" element={<Settings />} />
+                <Route path="/profile-settings" element={<ProfileSettings />} />
                 <Route path="/auth" element={<Auth />} />
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/onboarding" element={<Onboarding />} />
