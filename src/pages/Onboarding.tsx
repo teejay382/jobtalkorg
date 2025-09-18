@@ -15,6 +15,7 @@ const Onboarding = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [accountType, setAccountType] = useState<'freelancer' | 'employer' | ''>('');
+  const [roleSupported, setRoleSupported] = useState(true);
   const [selectionError, setSelectionError] = useState('');
   const [companyName, setCompanyName] = useState('');
   const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
@@ -46,16 +47,57 @@ const Onboarding = () => {
       }
 
       // Check if user has already completed onboarding. Use user_id filter.
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('onboarding_completed, role')
-        .eq('user_id', session.user.id)
-        .single();
+      // Try fetching the role column first; if the remote DB doesn't have it
+      // (PGRST204), fall back to querying only onboarding_completed.
+      try {
+        const { data: profile, error } = await supabase
+          .from('profiles')
+          .select('onboarding_completed, role')
+          .eq('user_id', session.user.id)
+          .single();
 
-      if (profile?.onboarding_completed) {
-        // Redirect based on role if available
-        if (profile.role === 'employer') navigate('/?role=employer');
-        else navigate('/?role=freelancer');
+        if (error) {
+          // If the error indicates the `role` column isn't present, fall back
+          // to selecting only onboarding_completed and mark role unsupported.
+          // Supabase/postgrest surface PGRST204 for missing column in some cases.
+          // Treat any select failure as a hint that `role` might not exist.
+          console.warn('profiles select with role failed, falling back:', error);
+          setRoleSupported(false);
+
+          const { data: profileNoRole } = await supabase
+            .from('profiles')
+            .select('onboarding_completed')
+            .eq('user_id', session.user.id)
+            .single();
+
+          if (profileNoRole?.onboarding_completed) {
+            // No role available; redirect to freelancer by default
+            navigate('/?role=freelancer');
+          }
+        } else {
+          if (profile?.onboarding_completed) {
+            // Redirect based on role if available
+            if (profile.role === 'employer') navigate('/?role=employer');
+            else navigate('/?role=freelancer');
+          }
+        }
+      } catch (err) {
+        // Network or unexpected error. Log and try a minimal select as fallback.
+        console.warn('Error while checking onboarding/profile, attempting fallback:', err);
+        setRoleSupported(false);
+        try {
+          const { data: profileNoRole } = await supabase
+            .from('profiles')
+            .select('onboarding_completed')
+            .eq('user_id', session.user.id)
+            .single();
+
+          if (profileNoRole?.onboarding_completed) {
+            navigate('/?role=freelancer');
+          }
+        } catch (err2) {
+          console.error('Fallback profile check failed:', err2);
+        }
       }
     };
 
@@ -112,7 +154,9 @@ const Onboarding = () => {
       }
 
       const updateData: any = {
-        role: accountType,
+        // Only include `role` if the remote DB supports it. If not, we'll
+        // omit it to avoid PGRST204 errors and retry without role below.
+        ...(roleSupported ? { role: accountType } : {}),
         onboarding_completed: true
       };
 
@@ -129,7 +173,7 @@ const Onboarding = () => {
       const payload: any = {
         user_id: session.user.id,
         username,
-        role: accountType,
+        ...(roleSupported ? { role: accountType } : {}),
         onboarding_completed: true,
         ...updateData,
       };
@@ -140,22 +184,55 @@ const Onboarding = () => {
         if (payload[k] === null) delete payload[k];
       });
 
-      const { data: upserted, error } = await supabase
-        .from('profiles')
-        .upsert(payload, { onConflict: 'user_id' })
-        .select()
-        .single();
+      // Try upsert including role (if supported). If the request fails due to
+      // a missing column (PGRST204) or similar, retry without the role field.
+      let upserted: any = null;
+      try {
+        const res = await supabase
+          .from('profiles')
+          .upsert(payload, { onConflict: 'user_id' })
+          .select()
+          .single();
 
-      if (error) {
-        // If the profiles table is missing account_type column, surface a helpful message
-        console.error('Supabase upsert error:', error);
-        throw error;
+        if ((res as any).error) throw (res as any).error;
+        upserted = (res as any).data;
+      } catch (err: any) {
+        console.error('Supabase upsert error:', err);
+
+        // If the error indicates the `role` column is missing in the schema,
+        // mark role as unsupported and retry without it.
+        if (err?.code === 'PGRST204' || /Could not find the 'role' column/.test(err?.message || '')) {
+          console.warn('Detected missing `role` column in remote DB. Retrying upsert without role.');
+          setRoleSupported(false);
+
+          // Remove role and username if they cause issues; at minimum omit role
+          const fallbackPayload = { ...payload };
+          delete fallbackPayload.role;
+
+          try {
+            const res2 = await supabase
+              .from('profiles')
+              .upsert(fallbackPayload, { onConflict: 'user_id' })
+              .select()
+              .single();
+
+            if ((res2 as any).error) throw (res2 as any).error;
+            upserted = (res2 as any).data;
+          } catch (err2) {
+            console.error('Supabase fallback upsert error:', err2);
+            throw err2;
+          }
+        } else {
+          throw err;
+        }
       }
 
-      // Validate the saved role
-      if (!upserted || upserted.role !== accountType) {
-        console.error('Role mismatch after upsert', upserted);
-        throw new Error('Failed to persist selected role');
+      // Validate the saved role only if the DB supports it.
+      if (roleSupported) {
+        if (!upserted || upserted.role !== accountType) {
+          console.error('Role mismatch after upsert', upserted);
+          throw new Error('Failed to persist selected role');
+        }
       }
 
       toast({

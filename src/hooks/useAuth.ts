@@ -97,20 +97,42 @@ export const useAuth = () => {
             onboarding_completed: false,
           } as unknown as Database['public']['Tables']['profiles']['Insert'];
 
-          const { data: created, error: insertError } = await supabase
-            .from('profiles')
-            .upsert(upsertPayload, { onConflict: 'user_id' })
-            .select()
-            .single();
+          // Try upsert; if the remote DB rejects due to missing columns (e.g. role),
+          // retry with a trimmed payload.
+          try {
+            const { data: created, error: insertError } = await supabase
+              .from('profiles')
+              .upsert(upsertPayload, { onConflict: 'user_id' })
+              .select()
+              .single();
 
-          if (insertError) {
-            console.error('Error creating profile:', insertError);
+            if (insertError) {
+              // If the insert failed due to schema mismatch, try a fallback
+              console.warn('Initial profile upsert failed, attempting fallback upsert:', insertError);
+              const fallback = { user_id: authUser.id, email: authUser.email || '', onboarding_completed: false } as unknown as Database['public']['Tables']['profiles']['Insert'];
+              const { data: created2, error: insertError2 } = await supabase
+                .from('profiles')
+                .upsert(fallback, { onConflict: 'user_id' })
+                .select()
+                .single();
+
+              if (insertError2) {
+                console.error('Error creating profile (fallback):', insertError2);
+                setProfile(null);
+                return;
+              }
+
+              setProfile(created2 as unknown as Profile);
+              return;
+            }
+
+            setProfile(created as unknown as Profile);
+            return;
+          } catch (e) {
+            console.error('Unexpected error during profile upsert:', e);
             setProfile(null);
             return;
           }
-
-          setProfile(created as unknown as Profile);
-          return;
         } else {
           console.error('Error fetching profile:', error);
           return;
