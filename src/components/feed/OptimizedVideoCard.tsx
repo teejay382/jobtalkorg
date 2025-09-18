@@ -311,8 +311,12 @@ const OptimizedVideoCard = memo(({ video, isActive, onRefresh, isVisible }: Vide
           <Share className="w-6 h-6" />
         </button>
         
-        {isVideoFromEmployer && (
-          <button className="w-12 h-12 rounded-full bg-success/20 backdrop-blur-sm flex items-center justify-center text-success hover:bg-success/30 transition-smooth hover-scale">
+        {shouldShowHireButton && (
+          <button
+            onClick={handleHire}
+            className="w-12 h-12 rounded-full bg-success/20 backdrop-blur-sm flex items-center justify-center text-success hover:bg-success/30 transition-smooth hover-scale"
+            aria-label="Hire"
+          >
             <Briefcase className="w-6 h-6" />
           </button>
         )}

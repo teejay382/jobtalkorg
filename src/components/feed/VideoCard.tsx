@@ -283,8 +283,12 @@ const VideoCard = ({ video, isActive, onRefresh }: VideoCardProps) => {
           <Share className="w-6 h-6" />
         </button>
         
-        {isVideoFromEmployer && (
-          <button className="w-12 h-12 rounded-full bg-success/20 backdrop-blur-sm flex items-center justify-center text-success hover:bg-success/30 transition-all duration-300 hover:scale-110">
+        {shouldShowHireButton && (
+          <button
+            onClick={handleHire}
+            className="w-12 h-12 rounded-full bg-success/20 backdrop-blur-sm flex items-center justify-center text-success hover:bg-success/30 transition-all duration-300 hover:scale-110"
+            aria-label="Hire"
+          >
             <Briefcase className="w-6 h-6" />
           </button>
         )}
