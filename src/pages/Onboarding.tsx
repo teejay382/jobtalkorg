@@ -122,10 +122,14 @@ const Onboarding = () => {
       }
 
       // Use upsert and request the representation so we can verify the saved role
+      const username = (session.user.user_metadata && (session.user.user_metadata.user_name || session.user.user_metadata.full_name)) || session.user.email?.split('@')[0] || null;
+
       const { data: upserted, error } = await supabase
         .from('profiles')
         .upsert({
           user_id: session.user.id,
+          username,
+          role: accountType,
           ...updateData,
         })
         .select()
@@ -266,6 +270,9 @@ const Onboarding = () => {
                     </div>
                   </div>
                 </RadioGroup>
+                {selectionError && (
+                  <p className="text-sm text-destructive mt-2">{selectionError}</p>
+                )}
               </div>
             </div>
           )}
