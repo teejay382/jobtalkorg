@@ -284,13 +284,16 @@ const VideoCard = ({ video, isActive, onRefresh }: VideoCardProps) => {
         </button>
         
         {shouldShowHireButton && (
-          <button
-            onClick={handleHire}
-            className="w-12 h-12 rounded-full bg-success/20 backdrop-blur-sm flex items-center justify-center text-success hover:bg-success/30 transition-all duration-300 hover:scale-110"
-            aria-label="Hire"
-          >
-            <Briefcase className="w-6 h-6" />
-          </button>
+          <div>
+            <button
+              onClick={handleHire}
+              className="mt-1 px-3 py-2 rounded-md bg-emerald-600 text-white flex items-center gap-2 hover:bg-emerald-500 transition-all duration-200"
+              aria-label="Hire"
+            >
+              <Briefcase className="w-4 h-4" />
+              <span className="text-xs font-medium">Hire</span>
+            </button>
+          </div>
         )}
       </div>
       
@@ -311,13 +314,11 @@ const VideoCard = ({ video, isActive, onRefresh }: VideoCardProps) => {
           {shouldShowHireButton && (
             <Button
               onClick={handleHire}
-              className="hire-btn group relative overflow-hidden"
               size="sm"
+              className="bg-emerald-600 text-white border-transparent hover:bg-emerald-500 text-xs px-4 py-2 h-auto font-medium shadow-lg"
             >
-              <span className="relative z-10 text-sm font-semibold tracking-wide">
-                Hire Now
-              </span>
-              <div className="absolute inset-0 bg-gradient-to-r from-accent to-warning opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+              <Briefcase className="w-4 h-4 mr-2" />
+              Hire
             </Button>
           )}
         </div>

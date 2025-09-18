@@ -109,7 +109,10 @@ const Onboarding = () => {
 
       const { error } = await supabase
         .from('profiles')
-        .update(updateData)
+        .upsert({
+          user_id: session.user.id,
+          ...updateData,
+        })
         .eq('user_id', session.user.id);
 
       if (error) {
@@ -176,6 +179,11 @@ const Onboarding = () => {
                 >
                   <div className="space-y-4">
                     <div
+                      role="radio"
+                      tabIndex={0}
+                      aria-checked={accountType === 'freelancer'}
+                      onClick={() => setAccountType('freelancer')}
+                      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setAccountType('freelancer'); } }}
                       className={`flex items-center space-x-3 p-4 border rounded-lg hover:bg-muted/50 cursor-pointer ${accountType === 'freelancer' ? 'border-primary bg-primary/5' : ''}`}
                     >
                       {/* Native hidden radio to ensure checked/onChange work reliably */}
@@ -200,6 +208,11 @@ const Onboarding = () => {
                     </div>
                     
                     <div
+                      role="radio"
+                      tabIndex={0}
+                      aria-checked={accountType === 'employer'}
+                      onClick={() => setAccountType('employer')}
+                      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setAccountType('employer'); } }}
                       className={`flex items-center space-x-3 p-4 border rounded-lg hover:bg-muted/50 cursor-pointer ${accountType === 'employer' ? 'border-primary bg-primary/5' : ''}`}
                     >
                       <input
