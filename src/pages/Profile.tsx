@@ -299,7 +299,7 @@ const Profile = () => {
                 <Video className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
                 <h3 className="text-lg font-medium text-foreground mb-2">No videos yet</h3>
                 <p className="text-muted-foreground mb-4">
-                  Start showcasing your {(profile.role || profile.account_type) === 'freelancer' ? 'skills' : 'job opportunities'} with videos
+                  Start showcasing your {getProfileRole(profile) === 'freelancer' ? 'skills' : 'job opportunities'} with videos
                 </p>
                 <Button onClick={() => navigate('/upload')}>
                   Create Your First Video
@@ -312,10 +312,10 @@ const Profile = () => {
             <div className="text-center py-12">
               <Bookmark className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
               <h3 className="text-lg font-medium text-foreground mb-2">
-                No saved {(profile.role || profile.account_type) === 'freelancer' ? 'jobs' : 'profiles'} yet
+                No saved {getProfileRole(profile) === 'freelancer' ? 'jobs' : 'profiles'} yet
               </h3>
               <p className="text-muted-foreground mb-4">
-                Save {(profile.role || profile.account_type) === 'freelancer' ? 'job opportunities' : 'freelancer profiles'} you're interested in
+                Save {getProfileRole(profile) === 'freelancer' ? 'job opportunities' : 'freelancer profiles'} you're interested in
               </p>
               <Button variant="outline" onClick={() => navigate('/search')}>
                 Start Exploring

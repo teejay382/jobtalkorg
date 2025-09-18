@@ -33,12 +33,18 @@ const ProfileSettings: React.FC = () => {
   // Use Profile type for safer access
   const profileTyped = profile as Profile | undefined;
 
+  // Helper to coerce arbitrary strings into the allowed role union
+  const toRole = (val: unknown): 'freelancer' | 'employer' => {
+    if (val === 'employer') return 'employer';
+    return 'freelancer';
+  };
+
   const { register, handleSubmit, reset, control } = useForm<FormValues>({
     defaultValues: {
       username: profileTyped?.username || '',
       full_name: profileTyped?.full_name || '',
       bio: profileTyped?.bio || '',
-      account_type: (profileTyped?.role as 'freelancer' | 'employer') || (profileTyped?.account_type as 'freelancer' | 'employer') || 'freelancer',
+  account_type: profileTyped ? toRole(profileTyped.role ?? profileTyped.account_type) : 'freelancer',
       skills: Array.isArray(profileTyped?.skills) ? (profileTyped?.skills || []).join(', ') : '',
       location: profileTyped?.location || '',
       portfolio: profileTyped?.portfolio || '',
@@ -110,7 +116,7 @@ const ProfileSettings: React.FC = () => {
           username: data?.username || values.username,
           full_name: data?.full_name || values.full_name,
           bio: data?.bio || values.bio,
-          account_type: data?.account_type || values.account_type,
+          account_type: toRole(data?.account_type ?? values.account_type),
           skills: Array.isArray(data?.skills) ? (data!.skills as string[]).join(', ') : values.skills,
           location: data?.location || values.location,
           portfolio: data?.portfolio || values.portfolio,
