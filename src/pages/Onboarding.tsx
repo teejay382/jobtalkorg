@@ -176,20 +176,19 @@ const Onboarding = () => {
                 >
                   <div className="space-y-4">
                     <div
-                      role="button"
-                      tabIndex={0}
-                      aria-pressed={accountType === 'freelancer'}
-                      onClick={() => setAccountType('freelancer')}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter' || e.key === ' ') {
-                          e.preventDefault();
-                          setAccountType('freelancer');
-                        }
-                      }}
                       className={`flex items-center space-x-3 p-4 border rounded-lg hover:bg-muted/50 cursor-pointer ${accountType === 'freelancer' ? 'border-primary bg-primary/5' : ''}`}
                     >
+                      {/* Native hidden radio to ensure checked/onChange work reliably */}
+                      <input
+                        id="freelancer-radio"
+                        name="accountType"
+                        type="radio"
+                        className="sr-only"
+                        checked={accountType === 'freelancer'}
+                        onChange={() => setAccountType('freelancer')}
+                      />
                       <RadioGroupItem value="freelancer" id="freelancer" />
-                      <Label htmlFor="freelancer" className="flex items-center space-x-3 cursor-pointer flex-1">
+                      <Label htmlFor="freelancer-radio" className="flex items-center space-x-3 cursor-pointer flex-1">
                         <User className="h-6 w-6 text-primary" />
                         <div>
                           <div className="font-medium">I'm a Freelancer</div>
@@ -201,20 +200,18 @@ const Onboarding = () => {
                     </div>
                     
                     <div
-                      role="button"
-                      tabIndex={0}
-                      aria-pressed={accountType === 'employer'}
-                      onClick={() => setAccountType('employer')}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter' || e.key === ' ') {
-                          e.preventDefault();
-                          setAccountType('employer');
-                        }
-                      }}
                       className={`flex items-center space-x-3 p-4 border rounded-lg hover:bg-muted/50 cursor-pointer ${accountType === 'employer' ? 'border-primary bg-primary/5' : ''}`}
                     >
+                      <input
+                        id="employer-radio"
+                        name="accountType"
+                        type="radio"
+                        className="sr-only"
+                        checked={accountType === 'employer'}
+                        onChange={() => setAccountType('employer')}
+                      />
                       <RadioGroupItem value="employer" id="employer" />
-                      <Label htmlFor="employer" className="flex items-center space-x-3 cursor-pointer flex-1">
+                      <Label htmlFor="employer-radio" className="flex items-center space-x-3 cursor-pointer flex-1">
                         <Building2 className="h-6 w-6 text-primary" />
                         <div>
                           <div className="font-medium">I'm an Employer</div>

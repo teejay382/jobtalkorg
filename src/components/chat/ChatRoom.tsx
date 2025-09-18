@@ -106,26 +106,22 @@ export const ChatRoom = ({ conversationId, otherUser, onBack }: ChatRoomProps) =
             {profile?.account_type === 'employer' && (
               <button
                 onClick={async () => {
-                  try {
-                    // Insert a hire record for this employer -> otherUser
-                    // The generated Supabase client types may not include a `hires` table.
-                    // Use a TypeScript ignore here to avoid compile-time type errors
-                    // while still executing the insert at runtime.
-                    // @ts-ignore
-                    const { error } = await (supabase as any).from('hires').insert({
-                      employer_id: user?.id,
-                      freelancer_id: otherUser.id,
-                      status: 'initiated',
-                      created_at: new Date().toISOString()
-                    });
+                    try {
+                      // Insert a hire record for this employer -> otherUser
+                      const { error } = await supabase.from('hires').insert({
+                        employer_id: user?.id,
+                        freelancer_id: otherUser.id,
+                        status: 'initiated',
+                        created_at: new Date().toISOString()
+                      } as any);
 
-                    if (error) throw error;
+                      if (error) throw error;
 
-                    toast({ title: 'Hire sent', description: 'A hire request was created.' });
-                  } catch (err) {
-                    console.error('Error creating hire:', err);
-                    toast({ title: 'Error', description: 'Failed to create hire.' });
-                  }
+                      toast({ title: 'Hire sent', description: 'A hire request was created.' });
+                    } catch (err) {
+                      console.error('Error creating hire:', err);
+                      toast({ title: 'Error', description: 'Failed to create hire.' });
+                    }
                 }}
                 className="px-3 py-1 rounded-md bg-primary text-white text-sm"
               >

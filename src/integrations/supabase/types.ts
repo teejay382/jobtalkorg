@@ -273,6 +273,48 @@ export type Database = {
         }
         Relationships: []
       }
+      hires: {
+        Row: {
+          id: string
+          employer_id: string
+          freelancer_id: string
+          status: string
+          created_at: string
+          updated_at: string | null
+        }
+        Insert: {
+          id?: string
+          employer_id: string
+          freelancer_id: string
+          status?: string
+          created_at?: string
+          updated_at?: string | null
+        }
+        Update: {
+          id?: string
+          employer_id?: string
+          freelancer_id?: string
+          status?: string
+          created_at?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hires_employer_id_fkey"
+            columns: ["employer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "hires_freelancer_id_fkey"
+            columns: ["freelancer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
