@@ -180,11 +180,22 @@ const Onboarding = () => {
         ...updateData,
       };
 
-      // Remove undefined/null values for required fields
+      // Ensure email is a string (never null) to satisfy NOT NULL constraint
+      payload.email = payload.email ?? '';
+      payload.email = String(payload.email);
+
+      // Remove undefined/null values for required fields (but keep empty strings)
       Object.keys(payload).forEach((k) => {
         if (payload[k] === undefined) delete payload[k];
         if (payload[k] === null) delete payload[k];
       });
+
+      // Debug: log payload being sent to Supabase for diagnostics
+      // (will be visible in the browser console)
+      try {
+        // eslint-disable-next-line no-console
+        console.debug('[Onboarding] upsert payload:', { ...payload });
+      } catch (e) {}
 
       // Try upsert including role (if supported). If the request fails due to
       // a missing column (PGRST204) or similar, retry without the role field.
@@ -210,6 +221,13 @@ const Onboarding = () => {
           // Remove role if it causes issues; ensure email remains to satisfy NOT NULL
           const fallbackPayload = { ...payload };
           if ('role' in fallbackPayload) delete fallbackPayload.role;
+          // Guarantee email is string on the fallback path too
+          fallbackPayload.email = fallbackPayload.email ?? '';
+          fallbackPayload.email = String(fallbackPayload.email);
+          try {
+            // eslint-disable-next-line no-console
+            console.debug('[Onboarding] fallback upsert payload:', { ...fallbackPayload });
+          } catch (e) {}
 
           try {
             const res2 = await supabase
