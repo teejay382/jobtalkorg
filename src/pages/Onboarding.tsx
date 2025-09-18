@@ -14,7 +14,8 @@ import logoImage from '@/assets/logo.png';
 const Onboarding = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const [loading, setLoading] = useState(false);
-  const [accountType, setAccountType] = useState<'freelancer' | 'employer'>('freelancer');
+  const [accountType, setAccountType] = useState<'freelancer' | 'employer' | ''>('');
+  const [selectionError, setSelectionError] = useState('');
   const [companyName, setCompanyName] = useState('');
   const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
   const [customSkill, setCustomSkill] = useState('');
@@ -79,7 +80,13 @@ const Onboarding = () => {
   };
 
   const handleNext = () => {
+    setSelectionError('');
     if (currentStep === 1) {
+      // Ensure a role was selected before proceeding
+      if (!accountType) {
+        setSelectionError('Please select a role to continue.');
+        return;
+      }
       setCurrentStep(2);
     } else {
       handleComplete();
@@ -95,6 +102,13 @@ const Onboarding = () => {
         return;
       }
 
+      // Ensure role was selected
+      if (!accountType) {
+        setSelectionError('Please select a role to continue.');
+        setLoading(false);
+        return;
+      }
+
       const updateData: any = {
         account_type: accountType,
         onboarding_completed: true
@@ -107,16 +121,26 @@ const Onboarding = () => {
         updateData.skills = selectedSkills;
       }
 
-      const { error } = await supabase
+      // Use upsert and request the representation so we can verify the saved role
+      const { data: upserted, error } = await supabase
         .from('profiles')
         .upsert({
           user_id: session.user.id,
           ...updateData,
         })
-        .eq('user_id', session.user.id);
+        .select()
+        .single();
 
       if (error) {
+        // If the profiles table is missing account_type column, surface a helpful message
+        console.error('Supabase upsert error:', error);
         throw error;
+      }
+
+      // Validate the saved account_type
+      if (!upserted || upserted.account_type !== accountType) {
+        console.error('Account type mismatch after upsert', upserted);
+        throw new Error('Failed to persist selected role');
       }
 
       toast({
@@ -124,7 +148,13 @@ const Onboarding = () => {
         description: "Your profile has been set up successfully.",
       });
 
-      navigate('/');
+      // Redirect based on role. If you have dedicated employer/freelancer dashboards,
+      // replace these with the correct routes (e.g. '/employer' or '/freelancer').
+      if (accountType === 'employer') {
+        navigate('/?role=employer');
+      } else {
+        navigate('/?role=freelancer');
+      }
     } catch (error) {
       console.error('Error completing onboarding:', error);
       toast({
