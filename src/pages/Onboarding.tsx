@@ -264,9 +264,9 @@ const Onboarding = () => {
       // replace these with the correct routes (e.g. '/employer' or '/freelancer').
       // Redirect to role-specific areas (replace with your real routes)
       if (accountType === 'employer') {
-        navigate('/hire');
+        navigate('/?role=employer');
       } else {
-        navigate('/jobs');
+        navigate('/?role=freelancer');
       }
     } catch (error) {
       console.error('Error completing onboarding:', error);
