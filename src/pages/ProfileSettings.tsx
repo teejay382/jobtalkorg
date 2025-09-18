@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useForm, Controller } from 'react-hook-form';
-import { useAuth, Profile } from '@/hooks/useAuth';
+import { useAuth, Profile, getProfileRole } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Input } from '@/components/ui/input';
@@ -38,7 +38,7 @@ const ProfileSettings: React.FC = () => {
       username: profileTyped?.username || '',
       full_name: profileTyped?.full_name || '',
       bio: profileTyped?.bio || '',
-      account_type: (profileTyped?.account_type as 'freelancer' | 'employer') || 'freelancer',
+      account_type: (profileTyped?.role as 'freelancer' | 'employer') || (profileTyped?.account_type as 'freelancer' | 'employer') || 'freelancer',
       skills: Array.isArray(profileTyped?.skills) ? (profileTyped?.skills || []).join(', ') : '',
       location: profileTyped?.location || '',
       portfolio: profileTyped?.portfolio || '',
@@ -77,7 +77,9 @@ const ProfileSettings: React.FC = () => {
         username: values.username || null,
         full_name: values.full_name || null,
         bio: values.bio || null,
-        account_type: values.account_type,
+    account_type: values.account_type,
+    // also set role field in DB if your schema uses `role`
+    role: values.account_type,
         skills: values.skills ? values.skills.split(',').map(s => s.trim()).filter(Boolean) : null,
         location: values.location || null,
         portfolio: values.portfolio || null,
@@ -184,16 +186,16 @@ const ProfileSettings: React.FC = () => {
                 <div className="flex-1 pr-4">
                   <Label>Role</Label>
                   <div className="flex gap-2 mt-2">
-                    <label className={`px-3 py-2 rounded-md border ${profile?.account_type === 'freelancer' ? 'bg-primary text-white' : 'bg-transparent'}`}>
+                    <label className={`px-3 py-2 rounded-md border ${getProfileRole(profile) === 'freelancer' ? 'bg-primary text-white' : 'bg-transparent'}`}>
                       <input type="radio" value="freelancer" {...register('account_type')} className="hidden" /> Freelancer
                     </label>
-                    <label className={`px-3 py-2 rounded-md border ${profile?.account_type === 'employer' ? 'bg-primary text-white' : 'bg-transparent'}`}>
+                    <label className={`px-3 py-2 rounded-md border ${getProfileRole(profile) === 'employer' ? 'bg-primary text-white' : 'bg-transparent'}`}>
                       <input type="radio" value="employer" {...register('account_type')} className="hidden" /> Employer
                     </label>
                   </div>
                 </div>
 
-                <div className="flex flex-col items-end">
+                <div className="flex flex-col items-end"> 
                   <Label className="text-sm">Availability</Label>
                   <div className="mt-2">
                     <Controller

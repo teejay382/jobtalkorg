@@ -19,7 +19,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth, getProfileRole } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
@@ -161,14 +161,14 @@ const Profile = () => {
                 <h1 className="text-2xl font-bold text-white">
                   {profile.full_name || profile.username || 'User'}
                 </h1>
-                {profile.account_type === 'freelancer' ? (
+                {getProfileRole(profile) === 'freelancer' ? (
                   <User className="w-5 h-5 text-blue-400" />
                 ) : (
                   <Building2 className="w-5 h-5 text-green-400" />
                 )}
               </div>
               <p className="text-white/90">
-                {profile.account_type === 'freelancer' ? 'Freelancer' : 'Employer'}
+                {getProfileRole(profile) === 'freelancer' ? 'Freelancer' : 'Employer'}
                 {profile.company_name && ` at ${profile.company_name}`}
               </p>
               <div className="flex items-center gap-4 mt-2">
@@ -214,13 +214,13 @@ const Profile = () => {
           <div className="bg-card rounded-xl p-4 text-center shadow-soft">
             <div className="text-2xl font-bold text-success">0</div>
             <div className="text-sm text-muted-foreground">
-              {profile.account_type === 'freelancer' ? 'Projects' : 'Hires'}
+              {getProfileRole(profile) === 'freelancer' ? 'Projects' : 'Hires'}
             </div>
           </div>
           <div className="bg-card rounded-xl p-4 text-center shadow-soft">
             <div className="text-2xl font-bold text-accent">0</div>
             <div className="text-sm text-muted-foreground">
-              {profile.account_type === 'freelancer' ? 'Saved Jobs' : 'Favorites'}
+              {getProfileRole(profile) === 'freelancer' ? 'Saved Jobs' : 'Favorites'}
             </div>
           </div>
         </div>
@@ -299,7 +299,7 @@ const Profile = () => {
                 <Video className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
                 <h3 className="text-lg font-medium text-foreground mb-2">No videos yet</h3>
                 <p className="text-muted-foreground mb-4">
-                  Start showcasing your {profile.account_type === 'freelancer' ? 'skills' : 'job opportunities'} with videos
+                  Start showcasing your {(profile.role || profile.account_type) === 'freelancer' ? 'skills' : 'job opportunities'} with videos
                 </p>
                 <Button onClick={() => navigate('/upload')}>
                   Create Your First Video
@@ -312,10 +312,10 @@ const Profile = () => {
             <div className="text-center py-12">
               <Bookmark className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
               <h3 className="text-lg font-medium text-foreground mb-2">
-                No saved {profile.account_type === 'freelancer' ? 'jobs' : 'profiles'} yet
+                No saved {(profile.role || profile.account_type) === 'freelancer' ? 'jobs' : 'profiles'} yet
               </h3>
               <p className="text-muted-foreground mb-4">
-                Save {profile.account_type === 'freelancer' ? 'job opportunities' : 'freelancer profiles'} you're interested in
+                Save {(profile.role || profile.account_type) === 'freelancer' ? 'job opportunities' : 'freelancer profiles'} you're interested in
               </p>
               <Button variant="outline" onClick={() => navigate('/search')}>
                 Start Exploring

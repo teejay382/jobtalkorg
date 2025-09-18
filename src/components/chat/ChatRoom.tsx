@@ -103,7 +103,7 @@ export const ChatRoom = ({ conversationId, otherUser, onBack }: ChatRoomProps) =
             </div>
           </div>
           <div className="flex items-center gap-2">
-            {profile?.account_type === 'employer' && (
+            {profile?.role === 'employer' && (
               <button
                 onClick={async () => {
                     try {

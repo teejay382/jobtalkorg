@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
+import type { Database } from '@/integrations/supabase/types';
 
 export interface Profile {
   id: string;
@@ -9,7 +10,10 @@ export interface Profile {
   username: string | null;
   full_name: string | null;
   bio: string | null;
-  account_type: 'freelancer' | 'employer';
+  // Keep both `role` and legacy `account_type` to remain compatible with DB and UI.
+  // Accept broader string|null from the DB and normalize elsewhere when needed.
+  role: 'freelancer' | 'employer' | string | null;
+  account_type: 'freelancer' | 'employer' | string | null;
   company_name: string | null;
   skills: string[] | null;
   avatar_url: string | null;
@@ -83,15 +87,19 @@ export const useAuth = () => {
             return;
           }
 
+          const username = (authUser.user_metadata && (authUser.user_metadata.user_name || authUser.user_metadata.full_name)) || (authUser.email ? authUser.email.split('@')[0] : null);
+
+          const upsertPayload = {
+            user_id: authUser.id,
+            email: authUser.email || '',
+            full_name: (authUser.user_metadata && (authUser.user_metadata.full_name || authUser.user_metadata.name)) || null,
+            username: username,
+            onboarding_completed: false,
+          } as unknown as Database['public']['Tables']['profiles']['Insert'];
+
           const { data: created, error: insertError } = await supabase
             .from('profiles')
-            .insert({
-              user_id: authUser.id,
-              email: authUser.email || '',
-              full_name: (authUser.user_metadata && (authUser.user_metadata.full_name || authUser.user_metadata.name)) || null,
-              username: (authUser.user_metadata && (authUser.user_metadata.user_name || authUser.user_metadata.full_name)) || (authUser.email ? authUser.email.split('@')[0] : null),
-              onboarding_completed: false
-            })
+            .upsert(upsertPayload, { onConflict: 'user_id' })
             .select()
             .single();
 
@@ -109,7 +117,7 @@ export const useAuth = () => {
         }
       }
 
-      setProfile(data);
+  setProfile(data);
 
       // Enrich missing display fields from auth metadata if needed
       const authUser = (await supabase.auth.getUser()).data.user;
@@ -120,12 +128,14 @@ export const useAuth = () => {
         const suggestedUsername = data.username || meta.user_name || suggestedFull || emailPrefix || null;
         if ((!data.full_name && suggestedFull) || (!data.username && suggestedUsername)) {
           try {
+            const updatePayload = {
+              full_name: data.full_name || suggestedFull,
+              username: data.username || suggestedUsername,
+            } as unknown as Database['public']['Tables']['profiles']['Update'];
+
             const { data: updated } = await supabase
               .from('profiles')
-              .update({
-                full_name: data.full_name || suggestedFull,
-                username: data.username || suggestedUsername,
-              })
+              .update(updatePayload)
               .eq('user_id', authUser.id)
               .select()
               .single();
@@ -156,9 +166,10 @@ export const useAuth = () => {
     if (!user) return { data: null, error: 'No user logged in' };
 
     try {
+      const dbUpdates = updates as unknown as Database['public']['Tables']['profiles']['Update'];
       const { data, error } = await supabase
         .from('profiles')
-        .update(updates)
+        .update(dbUpdates)
         .eq('user_id', user.id)
         .select()
         .single();
@@ -182,4 +193,13 @@ export const useAuth = () => {
     updateProfile,
     refetchProfile: () => user && fetchProfile(user.id)
   };
+};
+
+// Utility to normalize role from profile object
+export const getProfileRole = (profile: Profile | null | undefined): 'freelancer' | 'employer' | undefined => {
+  if (!profile) return undefined;
+  const roleVal = (profile.role as string) || (profile.account_type as string) || undefined;
+  if (roleVal === 'freelancer') return 'freelancer';
+  if (roleVal === 'employer') return 'employer';
+  return undefined;
 };

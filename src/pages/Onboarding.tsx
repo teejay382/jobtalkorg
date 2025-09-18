@@ -37,7 +37,7 @@ const Onboarding = () => {
   ];
 
   useEffect(() => {
-    // Check if user is authenticated
+    // Check if user is authenticated and whether onboarding completed
     const checkAuth = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
@@ -45,15 +45,17 @@ const Onboarding = () => {
         return;
       }
 
-      // Check if user has already completed onboarding
+      // Check if user has already completed onboarding. Use user_id filter.
       const { data: profile } = await supabase
         .from('profiles')
-        .select('onboarding_completed, account_type')
+        .select('onboarding_completed, role')
         .eq('user_id', session.user.id)
         .single();
 
       if (profile?.onboarding_completed) {
-        navigate('/');
+        // Redirect based on role if available
+        if (profile.role === 'employer') navigate('/?role=employer');
+        else navigate('/?role=freelancer');
       }
     };
 
@@ -110,7 +112,7 @@ const Onboarding = () => {
       }
 
       const updateData: any = {
-        account_type: accountType,
+        role: accountType,
         onboarding_completed: true
       };
 
@@ -124,14 +126,23 @@ const Onboarding = () => {
       // Use upsert and request the representation so we can verify the saved role
       const username = (session.user.user_metadata && (session.user.user_metadata.user_name || session.user.user_metadata.full_name)) || session.user.email?.split('@')[0] || null;
 
+      const payload: any = {
+        user_id: session.user.id,
+        username,
+        role: accountType,
+        onboarding_completed: true,
+        ...updateData,
+      };
+
+      // Remove undefined/null values for required fields
+      Object.keys(payload).forEach((k) => {
+        if (payload[k] === undefined) delete payload[k];
+        if (payload[k] === null) delete payload[k];
+      });
+
       const { data: upserted, error } = await supabase
         .from('profiles')
-        .upsert({
-          user_id: session.user.id,
-          username,
-          role: accountType,
-          ...updateData,
-        })
+        .upsert(payload, { onConflict: 'user_id' })
         .select()
         .single();
 
@@ -141,9 +152,9 @@ const Onboarding = () => {
         throw error;
       }
 
-      // Validate the saved account_type
-      if (!upserted || upserted.account_type !== accountType) {
-        console.error('Account type mismatch after upsert', upserted);
+      // Validate the saved role
+      if (!upserted || upserted.role !== accountType) {
+        console.error('Role mismatch after upsert', upserted);
         throw new Error('Failed to persist selected role');
       }
 
@@ -154,10 +165,11 @@ const Onboarding = () => {
 
       // Redirect based on role. If you have dedicated employer/freelancer dashboards,
       // replace these with the correct routes (e.g. '/employer' or '/freelancer').
+      // Redirect to role-specific areas (replace with your real routes)
       if (accountType === 'employer') {
-        navigate('/?role=employer');
+        navigate('/hire');
       } else {
-        navigate('/?role=freelancer');
+        navigate('/jobs');
       }
     } catch (error) {
       console.error('Error completing onboarding:', error);

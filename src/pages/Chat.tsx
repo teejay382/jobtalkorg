@@ -22,7 +22,7 @@ const Chat = () => {
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .select('user_id, full_name, username, avatar_url, account_type, company_name')
+        .select('user_id, full_name, username, avatar_url, role, account_type, company_name')
         .eq('user_id', userId)
         .single();
       
@@ -41,6 +41,7 @@ const Chat = () => {
         username: data.username || data.full_name || `User ${userId.slice(0, 8)}`,
         full_name: data.full_name,
         avatar_url: data.avatar_url,
+        role: data.role || data.account_type,
         account_type: data.account_type,
         company_name: data.company_name
       };

@@ -3,7 +3,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Heart, MessageCircle, Share, Briefcase, Play, Volume2, VolumeX } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth, getProfileRole } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
@@ -26,7 +26,8 @@ interface VideoCardProps {
       full_name: string;
       username?: string;
       avatar_url?: string;
-      account_type?: string;
+  account_type?: string;
+  role?: string;
       company_name?: string;
       email?: string;
     };
@@ -207,8 +208,8 @@ const VideoCard = ({ video, isActive, onRefresh }: VideoCardProps) => {
     onRefresh();
   };
 
-  const isVideoFromEmployer = video.user.account_type === 'employer';
-  const isCurrentUserEmployer = profile?.account_type === 'employer';
+  const isVideoFromEmployer = (video.user.role || (video.user as any).account_type) === 'employer';
+  const isCurrentUserEmployer = getProfileRole(profile) === 'employer';
   const displayName = video.user.full_name;
   const userRole = isVideoFromEmployer ? (video.user.company_name || 'Employer') : 'Job Seeker';
 
