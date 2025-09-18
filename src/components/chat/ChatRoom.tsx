@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Send, MoreVertical } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -20,6 +22,8 @@ interface ChatRoomProps {
 export const ChatRoom = ({ conversationId, otherUser, onBack }: ChatRoomProps) => {
   const { user } = useAuth();
   const { messages, sendMessage, fetchMessages, sendTypingIndicator } = useChat();
+  const { profile } = useAuth();
+  const { toast } = useToast();
   const [message, setMessage] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -98,9 +102,41 @@ export const ChatRoom = ({ conversationId, otherUser, onBack }: ChatRoomProps) =
               <p className="text-xs text-muted-foreground">Online</p>
             </div>
           </div>
-          <button className="w-8 h-8 flex items-center justify-center text-muted-foreground">
-            <MoreVertical className="w-5 h-5" />
-          </button>
+          <div className="flex items-center gap-2">
+            {profile?.account_type === 'employer' && (
+              <button
+                onClick={async () => {
+                  try {
+                    // Insert a hire record for this employer -> otherUser
+                    // The generated Supabase client types may not include a `hires` table.
+                    // Use a TypeScript ignore here to avoid compile-time type errors
+                    // while still executing the insert at runtime.
+                    // @ts-ignore
+                    const { error } = await (supabase as any).from('hires').insert({
+                      employer_id: user?.id,
+                      freelancer_id: otherUser.id,
+                      status: 'initiated',
+                      created_at: new Date().toISOString()
+                    });
+
+                    if (error) throw error;
+
+                    toast({ title: 'Hire sent', description: 'A hire request was created.' });
+                  } catch (err) {
+                    console.error('Error creating hire:', err);
+                    toast({ title: 'Error', description: 'Failed to create hire.' });
+                  }
+                }}
+                className="px-3 py-1 rounded-md bg-primary text-white text-sm"
+              >
+                Hire
+              </button>
+            )}
+
+            <button className="w-8 h-8 flex items-center justify-center text-muted-foreground">
+              <MoreVertical className="w-5 h-5" />
+            </button>
+          </div>
         </div>
       </div>
 
