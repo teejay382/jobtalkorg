@@ -175,7 +175,19 @@ const Onboarding = () => {
                   onValueChange={(value: string) => setAccountType(value as 'freelancer' | 'employer')}
                 >
                   <div className="space-y-4">
-                    <div className="flex items-center space-x-3 p-4 border rounded-lg hover:bg-muted/50 cursor-pointer">
+                    <div
+                      role="button"
+                      tabIndex={0}
+                      aria-pressed={accountType === 'freelancer'}
+                      onClick={() => setAccountType('freelancer')}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          setAccountType('freelancer');
+                        }
+                      }}
+                      className={`flex items-center space-x-3 p-4 border rounded-lg hover:bg-muted/50 cursor-pointer ${accountType === 'freelancer' ? 'border-primary bg-primary/5' : ''}`}
+                    >
                       <RadioGroupItem value="freelancer" id="freelancer" />
                       <Label htmlFor="freelancer" className="flex items-center space-x-3 cursor-pointer flex-1">
                         <User className="h-6 w-6 text-primary" />
@@ -188,7 +200,19 @@ const Onboarding = () => {
                       </Label>
                     </div>
                     
-                    <div className="flex items-center space-x-3 p-4 border rounded-lg hover:bg-muted/50 cursor-pointer">
+                    <div
+                      role="button"
+                      tabIndex={0}
+                      aria-pressed={accountType === 'employer'}
+                      onClick={() => setAccountType('employer')}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          setAccountType('employer');
+                        }
+                      }}
+                      className={`flex items-center space-x-3 p-4 border rounded-lg hover:bg-muted/50 cursor-pointer ${accountType === 'employer' ? 'border-primary bg-primary/5' : ''}`}
+                    >
                       <RadioGroupItem value="employer" id="employer" />
                       <Label htmlFor="employer" className="flex items-center space-x-3 cursor-pointer flex-1">
                         <Building2 className="h-6 w-6 text-primary" />
