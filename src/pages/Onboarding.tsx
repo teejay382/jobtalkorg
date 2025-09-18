@@ -169,9 +169,11 @@ const Onboarding = () => {
 
       // Use upsert and request the representation so we can verify the saved role
       const username = (session.user.user_metadata && (session.user.user_metadata.user_name || session.user.user_metadata.full_name)) || session.user.email?.split('@')[0] || null;
+      const email = session.user.email ?? '';
 
       const payload: any = {
         user_id: session.user.id,
+        email,
         username,
         ...(roleSupported ? { role: accountType } : {}),
         onboarding_completed: true,
@@ -205,9 +207,9 @@ const Onboarding = () => {
           console.warn('Detected missing `role` column in remote DB. Retrying upsert without role.');
           setRoleSupported(false);
 
-          // Remove role and username if they cause issues; at minimum omit role
+          // Remove role if it causes issues; ensure email remains to satisfy NOT NULL
           const fallbackPayload = { ...payload };
-          delete fallbackPayload.role;
+          if ('role' in fallbackPayload) delete fallbackPayload.role;
 
           try {
             const res2 = await supabase
