@@ -8,6 +8,9 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 import { CommentSection } from './CommentSection';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { ChatRoom } from '@/components/chat/ChatRoom';
+import { useChat } from '@/hooks/useChat';
 
 interface VideoCardProps {
   video: {
@@ -44,10 +47,13 @@ const VideoCard = ({ video, isActive, onRefresh }: VideoCardProps) => {
   const [isMuted, setIsMuted] = useState(false); // Changed to false for audible videos
   const [loading, setLoading] = useState(false);
   const [showComments, setShowComments] = useState(false);
+  const [showHireModal, setShowHireModal] = useState(false);
+  const [hireConversationId, setHireConversationId] = useState<string | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const { user, profile } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { createOrGetConversation } = useChat();
 
   useEffect(() => {
     checkIfLiked();
@@ -177,7 +183,7 @@ const VideoCard = ({ video, isActive, onRefresh }: VideoCardProps) => {
     }
   };
 
-  const handleHire = () => {
+  const handleHire = async () => {
     if (!user) {
       toast({
         title: "Sign in required",
@@ -187,8 +193,30 @@ const VideoCard = ({ video, isActive, onRefresh }: VideoCardProps) => {
       return;
     }
 
-    // Navigate to chat with the video creator's ID
-    navigate(`/chat?user=${video.user.id}`);
+    try {
+      // Create or get conversation with the freelancer
+      const conversation = await createOrGetConversation(video.user.id);
+      if (conversation) {
+        setHireConversationId(conversation.id);
+        setShowHireModal(true);
+
+        // Send initial hire message
+        const initialMessage = `Hi ${video.user.full_name || video.user.username}, I'm interested in hiring you. Let's discuss!`;
+        await supabase.from('messages').insert({
+          conversation_id: conversation.id,
+          sender_id: user.id,
+          content: initialMessage,
+          created_at: new Date().toISOString()
+        });
+      }
+    } catch (error) {
+      console.error('Error creating conversation:', error);
+      toast({
+        title: "Error",
+        description: "Failed to start conversation. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleComment = () => {
@@ -359,6 +387,25 @@ const VideoCard = ({ video, isActive, onRefresh }: VideoCardProps) => {
         onClose={() => setShowComments(false)}
         onCommentAdded={handleCommentAdded}
       />
+
+      {/* Hire Modal */}
+      <Dialog open={showHireModal} onOpenChange={setShowHireModal}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-hidden">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Briefcase className="w-5 h-5" />
+              Hire {video.user.full_name || video.user.username}
+            </DialogTitle>
+          </DialogHeader>
+          {hireConversationId && (
+            <ChatRoom
+              conversationId={hireConversationId}
+              otherUser={video.user}
+              onBack={() => setShowHireModal(false)}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

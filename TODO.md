@@ -1,14 +1,29 @@
-# Feedback Flow Integration TODO
+# Hybrid Hiring System Implementation
 
-## Tasks
-- [x] Create FeedbackModal component in src/components/ui/FeedbackModal.tsx
-- [x] Update src/App.tsx to include FeedbackModal and implement session tracking logic (5 min timer, logout detection, modal triggers)
-- [x] Add permanent "Feedback" button in src/pages/ProfileSettings.tsx linking to Google Form
-- [x] Test modal responsiveness and functionality
-- [x] Verify session tracking prevents repeated modals
+## 1. Hire Button on Videos
+- [ ] Enhance Hire button in VideoCard.tsx to open chat modal pre-filled with "Hi [freelancer_username], I'm interested in hiring you. Let's discuss!"
+- [ ] Ensure button visibility only for logged-in employers viewing freelancer videos
+- [ ] Ensure mobile and web compatibility
 
-## Notes
-- Use sessionStorage for 'feedbackModalShown' and 'feedbackClicked' flags
-- Modal triggers: 5 minutes after login, or on logout (if not already shown/clicked)
-- Google Form URL: https://docs.google.com/forms/d/e/1FAIpQLSdsbSoo4B3Vg1k7dW3KVY1tyVYnqzGKBPE518k9Kn6ue7ni4Q/viewform?usp=dialog
-- Ensure modal is responsive and styled consistently
+## 2. Employer Job Posting
+- [ ] Add "Post a Job" menu item in MobileMenu.tsx for employers
+- [ ] Create new PostJob.tsx page with form fields: title, description, budget, timeline, created_by (employer_id)
+- [ ] Save jobs in Supabase jobs table
+- [ ] Extend Profile.tsx to show posted jobs for employers
+
+## 3. Apply with Video
+- [ ] Create migration for applications table with fields: id, job_id, freelancer_id, video_id, created_at
+- [ ] Add "Apply with Video" button in JobCard.tsx visible only to freelancers
+- [ ] Create ApplyWithVideoModal.tsx component to select/upload video
+- [ ] Implement application saving logic
+
+## 4. Permissions & UI/UX
+- [ ] Add role-based permission checks throughout the app
+- [ ] Show appropriate messages for unauthorized access
+- [ ] Ensure responsive design using Tailwind + ShadCN
+- [ ] Test on mobile and desktop
+
+## 5. Testing & Integration
+- [ ] Test all features end-to-end
+- [ ] Update routing in App.tsx if needed
+- [ ] Ensure proper error handling and user feedback
