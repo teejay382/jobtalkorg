@@ -152,106 +152,43 @@ const Onboarding = () => {
         return;
       }
 
-      const updateData: any = {
-        // Only include `role` if the remote DB supports it. If not, we'll
-        // omit it to avoid PGRST204 errors and retry without role below.
-        ...(roleSupported ? { role: accountType } : {}),
+      // First, create or update the profile with basic info
+      const username = (session.user.user_metadata && (session.user.user_metadata.user_name || session.user.user_metadata.full_name)) || session.user.email?.split('@')[0] || null;
+      const email = session.user.email ?? '';
+
+      const profileData: any = {
+        user_id: session.user.id,
+        email: String(email),
+        username,
         onboarding_completed: true
       };
 
       if (accountType === 'employer') {
-        updateData.company_name = companyName;
-        updateData.skills = selectedSkills; // Job categories for employers
+        profileData.company_name = companyName;
+        profileData.skills = selectedSkills; // Job categories for employers
       } else {
-        updateData.skills = selectedSkills;
+        profileData.skills = selectedSkills;
       }
 
-      // Use upsert and request the representation so we can verify the saved role
-      const username = (session.user.user_metadata && (session.user.user_metadata.user_name || session.user.user_metadata.full_name)) || session.user.email?.split('@')[0] || null;
-      const email = session.user.email ?? '';
+      // Create or update profile
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .upsert(profileData, { onConflict: 'user_id' });
 
-      const payload: any = {
-        user_id: session.user.id,
-        email,
-        username,
-        ...(roleSupported ? { role: accountType } : {}),
-        onboarding_completed: true,
-        ...updateData,
-      };
-
-      // Ensure email is a string (never null) to satisfy NOT NULL constraint
-      payload.email = payload.email ?? '';
-      payload.email = String(payload.email);
-
-      // Remove undefined/null values for required fields (but keep empty strings)
-      Object.keys(payload).forEach((k) => {
-        if (payload[k] === undefined) delete payload[k];
-        if (payload[k] === null) delete payload[k];
-      });
-
-      // Debug: log payload being sent to Supabase for diagnostics
-      // (will be visible in the browser console)
-      try {
-        // eslint-disable-next-line no-console
-        console.debug('[Onboarding] upsert payload:', { ...payload });
-      } catch (e) {}
-
-      // Try upsert including role (if supported). If the request fails due to
-      // a missing column (PGRST204) or similar, retry without the role field.
-      let upserted: any = null;
-      try {
-        const res = await supabase
-          .from('profiles')
-          .upsert(payload, { onConflict: 'user_id' })
-          .select()
-          .single();
-
-        if ((res as any).error) throw (res as any).error;
-        upserted = (res as any).data;
-      } catch (err: any) {
-        console.error('Supabase upsert error:', err);
-
-        // If the error indicates the `role` column is missing in the schema,
-        // mark role as unsupported and retry without it.
-        if (err?.code === 'PGRST204' || /Could not find the 'role' column/.test(err?.message || '')) {
-          console.warn('Detected missing `role` column in remote DB. Retrying upsert without role.');
-          setRoleSupported(false);
-
-          // Remove role if it causes issues; ensure email remains to satisfy NOT NULL
-          const fallbackPayload = { ...payload };
-          if ('role' in fallbackPayload) delete fallbackPayload.role;
-          // Guarantee email is string on the fallback path too
-          fallbackPayload.email = fallbackPayload.email ?? '';
-          fallbackPayload.email = String(fallbackPayload.email);
-          try {
-            // eslint-disable-next-line no-console
-            console.debug('[Onboarding] fallback upsert payload:', { ...fallbackPayload });
-          } catch (e) {}
-
-          try {
-            const res2 = await supabase
-              .from('profiles')
-              .upsert(fallbackPayload, { onConflict: 'user_id' })
-              .select()
-              .single();
-
-            if ((res2 as any).error) throw (res2 as any).error;
-            upserted = (res2 as any).data;
-          } catch (err2) {
-            console.error('Supabase fallback upsert error:', err2);
-            throw err2;
-          }
-        } else {
-          throw err;
-        }
+      if (profileError) {
+        console.error('Error creating profile:', profileError);
+        throw profileError;
       }
 
-      // Validate the saved role only if the DB supports it.
-      if (roleSupported) {
-        if (!upserted || upserted.role !== accountType) {
-          console.error('Role mismatch after upsert', upserted);
-          throw new Error('Failed to persist selected role');
-        }
+      // Explicitly set the role
+      const { error: roleError } = await supabase
+        .from('profiles')
+        .update({ role: accountType })
+        .eq('user_id', session.user.id);
+
+      if (roleError) {
+        console.error('Error updating role:', roleError);
+        throw roleError;
       }
 
       toast({
@@ -259,9 +196,7 @@ const Onboarding = () => {
         description: "Your profile has been set up successfully.",
       });
 
-      // Redirect based on role. If you have dedicated employer/freelancer dashboards,
-      // replace these with the correct routes (e.g. '/employer' or '/freelancer').
-      // Redirect to role-specific areas (replace with your real routes)
+      // Redirect based on role
       if (accountType === 'employer') {
         navigate('/?role=employer');
       } else {
