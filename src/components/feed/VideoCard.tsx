@@ -4,12 +4,11 @@ import { Heart, MessageCircle, Share, Briefcase, Play, Volume2, VolumeX } from '
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth, getProfileRole } from '@/hooks/useAuth';
-import { Button } from '@/components/ui/button';
+
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 import { CommentSection } from './CommentSection';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { ChatRoom } from '@/components/chat/ChatRoom';
+
 import { useChat } from '@/hooks/useChat';
 
 interface VideoCardProps {
@@ -47,8 +46,7 @@ const VideoCard = ({ video, isActive, onRefresh }: VideoCardProps) => {
   const [isMuted, setIsMuted] = useState(false); // Changed to false for audible videos
   const [loading, setLoading] = useState(false);
   const [showComments, setShowComments] = useState(false);
-  const [showHireModal, setShowHireModal] = useState(false);
-  const [hireConversationId, setHireConversationId] = useState<string | null>(null);
+  // Removed modal state for hire
   const videoRef = useRef<HTMLVideoElement>(null);
   const { user, profile } = useAuth();
   const { toast } = useToast();
@@ -197,17 +195,17 @@ const VideoCard = ({ video, isActive, onRefresh }: VideoCardProps) => {
       // Create or get conversation with the freelancer
       const conversation = await createOrGetConversation(video.user.id);
       if (conversation) {
-        setHireConversationId(conversation.id);
-        setShowHireModal(true);
-
         // Send initial hire message
-        const initialMessage = `Hi ${video.user.full_name || video.user.username}, I'm interested in hiring you. Let's discuss!`;
+        const initialMessage = "Hi 👋 I’m interested in hiring you for a project.";
         await supabase.from('messages').insert({
           conversation_id: conversation.id,
           sender_id: user.id,
           content: initialMessage,
           created_at: new Date().toISOString()
         });
+
+        // Redirect to chatroom
+        navigate(`/chat?user=${video.user.id}`);
       }
     } catch (error) {
       console.error('Error creating conversation:', error);
@@ -305,24 +303,21 @@ const VideoCard = ({ video, isActive, onRefresh }: VideoCardProps) => {
           <span className="text-white text-xs font-medium">{commentsCount}</span>
         </div>
         
-        <button 
-          onClick={handleShare} 
+        <button
+          onClick={handleShare}
           className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center text-white hover:bg-white/30 transition-all duration-300 hover:scale-110"
         >
           <Share className="w-6 h-6" />
         </button>
-        
+
         {shouldShowHireButton && (
-          <div>
-            <button
-              onClick={handleHire}
-              className="mt-1 px-3 py-2 rounded-md bg-emerald-600 text-white flex items-center gap-2 hover:bg-emerald-500 transition-all duration-200"
-              aria-label="Hire"
-            >
-              <Briefcase className="w-4 h-4" />
-              <span className="text-xs font-medium">Hire</span>
-            </button>
-          </div>
+          <button
+            onClick={handleHire}
+            className="w-12 h-12 rounded-full bg-emerald-600/20 backdrop-blur-sm flex items-center justify-center text-emerald-400 hover:bg-emerald-600/30 transition-all duration-300 hover:scale-110"
+            aria-label="Hire"
+          >
+            <Briefcase className="w-6 h-6" />
+          </button>
         )}
       </div>
       
@@ -340,16 +335,6 @@ const VideoCard = ({ video, isActive, onRefresh }: VideoCardProps) => {
             <h3 className="font-semibold text-base text-white truncate">{displayName}</h3>
             <p className="text-sm text-white/80 truncate">{userRole}</p>
           </div>
-          {shouldShowHireButton && (
-            <Button
-              onClick={handleHire}
-              size="sm"
-              className="bg-emerald-600 text-white border-transparent hover:bg-emerald-500 text-xs px-4 py-2 h-auto font-medium shadow-lg"
-            >
-              <Briefcase className="w-4 h-4 mr-2" />
-              Hire
-            </Button>
-          )}
         </div>
         
         {/* Video title */}
@@ -387,25 +372,6 @@ const VideoCard = ({ video, isActive, onRefresh }: VideoCardProps) => {
         onClose={() => setShowComments(false)}
         onCommentAdded={handleCommentAdded}
       />
-
-      {/* Hire Modal */}
-      <Dialog open={showHireModal} onOpenChange={setShowHireModal}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-hidden">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Briefcase className="w-5 h-5" />
-              Hire {video.user.full_name || video.user.username}
-            </DialogTitle>
-          </DialogHeader>
-          {hireConversationId && (
-            <ChatRoom
-              conversationId={hireConversationId}
-              otherUser={video.user}
-              onBack={() => setShowHireModal(false)}
-            />
-          )}
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };
