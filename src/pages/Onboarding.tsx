@@ -76,9 +76,8 @@ const Onboarding = () => {
           }
         } else {
           if (profile?.onboarding_completed) {
-            // Redirect based on role if available
-            if (profile.role === 'employer') navigate('/?role=employer');
-            else navigate('/?role=freelancer');
+            // Redirect to feed
+            navigate('/feed');
           }
         }
       } catch (err) {

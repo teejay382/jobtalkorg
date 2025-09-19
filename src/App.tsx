@@ -141,6 +141,7 @@ const App = () => {
             <Suspense fallback={<LoadingSkeleton />}>
               <Routes>
                 <Route path="/" element={<Index />} />
+                <Route path="/feed" element={<Index />} />
                 <Route path="/search" element={<Search />} />
                 <Route path="/upload" element={<Upload />} />
                 <Route path="/chat" element={<Chat />} />
