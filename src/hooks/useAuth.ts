@@ -34,40 +34,90 @@ export const useAuth = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Set up auth state listener FIRST
+    let mounted = true;
+
+    // Get initial session (this will automatically handle OAuth callbacks from URL)
+    const initializeAuth = async () => {
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error('Error getting session:', error);
+        } else if (mounted) {
+          setSession(session);
+          setUser(session?.user ?? null);
+          
+          if (session?.user) {
+            // Clean up URL if it contains auth tokens
+            if (window.location.hash && window.location.hash.includes('access_token')) {
+              // Clear the URL hash to remove tokens from address bar
+              window.history.replaceState({}, document.title, window.location.pathname);
+            }
+            
+            // Fetch profile after a short delay to ensure auth is settled
+            setTimeout(() => {
+              if (mounted) {
+                fetchProfile(session.user.id);
+              }
+            }, 100);
+          } else {
+            setLoading(false);
+          }
+        }
+      } catch (error) {
+        console.error('Error initializing auth:', error);
+        if (mounted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        if (!mounted) return;
+
+        console.log('Auth state changed:', event, session ? 'Session exists' : 'No session');
+        
         setSession(session);
         setUser(session?.user ?? null);
         
-        if (session?.user) {
-          // Defer profile fetch with setTimeout to prevent auth deadlock
+        if (event === 'SIGNED_IN' && session?.user) {
+          // Clean up URL if it contains auth tokens
+          if (window.location.hash && window.location.hash.includes('access_token')) {
+            window.history.replaceState({}, document.title, window.location.pathname);
+          }
+          
+          // Fetch profile for newly signed in user
           setTimeout(() => {
-            fetchProfile(session.user.id);
-          }, 0);
+            if (mounted) {
+              fetchProfile(session.user.id);
+            }
+          }, 100);
+        } else if (event === 'SIGNED_OUT') {
+          setProfile(null);
+          setLoading(false);
+        } else if (session?.user) {
+          // For existing sessions, fetch profile
+          setTimeout(() => {
+            if (mounted) {
+              fetchProfile(session.user.id);
+            }
+          }, 100);
         } else {
           setProfile(null);
+          setLoading(false);
         }
-        
-        setLoading(false);
       }
     );
 
-    // THEN check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      
-      if (session?.user) {
-        setTimeout(() => {
-          fetchProfile(session.user.id);
-        }, 0);
-      } else {
-        setLoading(false);
-      }
-    });
+    // Initialize auth state
+    initializeAuth();
 
-    return () => subscription.unsubscribe();
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   const fetchProfile = async (userId: string) => {

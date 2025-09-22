@@ -20,6 +20,7 @@ const Onboarding = lazy(() => import('./pages/Onboarding'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 const LoginPage = lazy(() => import('./pages/LoginPage'));
 const Callback = lazy(() => import('./pages/auth/callback'));
+const OAuthTest = lazy(() => import('./pages/OAuthTest'));
 
 // Lazy-load heavy UI pieces (to reduce initial bundle)
 const Toaster = lazy(() => import('@/components/ui/toaster').then(mod => ({ default: mod.Toaster })));
@@ -153,6 +154,7 @@ const App = () => {
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/onboarding" element={<Onboarding />} />
                 <Route path="/auth/callback" element={<Callback />} />
+                <Route path="/oauth-test" element={<OAuthTest />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>
