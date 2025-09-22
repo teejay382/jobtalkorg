@@ -28,7 +28,7 @@ const FeedbackModal: React.FC<FeedbackModalProps> = ({
         <DialogHeader>
           <DialogTitle>We'd love your feedback!</DialogTitle>
           <DialogDescription>
-            Help us improve Job Talk by answering a quick 5-minute questionnaire.
+            Help us improve JobTolk by answering a quick 5-minute questionnaire.
           </DialogDescription>
         </DialogHeader>
         <DialogFooter className="flex gap-2">

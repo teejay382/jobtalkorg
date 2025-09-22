@@ -21,7 +21,7 @@ const Auth = () => {
     fullName: ''
   });
   const [error, setError] = useState('');
-  
+
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { toast } = useToast();
@@ -114,14 +114,14 @@ const Auth = () => {
             title: "Welcome back!",
             description: "You have successfully signed in.",
           });
-          
+
           // Check if user has completed onboarding
           const { data: profile } = await supabase
             .from('profiles')
             .select('onboarding_completed')
             .eq('user_id', (await supabase.auth.getUser()).data.user?.id)
             .single();
-            
+
           if (profile && !profile.onboarding_completed) {
             navigate('/onboarding');
           } else {
@@ -145,7 +145,7 @@ const Auth = () => {
           redirectTo: `${window.location.origin}`
         }
       });
-      
+
       if (error) {
         setError(error.message);
       }
@@ -161,16 +161,16 @@ const Auth = () => {
       <Card className="w-full max-w-md">
         <CardHeader className="text-center space-y-4">
           <div className="flex justify-center">
-            <img src={logoImage} alt="Job Talk" className="h-16 w-16" />
+            <img src={logoImage} alt="JobTolk" className="h-16 w-16" />
           </div>
           <div>
             <CardTitle className="text-2xl font-bold">
               {isSignUp ? 'Create Account' : 'Welcome Back'}
             </CardTitle>
             <CardDescription>
-              {isSignUp 
-                ? 'Join Job Talk to showcase your skills or find talent' 
-                : 'Sign in to your Job Talk account'
+              {isSignUp
+                ? 'Join JobTolk to showcase your skills or find talent'
+                : 'Sign in to your JobTolk account'
               }
             </CardDescription>
           </div>

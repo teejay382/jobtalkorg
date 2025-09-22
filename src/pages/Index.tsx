@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '@/components/layout/Header';
@@ -26,10 +25,10 @@ const Index = () => {
         <Card className="w-full max-w-md text-center bg-white dark:bg-gray-800">
           <CardHeader className="space-y-4">
             <div className="flex justify-center">
-              <img src={logoImage} alt="Job Talk" className="h-20 w-20" />
+              <img src={logoImage} alt="JobTolk" className="h-20 w-20" />
             </div>
             <div>
-              <CardTitle className="text-3xl font-bold text-primary">Welcome to Job Talk</CardTitle>
+              <CardTitle className="text-3xl font-bold text-primary">Welcome to JobTolk</CardTitle>
               <CardDescription className="text-lg mt-2">
                 Connect freelancers and employers through authentic video showcases
               </CardDescription>
@@ -59,12 +58,12 @@ const Index = () => {
       <div className="hidden md:block">
         <Header />
       </div>
-      
+
       {/* Main content - full screen on mobile */}
       <main className="md:pt-16 pb-16">
         <VideoFeed />
       </main>
-      
+
       {/* Bottom navigation */}
       <BottomNavigation />
     </div>

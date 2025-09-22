@@ -20,7 +20,7 @@ const Onboarding = () => {
   const [companyName, setCompanyName] = useState('');
   const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
   const [customSkill, setCustomSkill] = useState('');
-  
+
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -192,7 +192,7 @@ const Onboarding = () => {
       }
 
       toast({
-        title: "Welcome to Job Talk!",
+        title: "Welcome to JobTolk!",
         description: "Your profile has been set up successfully.",
       });
 
@@ -227,17 +227,17 @@ const Onboarding = () => {
       <Card className="w-full max-w-2xl">
         <CardHeader className="text-center space-y-4">
           <div className="flex justify-center">
-            <img src={logoImage} alt="Job Talk" className="h-16 w-16" />
+            <img src={logoImage} alt="JobTolk" className="h-16 w-16" />
           </div>
           <div>
             <CardTitle className="text-2xl font-bold">
-              Welcome to Job Talk!
+              Welcome to JobTolk!
             </CardTitle>
             <CardDescription>
               Let's set up your profile to get you started
             </CardDescription>
           </div>
-          
+
           {/* Progress indicator */}
           <div className="flex justify-center space-x-2">
             <div className={`w-3 h-3 rounded-full ${currentStep >= 1 ? 'bg-primary' : 'bg-muted'}`} />
@@ -250,8 +250,8 @@ const Onboarding = () => {
             <div className="space-y-6">
               <div>
                 <h3 className="text-lg font-semibold mb-4">What describes you best?</h3>
-                <RadioGroup 
-                  value={accountType} 
+                <RadioGroup
+                  value={accountType}
                   onValueChange={(value: string) => setAccountType(value as 'freelancer' | 'employer')}
                 >
                   <div className="space-y-4">
@@ -283,7 +283,7 @@ const Onboarding = () => {
                         </div>
                       </Label>
                     </div>
-                    
+
                     <div
                       role="radio"
                       tabIndex={0}
@@ -336,12 +336,12 @@ const Onboarding = () => {
 
               <div>
                 <h3 className="text-lg font-semibold mb-4">
-                  {accountType === 'freelancer' 
-                    ? 'What are your skills?' 
+                  {accountType === 'freelancer'
+                    ? 'What are your skills?'
                     : 'What job categories do you hire for?'
                   }
                 </h3>
-                
+
                 <div className="space-y-4">
                   <div className="flex flex-wrap gap-2">
                     {(accountType === 'freelancer' ? popularSkills : jobCategories).map((skill) => (
@@ -414,7 +414,7 @@ const Onboarding = () => {
                 Back
               </Button>
             )}
-            
+
             <Button
               onClick={handleNext}
               disabled={!canProceed() || loading}

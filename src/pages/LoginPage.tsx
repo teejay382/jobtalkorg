@@ -13,7 +13,7 @@ export default function LoginPage() {
 
   return (
     <div className="flex flex-col items-center justify-center h-screen">
-      <h1 className="text-2xl font-bold mb-6">Login to JobTalk</h1>
+      <h1 className="text-2xl font-bold mb-6">Login to JobTolk</h1>
       <Button
         onClick={signInWithGoogle}
         className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg"
@@ -23,5 +23,3 @@ export default function LoginPage() {
     </div>
   );
 }
-
-
