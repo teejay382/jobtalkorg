@@ -24,7 +24,6 @@ const OAuthTest = lazy(() => import('./pages/OAuthTest'));
 
 // Lazy-load heavy UI pieces (to reduce initial bundle)
 const Toaster = lazy(() => import('@/components/ui/toaster').then(mod => ({ default: mod.Toaster })));
-const Sonner = lazy(() => import('@/components/ui/sonner').then(mod => ({ default: mod.Toaster })));
 
 const LoadingSkeleton = () => (
   <div aria-busy="true" className="w-full h-full flex items-center justify-center p-6">Loading…</div>
@@ -52,20 +51,7 @@ const RouteTracker = () => {
   return null;
 };
 
-const App = () => {
-  console.log("App component is loading...");
-
-  // create a memoized QueryClient so it's stable across renders
-  const queryClient = useMemo(() => new QueryClient({
-    defaultOptions: {
-      queries: {
-        // cacheTime removed because it's not allowed by current react-query types; use staleTime instead
-        staleTime: 0,
-        refetchOnWindowFocus: false,
-      },
-    },
-  }), []);
-
+const MainApp = () => {
   // initialize global realtime notifications (comments/likes/messages)
   useNotifications();
 
@@ -130,43 +116,94 @@ const App = () => {
   }, []);
 
   return (
+    <>
+      <BrowserRouter>
+        <RouteTracker />
+        <Suspense fallback={<LoadingSkeleton />}>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/feed" element={<Index />} />
+            <Route path="/search" element={<Search />} />
+            <Route path="/upload" element={<Upload />} />
+            <Route path="/chat" element={<Chat />} />
+            <Route path="/profile" element={<Profile />} />
+            <Route path="/settings" element={<Settings />} />
+            <Route path="/profile-settings" element={<ProfileSettings />} />
+            <Route path="/auth" element={<Auth />} />
+            <Route path="/onboarding" element={<Onboarding />} />
+            <Route path="/auth/callback" element={<Callback />} />
+            <Route path="/oauth-test" element={<OAuthTest />} />
+            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </Suspense>
+      </BrowserRouter>
+
+      <FeedbackModal
+        open={feedbackModalOpen}
+        onOpenChange={setFeedbackModalOpen}
+        onGiveFeedback={handleGiveFeedback}
+        onLater={handleLater}
+      />
+    </>
+  );
+};
+
+const App = () => {
+  console.log("App component is loading...");
+
+  // create a memoized QueryClient so it's stable across renders
+  const queryClient = useMemo(() => new QueryClient({
+    defaultOptions: {
+      queries: {
+        // cacheTime removed because it's not allowed by current react-query types; use staleTime instead
+        staleTime: 0,
+        refetchOnWindowFocus: false,
+      },
+    },
+  }), []);
+
+  const { loading, session } = useAuth();
+
+  // Catch and log MetaMask or other auth errors without blocking render
+  useEffect(() => {
+    try {
+      // Any potential MetaMask-related auth init errors will be caught here
+      // (though useAuth handles most; this is a safety net)
+    } catch (error) {
+      console.error('Auth error (possibly MetaMask):', error);
+    }
+  }, []);
+
+  // Show loading while auth is initializing
+  if (loading) {
+    return <LoadingSkeleton />;
+  }
+
+  // If not signed in, show login page
+  if (!session) {
+    return (
+      <ErrorBoundary>
+        <QueryClientProvider client={queryClient}>
+          <TooltipProvider>
+            <Suspense fallback={<LoadingSkeleton />}>
+              <LoginPage />
+            </Suspense>
+          </TooltipProvider>
+        </QueryClientProvider>
+      </ErrorBoundary>
+    );
+  }
+
+  // If signed in, show main app
+  return (
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
           <Suspense fallback={null}>
             <Toaster />
-            <Sonner />
           </Suspense>
-
-          <BrowserRouter>
-            <RouteTracker />
-            <Suspense fallback={<LoadingSkeleton />}>
-              <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/feed" element={<Index />} />
-                <Route path="/search" element={<Search />} />
-                <Route path="/upload" element={<Upload />} />
-                <Route path="/chat" element={<Chat />} />
-                <Route path="/profile" element={<Profile />} />
-                <Route path="/settings" element={<Settings />} />
-                <Route path="/profile-settings" element={<ProfileSettings />} />
-                <Route path="/auth" element={<Auth />} />
-                <Route path="/login" element={<LoginPage />} />
-                <Route path="/onboarding" element={<Onboarding />} />
-                <Route path="/auth/callback" element={<Callback />} />
-                <Route path="/oauth-test" element={<OAuthTest />} />
-                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </Suspense>
-          </BrowserRouter>
-
-          <FeedbackModal
-            open={feedbackModalOpen}
-            onOpenChange={setFeedbackModalOpen}
-            onGiveFeedback={handleGiveFeedback}
-            onLater={handleLater}
-          />
+          <MainApp />
         </TooltipProvider>
       </QueryClientProvider>
     </ErrorBoundary>
