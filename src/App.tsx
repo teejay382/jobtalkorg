@@ -8,6 +8,7 @@ import FeedbackModal from '@/components/ui/FeedbackModal';
 import { useAuth } from '@/hooks/useAuth';
 
 // Lazy-load pages (code splitting)
+const Welcome = lazy(() => import('./pages/Welcome'));
 const Index = lazy(() => import('./pages/Index'));
 const Search = lazy(() => import('./pages/Search'));
 const Upload = lazy(() => import('./pages/Upload'));
@@ -121,6 +122,7 @@ const MainApp = () => {
         <RouteTracker />
         <Suspense fallback={<LoadingSkeleton />}>
           <Routes>
+            <Route path="/welcome" element={<Welcome />} />
             <Route path="/" element={<Index />} />
             <Route path="/feed" element={<Index />} />
             <Route path="/search" element={<Search />} />

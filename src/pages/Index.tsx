@@ -18,31 +18,12 @@ const Index = () => {
     }
   }, [user, profile, navigate]);
 
-  // Show welcome screen for non-authenticated users
-  if (!loading && !user) {
-    return (
-      <div className="min-h-screen bg-white dark:bg-gray-900 flex items-center justify-center p-4">
-        <Card className="w-full max-w-md text-center bg-white dark:bg-gray-800">
-          <CardHeader className="space-y-4">
-            <div className="flex justify-center">
-              <img src={logoImage} alt="JobTolk" className="h-20 w-20" />
-            </div>
-            <div>
-              <CardTitle className="text-3xl font-bold text-primary">Welcome to JobTolk</CardTitle>
-              <CardDescription className="text-lg mt-2">
-                Connect freelancers and employers through authentic video showcases
-              </CardDescription>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <Button onClick={() => navigate('/auth')} className="w-full" size="lg">
-              Get Started
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
+  // Redirect non-authenticated users to welcome page
+  useEffect(() => {
+    if (!loading && !user) {
+      navigate('/welcome');
+    }
+  }, [loading, user, navigate]);
 
   if (loading) {
     return (
