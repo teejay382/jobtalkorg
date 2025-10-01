@@ -39,9 +39,26 @@ export const useAuth = () => {
     // Get initial session (this will automatically handle OAuth callbacks from URL)
     const initializeAuth = async () => {
       try {
+        // Clear any invalid tokens first
+        const storedSession = localStorage.getItem('supabase.auth.token');
+        if (storedSession) {
+          try {
+            const parsed = JSON.parse(storedSession);
+            // Check if token is expired or invalid
+            if (parsed.expires_at && parsed.expires_at * 1000 < Date.now()) {
+              localStorage.removeItem('supabase.auth.token');
+            }
+          } catch (e) {
+            // Invalid token format, clear it
+            localStorage.removeItem('supabase.auth.token');
+          }
+        }
+
         const { data: { session }, error } = await supabase.auth.getSession();
         
         if (error) {
+          // Clear invalid session data
+          localStorage.removeItem('supabase.auth.token');
           console.error('Error getting session:', error);
         } else if (mounted) {
           setSession(session);

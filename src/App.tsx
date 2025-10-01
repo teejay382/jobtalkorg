@@ -165,16 +165,6 @@ const App = () => {
 
   const { loading, session } = useAuth();
 
-  // Catch and log MetaMask or other auth errors without blocking render
-  useEffect(() => {
-    try {
-      // Any potential MetaMask-related auth init errors will be caught here
-      // (though useAuth handles most; this is a safety net)
-    } catch (error) {
-      console.error('Auth error (possibly MetaMask):', error);
-    }
-  }, []);
-
   // Show loading while auth is initializing
   if (loading) {
     return <LoadingSkeleton />;
