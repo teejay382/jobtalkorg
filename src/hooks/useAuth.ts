@@ -60,6 +60,7 @@ export const useAuth = () => {
           // Clear invalid session data
           localStorage.removeItem('supabase.auth.token');
           console.error('Error getting session:', error);
+          if (mounted) setLoading(false);
         } else if (mounted) {
           setSession(session);
           setUser(session?.user ?? null);

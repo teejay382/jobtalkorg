@@ -163,29 +163,14 @@ const App = () => {
     },
   }), []);
 
-  const { loading, session } = useAuth();
-
   // Show loading while auth is initializing
+  const { loading } = useAuth();
+  
   if (loading) {
     return <LoadingSkeleton />;
   }
 
-  // If not signed in, show login page
-  if (!session) {
-    return (
-      <ErrorBoundary>
-        <QueryClientProvider client={queryClient}>
-          <TooltipProvider>
-            <Suspense fallback={<LoadingSkeleton />}>
-              <LoginPage />
-            </Suspense>
-          </TooltipProvider>
-        </QueryClientProvider>
-      </ErrorBoundary>
-    );
-  }
-
-  // If signed in, show main app
+  // Let routing handle auth flow naturally (Index page shows welcome screen for non-authenticated)
   return (
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
