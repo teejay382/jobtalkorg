@@ -313,7 +313,7 @@ const Auth = () => {
                 setError('');
                 setFormData({ email: '', password: '', confirmPassword: '', fullName: '' });
               }}
-              className="text-primary hover:text-primary-light font-semibold transition-smooth"
+              className="text-accent hover:underline font-bold transition-smooth"
             >
               {isSignUp ? 'Sign In' : 'Sign Up'}
             </button>
