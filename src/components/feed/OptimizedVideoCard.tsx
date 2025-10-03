@@ -281,35 +281,35 @@ const OptimizedVideoCard = memo(({ video, isActive, onRefresh, isVisible }: Vide
       </button>
       
       {/* Right side interactions */}
-      <div className="absolute right-4 bottom-32 flex flex-col gap-4 z-10">
+      <div className="absolute right-4 bottom-32 flex flex-col gap-5 z-10">
         <div className="flex flex-col items-center gap-2">
           <button 
             onClick={handleLike}
             disabled={loading}
-            className={`w-12 h-12 rounded-full backdrop-blur-sm flex items-center justify-center transition-smooth hover-scale ${
-              isLiked ? 'text-red-500 bg-red-500/20' : 'text-white bg-white/20 hover:bg-white/30'
+            className={`w-14 h-14 rounded-2xl backdrop-blur-md flex items-center justify-center transition-smooth hover:scale-110 shadow-medium ${
+              isLiked ? 'text-red-500 bg-red-500/30' : 'text-white bg-white/15 hover:bg-white/25'
             } ${loading ? 'opacity-50' : ''}`}
           >
-            <Heart className={`w-6 h-6 ${isLiked ? 'fill-current' : ''}`} />
+            <Heart className={`w-7 h-7 ${isLiked ? 'fill-current' : ''}`} strokeWidth={2} />
           </button>
-          <span className="text-white text-xs font-medium">{likesCount}</span>
+          <span className="text-white text-sm font-bold drop-shadow-lg">{likesCount}</span>
         </div>
         
         <div className="flex flex-col items-center gap-2">
           <button 
             onClick={handleComment}
-            className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center text-white hover:bg-white/30 transition-smooth hover-scale"
+            className="w-14 h-14 rounded-2xl bg-white/15 backdrop-blur-md flex items-center justify-center text-white hover:bg-white/25 transition-smooth hover:scale-110 shadow-medium"
           >
-            <MessageCircle className="w-6 h-6" />
+            <MessageCircle className="w-7 h-7" strokeWidth={2} />
           </button>
-          <span className="text-white text-xs font-medium">{commentsCount}</span>
+          <span className="text-white text-sm font-bold drop-shadow-lg">{commentsCount}</span>
         </div>
         
         <button 
           onClick={handleShare} 
-          className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center text-white hover:bg-white/30 transition-smooth hover-scale"
+          className="w-14 h-14 rounded-2xl bg-white/15 backdrop-blur-md flex items-center justify-center text-white hover:bg-white/25 transition-smooth hover:scale-110 shadow-medium"
         >
-          <Share className="w-6 h-6" />
+          <Share className="w-7 h-7" strokeWidth={2} />
         </button>
       </div>
       
@@ -331,9 +331,9 @@ const OptimizedVideoCard = memo(({ video, isActive, onRefresh, isVisible }: Vide
             <Button
               onClick={handleHire}
               size="sm"
-              className="bg-emerald-600 text-white border-transparent hover:bg-emerald-500 text-xs px-4 py-2 h-auto font-medium shadow-lg hover-scale"
+              className="bg-gradient-to-r from-success to-emerald-600 text-white border-transparent hover:shadow-strong text-sm px-5 py-2.5 h-auto font-bold rounded-xl hover:scale-105 transition-smooth"
             >
-              <Briefcase className="w-4 h-4 mr-2" />
+              <Briefcase className="w-4 h-4 mr-1.5" strokeWidth={2.5} />
               Hire
             </Button>
           )}
@@ -353,13 +353,13 @@ const OptimizedVideoCard = memo(({ video, isActive, onRefresh, isVisible }: Vide
             {video.tags.slice(0, 3).map((tag, index) => (
               <span
                 key={index}
-                className="bg-white/20 backdrop-blur-sm text-white border border-white/30 text-xs px-3 py-1 rounded-full font-medium shadow-md hover-scale"
+                className="bg-white/15 backdrop-blur-md text-white border-2 border-white/30 text-xs px-4 py-1.5 rounded-full font-bold shadow-medium hover:scale-105 transition-smooth"
               >
                 #{tag}
               </span>
             ))}
             {video.tags.length > 3 && (
-              <span className="text-xs text-white/70 flex items-center font-medium drop-shadow-md">
+              <span className="text-sm text-white/80 flex items-center font-bold drop-shadow-lg">
                 +{video.tags.length - 3} more
               </span>
             )}

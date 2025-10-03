@@ -44,28 +44,34 @@ const Welcome = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Hero Section */}
-      <section className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-elegant opacity-90" />
-        <div className="relative container mx-auto px-4 py-20 md:py-32">
+      <section className="relative overflow-hidden bg-gradient-elegant">
+        <div className="container mx-auto px-4 py-16 md:py-24">
           <div className="grid md:grid-cols-2 gap-12 items-center">
             {/* Left Content */}
-            <div className="text-center md:text-left space-y-6">
+            <div className="text-center md:text-left space-y-8">
               <div className="flex justify-center md:justify-start">
-                <img src={logoImage} alt="JobTolk Logo" className="h-20 w-20 md:h-24 md:w-24" />
+                <div className="p-3 rounded-3xl bg-white shadow-elegant">
+                  <img src={logoImage} alt="JobTolk Logo" className="h-16 w-16 md:h-20 md:w-20" />
+                </div>
               </div>
-              <h1 className="text-4xl md:text-6xl font-bold text-foreground">
-                Welcome to <span className="text-primary">JobTolk</span>
-              </h1>
-              <p className="text-xl md:text-2xl text-muted-foreground">
-                Connect freelancers and employers through authentic video showcases
-              </p>
-              <p className="text-lg text-muted-foreground">
-                Discover talent beyond resumes. See skills in action. Make better hiring decisions.
-              </p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
+              <div className="space-y-4">
+                <h1 className="text-5xl md:text-7xl font-bold text-foreground leading-tight">
+                  Welcome to{' '}
+                  <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                    JobTolk
+                  </span>
+                </h1>
+                <p className="text-xl md:text-2xl text-muted-foreground leading-relaxed">
+                  Connect freelancers and employers through authentic video showcases
+                </p>
+                <p className="text-base md:text-lg text-muted-foreground">
+                  Discover talent beyond resumes. See skills in action. Make better hiring decisions.
+                </p>
+              </div>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start pt-4">
                 <Button 
                   size="lg" 
-                  className="text-lg px-8"
+                  className="text-lg px-10 py-6 rounded-2xl shadow-strong hover:shadow-glow transition-smooth font-semibold"
                   onClick={() => navigate('/auth?signup=true')}
                 >
                   Get Started Free
@@ -73,7 +79,7 @@ const Welcome = () => {
                 <Button 
                   size="lg" 
                   variant="outline" 
-                  className="text-lg px-8"
+                  className="text-lg px-10 py-6 rounded-2xl font-semibold border-2"
                   onClick={() => navigate('/auth')}
                 >
                   Sign In
@@ -83,13 +89,13 @@ const Welcome = () => {
 
             {/* Right Content - Hero Image */}
             <div className="hidden md:block">
-              <div className="relative rounded-2xl overflow-hidden shadow-elegant">
+              <div className="relative rounded-3xl overflow-hidden shadow-elegant hover:shadow-strong transition-smooth">
                 <img 
                   src={heroImage} 
                   alt="JobTolk Platform" 
                   className="w-full h-auto"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-background/50 to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-t from-background/30 to-transparent" />
               </div>
             </div>
           </div>
@@ -98,26 +104,26 @@ const Welcome = () => {
 
       {/* Features Section */}
       <section className="container mx-auto px-4 py-20">
-        <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">
+        <div className="text-center mb-16 space-y-4">
+          <h2 className="text-4xl md:text-5xl font-bold">
             Everything You Need to Succeed
           </h2>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+          <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">
             JobTolk provides powerful tools for freelancers to showcase their work and for employers to find the perfect talent
           </p>
         </div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           {features.map((feature, index) => {
             const Icon = feature.icon;
             return (
-              <Card key={index} className="p-6 hover:shadow-lg transition-shadow">
+              <Card key={index} className="p-8 hover:shadow-strong transition-smooth border-2 rounded-2xl group">
                 <div className="flex flex-col items-center text-center space-y-4">
-                  <div className="p-3 rounded-full bg-primary/10">
+                  <div className="p-4 rounded-2xl bg-gradient-to-br from-primary/10 to-accent/10 group-hover:from-primary/20 group-hover:to-accent/20 transition-smooth">
                     <Icon className="w-8 h-8 text-primary" />
                   </div>
-                  <h3 className="text-xl font-semibold">{feature.title}</h3>
-                  <p className="text-muted-foreground">{feature.description}</p>
+                  <h3 className="text-xl font-bold">{feature.title}</h3>
+                  <p className="text-muted-foreground leading-relaxed">{feature.description}</p>
                 </div>
               </Card>
             );
@@ -126,18 +132,20 @@ const Welcome = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="bg-muted/50 py-20">
-        <div className="container mx-auto px-4 text-center space-y-8">
-          <h2 className="text-3xl md:text-4xl font-bold">
-            Ready to Transform Your Career or Business?
-          </h2>
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            Join thousands of freelancers and employers already using JobTolk to connect and succeed
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+      <section className="bg-gradient-to-br from-primary/5 to-accent/5 py-24">
+        <div className="container mx-auto px-4 text-center space-y-10">
+          <div className="space-y-4">
+            <h2 className="text-4xl md:text-5xl font-bold">
+              Ready to Transform Your Career or Business?
+            </h2>
+            <p className="text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
+              Join thousands of freelancers and employers already using JobTolk to connect and succeed
+            </p>
+          </div>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
             <Button 
               size="lg" 
-              className="text-lg px-8"
+              className="text-lg px-10 py-6 rounded-2xl shadow-strong hover:shadow-glow transition-smooth font-semibold"
               onClick={() => navigate('/auth?signup=true')}
             >
               Create Your Account
@@ -145,7 +153,7 @@ const Welcome = () => {
             <Button 
               size="lg" 
               variant="outline" 
-              className="text-lg px-8"
+              className="text-lg px-10 py-6 rounded-2xl font-semibold border-2"
               onClick={() => navigate('/auth')}
             >
               Already Have an Account?
