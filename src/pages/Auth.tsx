@@ -169,8 +169,8 @@ const Auth = () => {
       <Card className="w-full max-w-md shadow-elegant border-2 rounded-3xl">
         <CardHeader className="text-center space-y-6 pb-8">
           <div className="flex justify-center">
-            <div className="p-3 rounded-2xl bg-gradient-to-br from-primary/10 to-accent/10">
-              <img src={logoImage} alt="JobTolk" className="h-14 w-14" />
+            <div className="p-2 rounded-2xl bg-gradient-to-br from-primary/10 to-accent/10">
+              <img src={logoImage} alt="JobTolk" className="h-10 w-10" />
             </div>
           </div>
           <div className="space-y-2">
