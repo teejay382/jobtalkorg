@@ -9,8 +9,15 @@ const Callback = () => {
   useEffect(() => {
     const handleCallback = async () => {
       try {
+        console.log('Callback: Starting authentication process...');
+        
         // Get the session from the URL hash
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        
+        console.log('Callback: Session retrieved', { 
+          hasSession: !!session, 
+          sessionError: sessionError?.message 
+        });
         
         if (sessionError) {
           console.error('Session error:', sessionError);
@@ -20,20 +27,39 @@ const Callback = () => {
         }
 
         if (session) {
+          console.log('Callback: Session found, checking profile...');
+          
           // Check if profile exists and onboarding is completed
-          const { data: profile } = await supabase
+          const { data: profile, error: profileError } = await supabase
             .from('profiles')
             .select('onboarding_completed')
             .eq('user_id', session.user.id)
             .single();
 
+          console.log('Callback: Profile check result', { 
+            profile, 
+            profileError: profileError?.message 
+          });
+
+          if (profileError) {
+            console.error('Profile query error:', profileError);
+            // If profile doesn't exist yet, redirect to onboarding
+            console.log('Callback: Navigating to onboarding (no profile)');
+            navigate('/onboarding', { replace: true });
+            return;
+          }
+
           if (profile && !profile.onboarding_completed) {
+            console.log('Callback: Navigating to onboarding');
             navigate('/onboarding', { replace: true });
           } else {
+            console.log('Callback: Navigating to home');
             navigate('/', { replace: true });
           }
         } else {
           // No session found, redirect to auth
+          console.log('Callback: No session, redirecting to auth');
+          setError('No session found. Redirecting to login...');
           setTimeout(() => navigate('/auth'), 2000);
         }
       } catch (err) {
