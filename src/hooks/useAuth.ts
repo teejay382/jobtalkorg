@@ -152,6 +152,7 @@ export const useAuth = () => {
           const authUser = (await supabase.auth.getUser()).data.user;
           if (!authUser) {
             setProfile(null);
+            setLoading(false);
             return;
           }
 
@@ -184,30 +185,36 @@ export const useAuth = () => {
                 .select()
                 .single();
 
-              if (insertError2) {
-                console.error('Error creating profile (fallback):', insertError2);
-                setProfile(null);
-                return;
-              }
-
-              setProfile(created2 as unknown as Profile);
+            if (insertError2) {
+              console.error('Error creating profile (fallback):', insertError2);
+              setProfile(null);
+              setLoading(false);
               return;
             }
 
-            setProfile(created as unknown as Profile);
+            setProfile(created2 as unknown as Profile);
+            setLoading(false);
             return;
-          } catch (e) {
-            console.error('Unexpected error during profile upsert:', e);
-            setProfile(null);
-            return;
-          }
-        } else {
-          console.error('Error fetching profile:', error);
+            }
+
+          setProfile(created as unknown as Profile);
+          setLoading(false);
+          return;
+        } catch (e) {
+          console.error('Unexpected error during profile upsert:', e);
+          setProfile(null);
+          setLoading(false);
           return;
         }
+      } else {
+        console.error('Error fetching profile:', error);
+        setLoading(false);
+        return;
       }
+    }
 
   setProfile(data);
+  setLoading(false);
 
       // Enrich missing display fields from auth metadata if needed
       const authUser = (await supabase.auth.getUser()).data.user;
