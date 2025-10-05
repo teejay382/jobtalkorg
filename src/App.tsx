@@ -168,7 +168,10 @@ const App = () => {
   // Show loading while auth is initializing
   const { loading } = useAuth();
   
+  console.log('App loading state:', loading);
+  
   if (loading) {
+    console.log('App showing loading skeleton');
     return <LoadingSkeleton />;
   }
 

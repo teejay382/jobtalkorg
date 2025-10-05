@@ -12,8 +12,16 @@ const Index = () => {
   const { user, profile, loading } = useAuth();
   const navigate = useNavigate();
 
+  console.log('Index page state:', { 
+    hasUser: !!user, 
+    hasProfile: !!profile, 
+    onboardingCompleted: profile?.onboarding_completed,
+    loading 
+  });
+
   useEffect(() => {
     if (user && profile && !profile.onboarding_completed) {
+      console.log('Redirecting to onboarding from Index');
       navigate('/onboarding');
     }
   }, [user, profile, navigate]);
@@ -21,6 +29,7 @@ const Index = () => {
   // Redirect non-authenticated users to welcome page
   useEffect(() => {
     if (!loading && !user) {
+      console.log('Redirecting to welcome - no user');
       navigate('/welcome');
     }
   }, [loading, user, navigate]);
