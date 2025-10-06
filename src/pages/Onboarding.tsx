@@ -1,44 +1,37 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { User, Building2, CheckCircle, ArrowRight, Plus, X } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
+import { Video, MapPin, X, Plus, Lightbulb } from 'lucide-react';
 import logoImage from '@/assets/logo.png';
 
 const Onboarding = () => {
-  const [currentStep, setCurrentStep] = useState(1);
   const [loading, setLoading] = useState(false);
-  const [accountType, setAccountType] = useState<'freelancer' | 'employer' | ''>('');
-  const [roleSupported, setRoleSupported] = useState(true);
-  const [selectionError, setSelectionError] = useState('');
-  const [companyName, setCompanyName] = useState('');
-  const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
+  const [role, setRole] = useState<'freelancer' | 'employer' | null>(null);
+  const [bio, setBio] = useState('');
+  const [videoFile, setVideoFile] = useState<File | null>(null);
+  const [videoPreview, setVideoPreview] = useState<string | null>(null);
+  const [location, setLocation] = useState('');
+  const [autoDetectingLocation, setAutoDetectingLocation] = useState(false);
+  const [skills, setSkills] = useState<string[]>([]);
   const [customSkill, setCustomSkill] = useState('');
-
+  
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const popularSkills = [
-    'Web Development', 'Graphic Design', 'Video Editing', 'Copywriting',
-    'Digital Marketing', 'Sales', 'Data Analysis', 'Customer Service',
-    'Mobile Development', 'UI/UX Design', 'Content Writing', 'SEO',
-    'Social Media Management', 'Photography', 'Project Management',
-    'Translation', 'Voice Over', 'Accounting', 'Virtual Assistant'
-  ];
-
-  const jobCategories = [
-    'Technology', 'Design', 'Marketing', 'Sales', 'Customer Support',
-    'Operations', 'Finance', 'HR', 'Content', 'Engineering'
+  const suggestedSkills = [
+    'Web Design', 'Photography', 'Writing', 'Video Editing', 'Social Media',
+    'Graphic Design', 'Translation', 'Voice Over', 'Data Entry', 'Customer Service',
+    'Accounting', 'Marketing', 'SEO', 'Mobile Development', 'Teaching'
   ];
 
   useEffect(() => {
-    // Check if user is authenticated and whether onboarding completed
     const checkAuth = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
@@ -46,93 +39,107 @@ const Onboarding = () => {
         return;
       }
 
-      // Check if user has already completed onboarding. Use user_id filter.
-      // Try fetching the role column first; if the remote DB doesn't have it
-      // (PGRST204), fall back to querying only onboarding_completed.
-      try {
-        const { data: profile, error } = await supabase
-          .from('profiles')
-          .select('onboarding_completed, role')
-          .eq('user_id', session.user.id)
-          .single();
+      // Get user's role from profile
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role, onboarding_completed')
+        .eq('user_id', session.user.id)
+        .single();
 
-        if (error) {
-          // If the error indicates the `role` column isn't present, fall back
-          // to selecting only onboarding_completed and mark role unsupported.
-          // Supabase/postgrest surface PGRST204 for missing column in some cases.
-          // Treat any select failure as a hint that `role` might not exist.
-          console.warn('profiles select with role failed, falling back:', error);
-          setRoleSupported(false);
+      if (profile?.onboarding_completed) {
+        navigate('/');
+        return;
+      }
 
-          const { data: profileNoRole } = await supabase
-            .from('profiles')
-            .select('onboarding_completed')
-            .eq('user_id', session.user.id)
-            .single();
-
-          if (profileNoRole?.onboarding_completed) {
-            // No role available; redirect to freelancer by default
-            navigate('/?role=freelancer');
-          }
-        } else {
-          if (profile?.onboarding_completed) {
-            // Redirect to feed
-            navigate('/feed');
-          }
-        }
-      } catch (err) {
-        // Network or unexpected error. Log and try a minimal select as fallback.
-        console.warn('Error while checking onboarding/profile, attempting fallback:', err);
-        setRoleSupported(false);
-        try {
-          const { data: profileNoRole } = await supabase
-            .from('profiles')
-            .select('onboarding_completed')
-            .eq('user_id', session.user.id)
-            .single();
-
-          if (profileNoRole?.onboarding_completed) {
-            navigate('/?role=freelancer');
-          }
-        } catch (err2) {
-          console.error('Fallback profile check failed:', err2);
-        }
+      if (profile?.role) {
+        setRole(profile.role as 'freelancer' | 'employer');
       }
     };
 
     checkAuth();
   }, [navigate]);
 
-  const addCustomSkill = () => {
-    if (customSkill.trim() && !selectedSkills.includes(customSkill.trim())) {
-      setSelectedSkills([...selectedSkills, customSkill.trim()]);
-      setCustomSkill('');
+  const autoDetectLocation = async () => {
+    setAutoDetectingLocation(true);
+    try {
+      if ('geolocation' in navigator) {
+        navigator.geolocation.getCurrentPosition(
+          async (position) => {
+            const { latitude, longitude } = position.coords;
+            
+            // Use reverse geocoding to get location name
+            const response = await fetch(
+              `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`
+            );
+            const data = await response.json();
+            
+            const city = data.address.city || data.address.town || data.address.village || '';
+            const country = data.address.country || '';
+            setLocation(`${city}, ${country}`.trim());
+            
+            toast({
+              title: "Location detected!",
+              description: `We found you in ${city}, ${country}`,
+            });
+          },
+          (error) => {
+            console.error('Geolocation error:', error);
+            toast({
+              title: "Couldn't detect location",
+              description: "Please enter your location manually",
+              variant: "destructive"
+            });
+          }
+        );
+      }
+    } catch (error) {
+      console.error('Location detection error:', error);
+    } finally {
+      setAutoDetectingLocation(false);
+    }
+  };
+
+  const handleVideoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 50 * 1024 * 1024) { // 50MB limit
+        toast({
+          title: "Video too large",
+          description: "Please upload a video under 50MB",
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      setVideoFile(file);
+      const preview = URL.createObjectURL(file);
+      setVideoPreview(preview);
+    }
+  };
+
+  const addSkill = (skill: string) => {
+    if (skills.length >= 3) {
+      toast({
+        title: "Maximum skills reached",
+        description: "You can select up to 3 skills",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    if (!skills.includes(skill)) {
+      setSkills([...skills, skill]);
     }
   };
 
   const removeSkill = (skill: string) => {
-    setSelectedSkills(selectedSkills.filter(s => s !== skill));
+    setSkills(skills.filter(s => s !== skill));
   };
 
-  const toggleSkill = (skill: string) => {
-    if (selectedSkills.includes(skill)) {
-      removeSkill(skill);
-    } else {
-      setSelectedSkills([...selectedSkills, skill]);
-    }
-  };
-
-  const handleNext = () => {
-    setSelectionError('');
-    if (currentStep === 1) {
-      // Ensure a role was selected before proceeding
-      if (!accountType) {
-        setSelectionError('Please select a role to continue.');
-        return;
-      }
-      setCurrentStep(2);
-    } else {
-      handleComplete();
+  const addCustomSkill = () => {
+    if (customSkill.trim() && !skills.includes(customSkill.trim())) {
+      addSkill(customSkill.trim());
+      setCustomSkill('');
     }
   };
 
@@ -140,73 +147,62 @@ const Onboarding = () => {
     setLoading(true);
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        navigate('/auth');
-        return;
+      if (!session) return;
+
+      let videoUrl = null;
+      
+      // Upload video if provided
+      if (videoFile) {
+        const fileExt = videoFile.name.split('.').pop();
+        const fileName = `${session.user.id}-intro-${Date.now()}.${fileExt}`;
+        
+        const { error: uploadError } = await supabase.storage
+          .from('videos')
+          .upload(fileName, videoFile);
+
+        if (uploadError) throw uploadError;
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('videos')
+          .getPublicUrl(fileName);
+        
+        videoUrl = publicUrl;
       }
 
-      // Ensure role was selected
-      if (!accountType) {
-        setSelectionError('Please select a role to continue.');
-        setLoading(false);
-        return;
-      }
-
-      // First, create or update the profile with basic info
-      const username = (session.user.user_metadata && (session.user.user_metadata.user_name || session.user.user_metadata.full_name)) || session.user.email?.split('@')[0] || null;
-      const email = session.user.email ?? '';
-
-      const profileData: any = {
-        user_id: session.user.id,
-        email: String(email),
-        username,
-        onboarding_completed: true
-      };
-
-      if (accountType === 'employer') {
-        profileData.company_name = companyName;
-        profileData.skills = selectedSkills; // Job categories for employers
-      } else {
-        profileData.skills = selectedSkills;
-      }
-
-      // Create or update profile
-      const { error: profileError } = await supabase
+      // Update profile
+      const { error: updateError } = await supabase
         .from('profiles')
-        .upsert(profileData, { onConflict: 'user_id' });
-
-      if (profileError) {
-        console.error('Error creating profile:', profileError);
-        throw profileError;
-      }
-
-      // Explicitly set the role
-      const { error: roleError } = await supabase
-        .from('profiles')
-        .update({ role: accountType })
+        .update({
+          bio: bio || null,
+          skills: skills.length > 0 ? skills : null,
+          onboarding_completed: true,
+        })
         .eq('user_id', session.user.id);
 
-      if (roleError) {
-        console.error('Error updating role:', roleError);
-        throw roleError;
+      if (updateError) throw updateError;
+
+      // If video was uploaded, create a video record
+      if (videoUrl) {
+        await supabase.from('videos').insert({
+          user_id: session.user.id,
+          title: 'My Introduction',
+          description: bio || 'Introduction video',
+          video_url: videoUrl,
+          tags: skills
+        });
       }
 
       toast({
-        title: "Welcome to JobTolk!",
-        description: "Your profile has been set up successfully.",
+        title: "Profile completed! 🎉",
+        description: "You're all set to start using JobTolk",
       });
 
-      // Redirect based on role
-      if (accountType === 'employer') {
-        navigate('/?role=employer');
-      } else {
-        navigate('/?role=freelancer');
-      }
+      navigate('/');
     } catch (error) {
-      console.error('Error completing onboarding:', error);
+      console.error('Onboarding error:', error);
       toast({
         title: "Error",
-        description: "Failed to complete setup. Please try again.",
+        description: "Failed to complete profile setup",
         variant: "destructive"
       });
     } finally {
@@ -214,216 +210,236 @@ const Onboarding = () => {
     }
   };
 
-  const canProceed = () => {
-    if (currentStep === 1) return true;
-    if (accountType === 'employer') {
-      return companyName.trim() && selectedSkills.length > 0;
-    }
-    return selectedSkills.length > 0;
-  };
+  const canProceed = bio.trim().length > 0 && skills.length > 0;
+  const progress = canProceed ? 100 : Math.round((
+    (bio.trim() ? 50 : 0) + 
+    (skills.length > 0 ? 50 : 0)
+  ));
 
   return (
     <div className="min-h-screen bg-gradient-elegant flex items-center justify-center p-4">
-      <Card className="w-full max-w-2xl">
-        <CardHeader className="text-center space-y-4">
+      <Card className="w-full max-w-2xl shadow-elegant border-2 rounded-3xl">
+        <CardHeader className="text-center space-y-6 pb-8">
           <div className="flex justify-center">
-            <img src={logoImage} alt="JobTolk" className="h-16 w-16" />
+            <div className="p-2 rounded-2xl bg-gradient-to-br from-primary/10 to-accent/10">
+              <img src={logoImage} alt="JobTolk" className="h-10 w-10" />
+            </div>
           </div>
-          <div>
-            <CardTitle className="text-2xl font-bold">
-              Welcome to JobTolk!
+          <div className="space-y-2">
+            <CardTitle className="text-3xl font-bold">
+              Show who you are 💪
             </CardTitle>
-            <CardDescription>
-              Let's set up your profile to get you started
+            <CardDescription className="text-base">
+              {role === 'freelancer' 
+                ? 'Let people see what you can do'
+                : 'Tell us about your company and what you need'
+              }
             </CardDescription>
           </div>
-
-          {/* Progress indicator */}
-          <div className="flex justify-center space-x-2">
-            <div className={`w-3 h-3 rounded-full ${currentStep >= 1 ? 'bg-primary' : 'bg-muted'}`} />
-            <div className={`w-3 h-3 rounded-full ${currentStep >= 2 ? 'bg-primary' : 'bg-muted'}`} />
+          
+          {/* Progress Bar */}
+          <div className="space-y-2">
+            <div className="w-full bg-muted rounded-full h-2">
+              <div 
+                className="bg-gradient-to-r from-primary to-accent h-2 rounded-full transition-all duration-500"
+                style={{ width: `${progress}%` }}
+              />
+            </div>
+            <p className="text-xs text-muted-foreground">{progress}% complete</p>
           </div>
         </CardHeader>
 
         <CardContent className="space-y-6">
-          {currentStep === 1 && (
-            <div className="space-y-6">
-              <div>
-                <h3 className="text-lg font-semibold mb-4">What describes you best?</h3>
-                <RadioGroup
-                  value={accountType}
-                  onValueChange={(value: string) => setAccountType(value as 'freelancer' | 'employer')}
-                >
-                  <div className="space-y-4">
-                    <div
-                      role="radio"
-                      tabIndex={0}
-                      aria-checked={accountType === 'freelancer'}
-                      onClick={() => setAccountType('freelancer')}
-                      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setAccountType('freelancer'); } }}
-                      className={`flex items-center space-x-3 p-4 border rounded-lg hover:bg-muted/50 cursor-pointer ${accountType === 'freelancer' ? 'border-primary bg-primary/5' : ''}`}
-                    >
-                      {/* Native hidden radio to ensure checked/onChange work reliably */}
-                      <input
-                        id="freelancer-radio"
-                        name="accountType"
-                        type="radio"
-                        className="sr-only"
-                        checked={accountType === 'freelancer'}
-                        onChange={() => setAccountType('freelancer')}
-                      />
-                      <RadioGroupItem value="freelancer" id="freelancer" />
-                      <Label htmlFor="freelancer-radio" className="flex items-center space-x-3 cursor-pointer flex-1">
-                        <User className="h-6 w-6 text-primary" />
-                        <div>
-                          <div className="font-medium">I'm a Freelancer</div>
-                          <div className="text-sm text-muted-foreground">
-                            I want to showcase my skills and find work opportunities
-                          </div>
-                        </div>
-                      </Label>
-                    </div>
+          {/* Bio Section */}
+          <div className="space-y-2">
+            <Label htmlFor="bio" className="text-base font-semibold">
+              Tell us what you do in one line
+            </Label>
+            <Textarea
+              id="bio"
+              placeholder={role === 'freelancer' 
+                ? "e.g., I design websites that people love to use" 
+                : "e.g., Looking for skilled graphic designers for our startup"
+              }
+              value={bio}
+              onChange={(e) => setBio(e.target.value)}
+              className="min-h-[80px] rounded-xl resize-none"
+              maxLength={150}
+            />
+            <p className="text-xs text-muted-foreground text-right">
+              {bio.length}/150 characters
+            </p>
+          </div>
 
-                    <div
-                      role="radio"
-                      tabIndex={0}
-                      aria-checked={accountType === 'employer'}
-                      onClick={() => setAccountType('employer')}
-                      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setAccountType('employer'); } }}
-                      className={`flex items-center space-x-3 p-4 border rounded-lg hover:bg-muted/50 cursor-pointer ${accountType === 'employer' ? 'border-primary bg-primary/5' : ''}`}
-                    >
-                      <input
-                        id="employer-radio"
-                        name="accountType"
-                        type="radio"
-                        className="sr-only"
-                        checked={accountType === 'employer'}
-                        onChange={() => setAccountType('employer')}
-                      />
-                      <RadioGroupItem value="employer" id="employer" />
-                      <Label htmlFor="employer-radio" className="flex items-center space-x-3 cursor-pointer flex-1">
-                        <Building2 className="h-6 w-6 text-primary" />
-                        <div>
-                          <div className="font-medium">I'm an Employer</div>
-                          <div className="text-sm text-muted-foreground">
-                            I want to find and hire talented freelancers
-                          </div>
-                        </div>
-                      </Label>
-                    </div>
-                  </div>
-                </RadioGroup>
-                {selectionError && (
-                  <p className="text-sm text-destructive mt-2">{selectionError}</p>
-                )}
+          {/* Video Upload Section */}
+          {role === 'freelancer' && (
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label className="text-base font-semibold">
+                  Upload a short intro video 🎥
+                </Label>
+                <div className="flex items-center gap-1 text-xs text-primary">
+                  <Lightbulb className="h-3 w-3" />
+                  <span className="font-medium">Profiles with video get 3x more jobs</span>
+                </div>
               </div>
-            </div>
-          )}
-
-          {currentStep === 2 && (
-            <div className="space-y-6">
-              {accountType === 'employer' && (
-                <div className="space-y-2">
-                  <Label htmlFor="companyName">Company Name</Label>
-                  <Input
-                    id="companyName"
-                    placeholder="Enter your company name"
-                    value={companyName}
-                    onChange={(e) => setCompanyName(e.target.value)}
+              <p className="text-sm text-muted-foreground mb-3">
+                Record or upload a 30-second video — say your name and what you do
+              </p>
+              
+              {videoPreview ? (
+                <div className="relative rounded-xl overflow-hidden border-2 border-border">
+                  <video 
+                    src={videoPreview} 
+                    controls 
+                    className="w-full h-48 object-cover"
                   />
+                  <button
+                    onClick={() => {
+                      setVideoFile(null);
+                      setVideoPreview(null);
+                    }}
+                    className="absolute top-2 right-2 p-2 bg-destructive text-destructive-foreground rounded-full hover:bg-destructive/90"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
                 </div>
+              ) : (
+                <label className="flex flex-col items-center justify-center w-full h-48 border-2 border-dashed border-border rounded-xl cursor-pointer hover:bg-muted/50 transition-all">
+                  <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                    <Video className="h-12 w-12 text-muted-foreground mb-3" />
+                    <p className="mb-2 text-sm text-muted-foreground">
+                      <span className="font-semibold">Click to upload</span> or drag and drop
+                    </p>
+                    <p className="text-xs text-muted-foreground">MP4, MOV up to 50MB</p>
+                  </div>
+                  <input 
+                    type="file" 
+                    className="hidden" 
+                    accept="video/*"
+                    onChange={handleVideoUpload}
+                  />
+                </label>
               )}
-
-              <div>
-                <h3 className="text-lg font-semibold mb-4">
-                  {accountType === 'freelancer'
-                    ? 'What are your skills?'
-                    : 'What job categories do you hire for?'
-                  }
-                </h3>
-
-                <div className="space-y-4">
-                  <div className="flex flex-wrap gap-2">
-                    {(accountType === 'freelancer' ? popularSkills : jobCategories).map((skill) => (
-                      <Badge
-                        key={skill}
-                        variant={selectedSkills.includes(skill) ? "default" : "outline"}
-                        className="cursor-pointer hover:bg-primary/20"
-                        onClick={() => toggleSkill(skill)}
-                      >
-                        {skill}
-                        {selectedSkills.includes(skill) && (
-                          <CheckCircle className="ml-1 h-3 w-3" />
-                        )}
-                      </Badge>
-                    ))}
-                  </div>
-
-                  {selectedSkills.length > 0 && (
-                    <div>
-                      <h4 className="text-sm font-medium mb-2">Selected:</h4>
-                      <div className="flex flex-wrap gap-2">
-                        {selectedSkills.map((skill) => (
-                          <Badge key={skill} variant="secondary" className="pr-1">
-                            {skill}
-                            <button
-                              onClick={() => removeSkill(skill)}
-                              className="ml-1 hover:bg-destructive/20 rounded-full p-0.5"
-                            >
-                              <X className="h-3 w-3" />
-                            </button>
-                          </Badge>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  <div className="flex gap-2">
-                    <Input
-                      placeholder={`Add custom ${accountType === 'freelancer' ? 'skill' : 'category'}`}
-                      value={customSkill}
-                      onChange={(e) => setCustomSkill(e.target.value)}
-                      onKeyPress={(e) => {
-                        if (e.key === 'Enter') {
-                          e.preventDefault();
-                          addCustomSkill();
-                        }
-                      }}
-                    />
-                    <Button
-                      type="button"
-                      size="sm"
-                      onClick={addCustomSkill}
-                      disabled={!customSkill.trim()}
-                    >
-                      <Plus className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              </div>
             </div>
           )}
 
-          <div className="flex justify-between pt-4">
-            {currentStep > 1 && (
+          {/* Location Section */}
+          <div className="space-y-2">
+            <Label htmlFor="location" className="text-base font-semibold">
+              Your location
+            </Label>
+            <p className="text-sm text-muted-foreground mb-2">
+              We'll help you find {role === 'freelancer' ? 'jobs' : 'talent'} nearby
+            </p>
+            <div className="flex gap-2">
+              <div className="relative flex-1">
+                <MapPin className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <Input
+                  id="location"
+                  type="text"
+                  placeholder="e.g., Lagos, Nigeria"
+                  value={location}
+                  onChange={(e) => setLocation(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
               <Button
+                type="button"
                 variant="outline"
-                onClick={() => setCurrentStep(currentStep - 1)}
-                disabled={loading}
+                onClick={autoDetectLocation}
+                disabled={autoDetectingLocation}
+                className="shrink-0"
               >
-                Back
+                {autoDetectingLocation ? 'Detecting...' : 'Auto-detect'}
               </Button>
+            </div>
+          </div>
+
+          {/* Skills Section */}
+          <div className="space-y-3">
+            <Label className="text-base font-semibold">
+              Choose 3 skills you're best at
+            </Label>
+            
+            {/* Selected Skills */}
+            {skills.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {skills.map((skill) => (
+                  <Badge 
+                    key={skill} 
+                    variant="default"
+                    className="px-3 py-2 text-sm rounded-xl flex items-center gap-2"
+                  >
+                    {skill}
+                    <button
+                      onClick={() => removeSkill(skill)}
+                      className="hover:text-destructive"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </Badge>
+                ))}
+              </div>
             )}
 
-            <Button
-              onClick={handleNext}
-              disabled={!canProceed() || loading}
-              className="ml-auto"
-            >
-              {loading ? 'Saving...' : (currentStep === 2 ? 'Complete Setup' : 'Next')}
-              {!loading && <ArrowRight className="ml-2 h-4 w-4" />}
-            </Button>
+            {/* Suggested Skills */}
+            {skills.length < 3 && (
+              <>
+                <p className="text-sm text-muted-foreground">Popular skills:</p>
+                <div className="flex flex-wrap gap-2">
+                  {suggestedSkills
+                    .filter(skill => !skills.includes(skill))
+                    .slice(0, 9)
+                    .map((skill) => (
+                      <Badge
+                        key={skill}
+                        variant="outline"
+                        className="px-3 py-2 text-sm cursor-pointer hover:bg-primary/10 hover:border-primary rounded-xl"
+                        onClick={() => addSkill(skill)}
+                      >
+                        {skill}
+                      </Badge>
+                    ))}
+                </div>
+              </>
+            )}
+
+            {/* Custom Skill Input */}
+            {skills.length < 3 && (
+              <div className="flex gap-2">
+                <Input
+                  placeholder="Add a custom skill"
+                  value={customSkill}
+                  onChange={(e) => setCustomSkill(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && addCustomSkill()}
+                  className="rounded-xl"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={addCustomSkill}
+                  disabled={!customSkill.trim()}
+                  className="shrink-0"
+                >
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </div>
+            )}
           </div>
+
+          {/* Complete Button */}
+          <Button
+            onClick={handleComplete}
+            disabled={!canProceed || loading}
+            className="w-full h-12 rounded-xl text-base font-semibold shadow-medium"
+          >
+            {loading ? 'Setting up...' : "Done — Let's find work"}
+          </Button>
+
+          <p className="text-center text-xs text-muted-foreground">
+            You can update this information anytime in your profile settings
+          </p>
         </CardContent>
       </Card>
     </div>

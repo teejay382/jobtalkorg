@@ -56,16 +56,19 @@ const Welcome = () => {
               </div>
               <div className="space-y-4">
                 <h1 className="text-5xl md:text-7xl font-bold text-foreground leading-tight">
-                  Welcome to{' '}
+                  👋 Welcome to{' '}
                   <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
                     JobTolk
                   </span>
                 </h1>
-                <p className="text-xl md:text-2xl text-muted-foreground leading-relaxed">
-                  Connect freelancers and employers through authentic video showcases
+                <p className="text-xl md:text-2xl text-muted-foreground leading-relaxed font-medium">
+                  Find work. Show your skill.
                 </p>
                 <p className="text-base md:text-lg text-muted-foreground">
-                  Discover talent beyond resumes. See skills in action. Make better hiring decisions.
+                  JobTolk helps you find real jobs — online or around you. Just show what you can do.
+                </p>
+                <p className="text-sm text-muted-foreground/80 italic">
+                  No long forms. Just tell us what you do — we'll help people find you.
                 </p>
               </div>
               <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start pt-4">
@@ -165,7 +168,7 @@ const Welcome = () => {
       {/* Footer */}
       <footer className="border-t py-8">
         <div className="container mx-auto px-4 text-center text-muted-foreground">
-          <p>&copy; 2025 JobTolk. All rights reserved.</p>
+          <p className="text-sm">Powered by JobTolk community • &copy; 2025 JobTolk. All rights reserved.</p>
         </div>
       </footer>
     </div>
