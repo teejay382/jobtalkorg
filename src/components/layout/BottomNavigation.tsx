@@ -12,7 +12,7 @@ const BottomNavigation = () => {
   ];
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-white/80 dark:bg-black/80 backdrop-blur-xl border-t border-border z-50 h-20 shadow-strong">
+    <nav className="fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur-xl border-t border-border z-50 h-20 shadow-soft">
       <div className="flex items-center justify-around px-2 py-2 max-w-md mx-auto h-full">
         {navItems.map((item) => (
           <NavLink
@@ -25,8 +25,8 @@ const BottomNavigation = () => {
             }
           >
             {item.isSpecial ? (
-              <div className="w-14 h-14 bg-gradient-to-br from-primary to-accent rounded-2xl shadow-strong flex items-center justify-center hover:scale-105 transition-smooth">
-                <item.icon className="w-7 h-7 text-white" strokeWidth={2.5} />
+              <div className="w-14 h-14 bg-gradient-to-br from-primary to-accent rounded-2xl shadow-glow flex items-center justify-center hover:scale-105 transition-smooth">
+                <item.icon className="w-7 h-7 text-primary-foreground" strokeWidth={2.5} />
               </div>
             ) : (
               <>

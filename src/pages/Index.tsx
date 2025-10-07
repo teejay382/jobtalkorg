@@ -47,24 +47,24 @@ const Index = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-black">
+    <div className="min-h-screen bg-background">
       {/* First-time Welcome Banner */}
       {showWelcome && (
-        <div className="bg-gradient-to-r from-primary/10 via-accent/10 to-primary/10 border-b-2 border-primary/20">
+        <div className="bg-gradient-to-r from-primary/10 via-accent/10 to-primary/10 border-b border-border backdrop-blur-sm">
           <div className="container mx-auto px-4 py-6">
             <div className="flex items-start justify-between gap-4">
               <div className="flex-1 space-y-2">
-                <h2 className="text-2xl font-bold text-white">
+                <h2 className="text-2xl font-bold text-foreground">
                   Welcome, {profile?.full_name || profile?.username}! 🚀
                 </h2>
-                <p className="text-gray-300">
+                <p className="text-muted-foreground">
                   You're all set. {profile?.role === 'freelancer' 
                     ? 'Post your first skill or start browsing jobs near you.' 
                     : 'Start finding talented people for your projects.'}
@@ -111,7 +111,7 @@ const Index = () => {
               </div>
               <button
                 onClick={() => setShowWelcome(false)}
-                className="text-gray-400 hover:text-white p-1"
+                className="text-muted-foreground hover:text-foreground p-1 transition-colors"
               >
                 <X className="h-5 w-5" />
               </button>
@@ -126,7 +126,7 @@ const Index = () => {
       </div>
 
       {/* Main content - full screen on mobile */}
-      <main className="md:pt-16 pb-16">
+      <main className="md:pt-16 pb-16 bg-background">
         <VideoFeed />
       </main>
 
