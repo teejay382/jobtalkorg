@@ -237,14 +237,14 @@ const OptimizedVideoCard = memo(({ video, isActive, onRefresh, isVisible, isMobi
   const shouldShowHireButton = !isVideoFromEmployer && isCurrentUserEmployer;
 
   return (
-    <div className="relative w-full h-full bg-gradient-to-br from-black via-primary/5 to-accent/5 overflow-hidden">
+    <div className="relative w-full h-full bg-gradient-to-br from-background/95 via-primary/10 to-accent/10 overflow-hidden">
       {/* Lazy loaded video */}
-      <div className="absolute inset-0 flex items-center justify-center">
+      <div className="absolute inset-0 flex items-center justify-center bg-black/20 backdrop-blur-sm">
         {isVisible ? (
           <video
             ref={videoRef}
             src={video.video_url}
-            className="w-full h-full object-cover"
+            className="w-full h-full object-contain"
             loop
             muted={isMuted}
             playsInline
@@ -255,7 +255,7 @@ const OptimizedVideoCard = memo(({ video, isActive, onRefresh, isVisible, isMobi
           />
         ) : (
           <div 
-            className="w-full h-full bg-center bg-cover bg-no-repeat"
+            className="w-full h-full bg-center bg-contain bg-no-repeat"
             style={{ backgroundImage: `url(${video.thumbnail_url})` }}
           />
         )}
