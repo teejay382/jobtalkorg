@@ -65,6 +65,9 @@
     --gradient-hero: linear-gradient(135deg, hsl(221 83% 53%) 0%, hsl(262 83% 58%) 100%);
     --gradient-elegant: linear-gradient(180deg, hsl(240 4.8% 95.9%) 0%, hsl(0 0% 100%) 100%);
     --gradient-video-overlay: linear-gradient(0deg, hsl(0 0% 0% / 0.85), transparent 60%);
+    --gradient-neon-blue: linear-gradient(135deg, hsl(221 100% 60%) 0%, hsl(262 100% 65%) 100%);
+    --gradient-neon-purple: linear-gradient(135deg, hsl(262 100% 65%) 0%, hsl(280 100% 70%) 100%);
+    --gradient-glass: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
 
     /* Modern Shadows */
     --shadow-soft: 0 1px 2px 0 rgb(0 0 0 / 0.05);
@@ -72,6 +75,9 @@
     --shadow-strong: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
     --shadow-glow: 0 0 40px hsl(262 83% 58% / 0.3);
     --shadow-elegant: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+    --shadow-neon-blue: 0 0 30px hsl(221 100% 60% / 0.4), 0 0 60px hsl(221 100% 60% / 0.2);
+    --shadow-neon-purple: 0 0 30px hsl(262 100% 65% / 0.4), 0 0 60px hsl(262 100% 65% / 0.2);
+    --shadow-glass: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
 
     /* Smooth Transitions */
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -150,21 +156,46 @@
 }
 
 @layer components {
-  /* Video Feed Components */
+  /* Video Feed Components - Futuristic Design */
   .video-card {
-    @apply relative w-full h-screen bg-black rounded-2xl overflow-hidden shadow-medium;
+    @apply relative w-full h-full bg-black rounded-2xl overflow-hidden;
+    box-shadow: var(--shadow-glass);
   }
 
   .video-overlay {
-    @apply absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent;
+    @apply absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-black/20;
   }
 
   .video-interactions {
-    @apply absolute right-4 bottom-24 flex flex-col gap-4;
+    @apply absolute right-4 bottom-32 flex flex-col gap-5 z-20;
   }
 
   .interaction-btn {
-    @apply w-14 h-14 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center text-white hover:bg-white/20 transition-smooth hover:scale-110 shadow-medium;
+    @apply w-16 h-16 rounded-2xl flex items-center justify-center text-white transition-all duration-300 hover:scale-110;
+    background: rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    box-shadow: var(--shadow-glass);
+  }
+
+  .interaction-btn:hover {
+    background: rgba(255, 255, 255, 0.15);
+    box-shadow: var(--shadow-neon-blue);
+  }
+
+  /* Glassmorphism cards */
+  .glass-card {
+    background: rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    box-shadow: var(--shadow-glass);
+  }
+
+  .glass-card-dark {
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: var(--shadow-glass);
   }
 
   /* Profile components */
@@ -402,6 +433,18 @@
 
   .shadow-glow {
     box-shadow: var(--shadow-glow);
+  }
+
+  .shadow-neon-blue {
+    box-shadow: var(--shadow-neon-blue);
+  }
+
+  .shadow-neon-purple {
+    box-shadow: var(--shadow-neon-purple);
+  }
+
+  .shadow-glass {
+    box-shadow: var(--shadow-glass);
   }
 
   .transition-smooth {
