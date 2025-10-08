@@ -128,14 +128,14 @@ const Chat = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gradient-to-br from-background via-primary/5 to-accent/5">
       <Header />
       
-      <main className="pt-20 pb-20 px-4 max-w-md mx-auto">
+      <main className="pt-20 pb-20 px-4 max-w-md mx-auto animate-fade-in">
         <div className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl font-bold text-foreground">Messages</h1>
-          <button className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center">
-            <Search className="w-5 h-5 text-muted-foreground" />
+          <h1 className="text-2xl font-bold bg-gradient-to-r from-foreground to-primary bg-clip-text text-transparent">Messages</h1>
+          <button className="w-10 h-10 rounded-full glass-card-premium border border-primary/20 flex items-center justify-center hover:shadow-soft transition-all duration-300 hover:scale-105 active:scale-95 group">
+            <Search className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors" />
           </button>
         </div>
 
@@ -143,8 +143,11 @@ const Chat = () => {
         <div className="space-y-2">
           {loading ? (
             <div className="text-center py-8">
-              <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto"></div>
-              <p className="text-sm text-muted-foreground mt-2">Loading conversations...</p>
+              <div className="relative w-12 h-12 mx-auto mb-3">
+                <div className="animate-spin rounded-full w-12 h-12 border-3 border-primary/30 border-t-primary" style={{ boxShadow: "0 0 20px hsl(var(--primary) / 0.5)" }} />
+                <div className="absolute inset-0 rounded-full bg-gradient-to-r from-primary/20 to-accent/20 animate-pulse" style={{ filter: "blur(8px)" }} />
+              </div>
+              <p className="text-sm font-medium text-muted-foreground animate-pulse">Loading conversations...</p>
             </div>
           ) : conversations.length === 0 ? (
             <div className="text-center py-8">
@@ -156,7 +159,7 @@ const Chat = () => {
               <button
                 key={conv.id}
                 onClick={() => handleConversationClick(conv)}
-                className="w-full bg-card rounded-xl p-4 shadow-soft border border-border hover:shadow-medium transition-shadow text-left"
+                className="w-full glass-card-premium rounded-xl p-4 border border-primary/20 hover:border-primary/40 hover:shadow-glass transition-all duration-300 text-left hover:scale-[1.02] active:scale-100 group"
               >
                 <div className="flex items-center gap-3">
                   <Avatar className="w-12 h-12">

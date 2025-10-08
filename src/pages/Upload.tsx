@@ -27,10 +27,10 @@ const Upload = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gradient-to-br from-background via-primary/5 to-accent/5">
       <Header />
       
-      <main className="pt-20 pb-20 px-4 max-w-md mx-auto">
+      <main className="pt-20 pb-20 px-4 max-w-md mx-auto animate-fade-in">
         <VideoUploader onSuccess={handleSuccess} />
       </main>
       

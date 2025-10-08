@@ -217,8 +217,8 @@ const Onboarding = () => {
   ));
 
   return (
-    <div className="min-h-screen bg-gradient-elegant flex items-center justify-center p-4">
-      <Card className="w-full max-w-2xl shadow-elegant border-2 rounded-3xl">
+    <div className="min-h-screen bg-gradient-to-br from-background via-primary/5 to-accent/5 flex items-center justify-center p-4">
+      <Card className="w-full max-w-2xl shadow-glass-strong border border-primary/20 rounded-3xl backdrop-blur-xl bg-background/95 animate-scale-in">
         <CardHeader className="text-center space-y-6 pb-8">
           <div className="flex justify-center">
             <div className="p-2 rounded-2xl bg-gradient-to-br from-primary/10 to-accent/10">
@@ -239,13 +239,15 @@ const Onboarding = () => {
           
           {/* Progress Bar */}
           <div className="space-y-2">
-            <div className="w-full bg-muted rounded-full h-2">
+            <div className="w-full bg-muted/50 rounded-full h-2 border border-primary/20 backdrop-blur-sm">
               <div 
-                className="bg-gradient-to-r from-primary to-accent h-2 rounded-full transition-all duration-500"
+                className="bg-gradient-to-r from-primary via-accent to-primary h-2 rounded-full transition-all duration-500 shadow-[0_0_10px_hsl(var(--primary)/0.5)] relative overflow-hidden"
                 style={{ width: `${progress}%` }}
-              />
+              >
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-pulse" />
+              </div>
             </div>
-            <p className="text-xs text-muted-foreground">{progress}% complete</p>
+            <p className="text-xs text-muted-foreground font-medium">{progress}% complete</p>
           </div>
         </CardHeader>
 

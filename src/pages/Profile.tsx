@@ -118,8 +118,11 @@ const Profile = () => {
   // Show a loader until auth is resolved and profile is available
   if (authLoading || !profile) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      <div className="min-h-screen bg-gradient-to-br from-background via-primary/5 to-accent/5 flex items-center justify-center">
+        <div className="relative">
+          <div className="animate-spin rounded-full h-16 w-16 border-4 border-primary/30 border-t-primary" style={{ boxShadow: "0 0 30px hsl(var(--primary) / 0.5)" }} />
+          <div className="absolute inset-0 rounded-full bg-gradient-to-r from-primary/20 to-accent/20 animate-pulse" style={{ filter: "blur(12px)" }} />
+        </div>
       </div>
     );
   }
@@ -136,14 +139,14 @@ const Profile = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gradient-to-br from-background via-primary/5 to-accent/5">
       <Header />
       
-      <main className="pt-20 pb-20 px-4 max-w-md mx-auto">
+      <main className="pt-20 pb-20 px-4 max-w-md mx-auto animate-fade-in">
         {/* Profile header */}
-        <div className="profile-header mb-6">
+        <div className="profile-header mb-6 glass-card-premium p-5 rounded-2xl border border-primary/20 shadow-glass">
           <div className="flex items-center gap-4 mb-4">
-            <Avatar className="w-20 h-20 border-4 border-white/20">
+            <Avatar className="w-20 h-20 border-4 border-primary/30 shadow-[0_0_20px_hsl(var(--primary)/0.3)] ring-2 ring-primary/10 ring-offset-2 ring-offset-background">
               {profile.avatar_url ? (
                 <AvatarImage src={profile.avatar_url} alt={profile.full_name || profile.username || ''} />
               ) : (
@@ -207,18 +210,18 @@ const Profile = () => {
 
         {/* Stats */}
         <div className="grid grid-cols-3 gap-4 mb-6">
-          <div className="bg-card rounded-xl p-4 text-center shadow-soft">
-            <div className="text-2xl font-bold text-primary">{userVideos.length}</div>
+          <div className="glass-card-premium rounded-xl p-4 text-center border border-primary/20 hover:border-primary/40 transition-all duration-300 hover:shadow-glass group animate-fade-in">
+            <div className="text-2xl font-bold text-primary group-hover:scale-110 transition-transform">{userVideos.length}</div>
             <div className="text-sm text-muted-foreground">Videos</div>
           </div>
-          <div className="bg-card rounded-xl p-4 text-center shadow-soft">
-            <div className="text-2xl font-bold text-success">0</div>
+          <div className="glass-card-premium rounded-xl p-4 text-center border border-accent/20 hover:border-accent/40 transition-all duration-300 hover:shadow-glass group animate-fade-in" style={{ animationDelay: '0.05s' }}>
+            <div className="text-2xl font-bold text-accent group-hover:scale-110 transition-transform">0</div>
             <div className="text-sm text-muted-foreground">
               {getProfileRole(profile) === 'freelancer' ? 'Projects' : 'Hires'}
             </div>
           </div>
-          <div className="bg-card rounded-xl p-4 text-center shadow-soft">
-            <div className="text-2xl font-bold text-accent">0</div>
+          <div className="glass-card-premium rounded-xl p-4 text-center border border-primary/20 hover:border-primary/40 transition-all duration-300 hover:shadow-glass group animate-fade-in" style={{ animationDelay: '0.1s' }}>
+            <div className="text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent group-hover:scale-110 transition-transform">0</div>
             <div className="text-sm text-muted-foreground">
               {getProfileRole(profile) === 'freelancer' ? 'Saved Jobs' : 'Favorites'}
             </div>
@@ -241,7 +244,10 @@ const Profile = () => {
           <TabsContent value="videos" className="mt-6">
             {videosLoading ? (
               <div className="flex items-center justify-center py-12">
-                <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary"></div>
+                <div className="relative">
+                  <div className="animate-spin rounded-full h-12 w-12 border-3 border-primary/30 border-t-primary" style={{ boxShadow: "0 0 20px hsl(var(--primary) / 0.5)" }} />
+                  <div className="absolute inset-0 rounded-full bg-gradient-to-r from-primary/20 to-accent/20 animate-pulse" style={{ filter: "blur(8px)" }} />
+                </div>
               </div>
             ) : userVideos.length > 0 ? (
               <div className="grid grid-cols-2 gap-4">

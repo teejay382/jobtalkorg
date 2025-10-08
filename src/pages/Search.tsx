@@ -57,13 +57,13 @@ const Search = () => {
   const hasSearched = filters.query || Object.keys(filters).length > 1;
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gradient-to-br from-background via-primary/5 to-accent/5">
       <Header />
       
-      <main className="pt-20 pb-20 px-4 max-w-4xl mx-auto">
+      <main className="pt-20 pb-20 px-4 max-w-4xl mx-auto animate-fade-in">
         {/* Search Header */}
         <div className="mb-6">
-          <h1 className="text-2xl font-bold text-foreground mb-4">
+          <h1 className="text-2xl font-bold bg-gradient-to-r from-foreground via-primary to-accent bg-clip-text text-transparent mb-4">
             Find Your Perfect {activeTab === 'jobs' ? 'Job' : 'Freelancer'}
           </h1>
           
@@ -74,7 +74,7 @@ const Search = () => {
               placeholder={`Search ${activeTab === 'jobs' ? 'jobs' : 'freelancers'}...`}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 pr-4 h-12 rounded-full border-primary/20 focus:border-primary text-base"
+              className="pl-10 pr-4 h-12 rounded-full border-primary/20 focus:border-primary text-base glass-card-premium backdrop-blur-xl hover:border-primary/40 transition-all duration-300 focus:shadow-glass"
             />
           </div>
 
@@ -86,10 +86,10 @@ const Search = () => {
                 <button
                   key={tab.id}
                   onClick={() => handleTabChange(tab.id)}
-                  className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${
+                  className={`px-6 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
                     activeTab === tab.id
-                      ? 'bg-gradient-to-r from-primary to-accent text-white shadow-lg'
-                      : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
+                      ? 'bg-gradient-to-r from-primary via-accent to-primary text-white shadow-[0_0_20px_hsl(var(--primary)/0.5)] border border-primary/30 scale-105'
+                      : 'glass-card-premium text-secondary-foreground hover:bg-secondary/80 border border-border hover:border-primary/20 hover:scale-105 active:scale-100'
                   }`}
                 >
                   {tab.label}
@@ -111,8 +111,11 @@ const Search = () => {
         <div className="space-y-4">
           {loading && (
             <div className="text-center py-12">
-              <div className="animate-spin w-8 h-8 border-2 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
-              <p className="text-muted-foreground">Searching...</p>
+              <div className="relative w-12 h-12 mx-auto mb-4">
+                <div className="animate-spin rounded-full w-12 h-12 border-3 border-primary/30 border-t-primary" style={{ boxShadow: "0 0 20px hsl(var(--primary) / 0.5)" }} />
+                <div className="absolute inset-0 rounded-full bg-gradient-to-r from-primary/20 to-accent/20 animate-pulse" style={{ filter: "blur(8px)" }} />
+              </div>
+              <p className="font-medium text-muted-foreground animate-pulse">Searching...</p>
             </div>
           )}
 
