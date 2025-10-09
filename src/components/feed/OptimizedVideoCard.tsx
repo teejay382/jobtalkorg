@@ -237,9 +237,9 @@ const OptimizedVideoCard = memo(({ video, isActive, onRefresh, isVisible, isMobi
   const shouldShowHireButton = !isVideoFromEmployer && isCurrentUserEmployer;
 
   return (
-    <div className="relative w-full h-full bg-gradient-to-br from-background/95 via-primary/10 to-accent/10 overflow-hidden">
-      {/* Lazy loaded video */}
-      <div className="absolute inset-0 flex items-center justify-center bg-black/20 backdrop-blur-sm">
+    <div className="relative w-full h-full bg-black overflow-hidden">
+      {/* Video container with 9:16 aspect ratio */}
+      <div className="absolute inset-0 flex items-center justify-center">
         {isVisible ? (
           <video
             ref={videoRef}
@@ -252,11 +252,15 @@ const OptimizedVideoCard = memo(({ video, isActive, onRefresh, isVisible, isMobi
             onClick={handleVideoClick}
             preload="none"
             onLoadedData={() => setVideoLoaded(true)}
+            style={{ aspectRatio: '9/16' }}
           />
         ) : (
           <div 
-            className="w-full h-full bg-center bg-contain bg-no-repeat"
-            style={{ backgroundImage: `url(${video.thumbnail_url})` }}
+            className="w-full h-full bg-center bg-contain bg-no-repeat bg-black"
+            style={{ 
+              backgroundImage: `url(${video.thumbnail_url})`,
+              aspectRatio: '9/16'
+            }}
           />
         )}
       </div>

@@ -96,41 +96,31 @@ const VirtualizedVideoFeed = () => {
   return (
     <div 
       ref={containerRef}
-      className={`w-full ${
-        isMobile 
-          ? 'h-screen overflow-y-scroll snap-y snap-mandatory' 
-          : 'min-h-screen overflow-y-auto p-6 bg-gradient-to-br from-background via-primary/5 to-accent/5'
-      }`}
+      className="w-full h-screen overflow-y-scroll snap-y snap-mandatory bg-black"
       style={{ scrollBehavior: 'smooth' }}
     >
-      <div className={`
-        ${isMobile 
-          ? 'flex flex-col' 
-          : 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 max-w-[2000px] mx-auto'
-        }
-      `}>
+      {/* TikTok-style vertical feed - one video at a time */}
+      <div className="flex flex-col">
         {videos.map((video, index) => (
           <div 
             key={video.id} 
             data-index={index}
-            className={`
-              ${isMobile 
-                ? 'h-screen w-full snap-start' 
-                : 'aspect-[9/16] rounded-3xl overflow-hidden hover:scale-[1.02] transition-all duration-500 shadow-glass hover:shadow-neon-blue'
-              }
-            `}
+            className="h-screen w-full snap-start snap-always flex items-center justify-center"
           >
-            <OptimizedVideoCard
-              video={video}
-              isActive={isMobile ? activeVideoIndex === index : visibleVideos.has(index)}
-              isVisible={visibleVideos.has(index)}
-              onRefresh={fetchVideos}
-              isMobile={isMobile}
-            />
+            {/* Container with 9:16 aspect ratio */}
+            <div className="relative w-full h-full max-w-[100vh*9/16] mx-auto">
+              <OptimizedVideoCard
+                video={video}
+                isActive={activeVideoIndex === index}
+                isVisible={visibleVideos.has(index)}
+                onRefresh={fetchVideos}
+                isMobile={true}
+              />
+            </div>
             
             {/* Loading indicator for infinite scroll */}
-            {index === videos.length - 1 && hasMore && isMobile && (
-              <div className="absolute bottom-20 left-1/2 transform -translate-x-1/2 z-20">
+            {index === videos.length - 1 && hasMore && (
+              <div className="absolute bottom-24 left-1/2 transform -translate-x-1/2 z-30">
                 <div className="glass-card rounded-full p-3">
                   <div className="animate-spin rounded-full h-6 w-6 border-2 border-primary/30 border-t-primary"></div>
                 </div>
@@ -140,23 +130,11 @@ const VirtualizedVideoFeed = () => {
         ))}
       </div>
       
-      {/* Loading more indicator for grid */}
-      {!isMobile && hasMore && (
-        <div className="flex justify-center py-8">
-          <div className="glass-card rounded-full p-4 animate-pulse">
-            <div className="animate-spin rounded-full h-8 w-8 border-3 border-primary/30 border-t-primary"></div>
-          </div>
-        </div>
-      )}
-      
       {/* End of content indicator */}
       {!hasMore && videos.length > 0 && (
-        <div className={`
-          ${isMobile ? 'h-20' : 'py-12'}
-          flex items-center justify-center
-        `}>
+        <div className="h-screen flex items-center justify-center snap-start">
           <div className="glass-card px-6 py-3 rounded-full">
-            <p className="text-foreground/70 text-sm font-medium">You've reached the end! 🎉</p>
+            <p className="text-white text-sm font-medium">You've reached the end! 🎉</p>
           </div>
         </div>
       )}
