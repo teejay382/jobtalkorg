@@ -96,8 +96,13 @@ const VirtualizedVideoFeed = () => {
   return (
     <div 
       ref={containerRef}
-      className="w-full h-screen overflow-y-scroll snap-y snap-mandatory bg-black"
-      style={{ scrollBehavior: 'smooth' }}
+      className="w-full h-full overflow-y-scroll snap-y snap-mandatory bg-black"
+      style={{ 
+        scrollBehavior: 'smooth',
+        height: '100vh',
+        width: '100vw',
+        position: 'relative'
+      }}
     >
       {/* TikTok-style vertical feed - one video at a time */}
       <div className="flex flex-col">

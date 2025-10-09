@@ -54,10 +54,10 @@ const Index = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="relative w-full h-screen overflow-hidden bg-background">
       {/* First-time Welcome Banner */}
       {showWelcome && (
-        <div className="bg-gradient-to-r from-primary/10 via-accent/10 to-primary/10 border-b border-border backdrop-blur-sm">
+        <div className="absolute top-0 left-0 right-0 z-50 bg-gradient-to-r from-primary/10 via-accent/10 to-primary/10 border-b border-border backdrop-blur-sm">
           <div className="container mx-auto px-4 py-6">
             <div className="flex items-start justify-between gap-4">
               <div className="flex-1 space-y-2">
@@ -121,12 +121,12 @@ const Index = () => {
       )}
 
       {/* Header - hidden on mobile for full-screen experience */}
-      <div className="hidden md:block">
+      <div className="hidden md:block absolute top-0 left-0 right-0 z-40">
         <Header />
       </div>
 
-      {/* Main content - full screen on mobile */}
-      <main className="md:pt-16 pb-16 bg-background">
+      {/* Main content - full screen feed */}
+      <main className="w-full h-full">
         <VideoFeed />
       </main>
 
