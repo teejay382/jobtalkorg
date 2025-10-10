@@ -74,7 +74,7 @@ const Profile = () => {
   const [isUploading, setIsUploading] = useState(false);
   // Rename local loading state to avoid confusion with auth loading
   const [videosLoading, setVideosLoading] = useState(true);
-  const { user, profile, signOut, loading: authLoading, updateProfile } = useAuth();
+  const { user, profile, signOut, loading: authLoading, updateProfile, refetchProfile } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -232,19 +232,26 @@ const Profile = () => {
     try {
       setIsUploading(true);
       const fileExt = file.name.split('.').pop();
-      const fileName = `${user.id}-${Date.now()}.${fileExt}`;
+      const fileName = `${Date.now()}.${fileExt}`;
+      const objectPath = `${user.id}/${fileName}`; // store inside user folder to satisfy RLS
       
-      const { data, error } = await supabase.storage
+      const { error } = await supabase.storage
         .from('avatars')
-        .upload(fileName, file);
+        .upload(objectPath, file, { upsert: true });
 
       if (error) throw error;
 
       const { data: { publicUrl } } = supabase.storage
         .from('avatars')
-        .getPublicUrl(fileName);
+        .getPublicUrl(objectPath);
 
-      await updateProfile({ avatar_url: publicUrl });
+      // cache-busting to ensure immediate visual update
+      const cacheBustedUrl = `${publicUrl}?v=${Date.now()}`;
+      await updateProfile({ avatar_url: cacheBustedUrl });
+      // ensure local state refresh if needed
+      if (typeof refetchProfile === 'function') {
+        await refetchProfile();
+      }
       
       toast({
         title: "Avatar updated",
