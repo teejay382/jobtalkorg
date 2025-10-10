@@ -456,6 +456,49 @@
     box-shadow: var(--shadow-strong);
   }
 
+  /* Enhanced contrast for light mode */
+  .profile-text-primary {
+    color: hsl(var(--foreground));
+  }
+
+  .profile-text-secondary {
+    color: hsl(var(--muted-foreground));
+  }
+
+  /* Ensure text visibility on glassmorphic backgrounds */
+  .glass-card-premium {
+    background: linear-gradient(135deg, 
+      hsl(var(--background) / 0.95), 
+      hsl(var(--background) / 0.85),
+      hsl(var(--primary) / 0.05));
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border: 1px solid hsl(var(--primary) / 0.2);
+    box-shadow: var(--shadow-glass), 0 0 0 1px hsl(var(--primary) / 0.1) inset;
+  }
+
+  /* Compact profile elements */
+  .profile-compact-text {
+    line-height: 1.4;
+    letter-spacing: -0.01em;
+  }
+
+  .profile-compact-icon {
+    flex-shrink: 0;
+  }
+
+  /* Improved button contrast */
+  .profile-btn-primary {
+    background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--accent)));
+    color: white;
+    border: 1px solid hsl(var(--primary) / 0.3);
+  }
+
+  .profile-btn-primary:hover {
+    background: linear-gradient(135deg, hsl(var(--primary) / 0.9), hsl(var(--accent) / 0.9));
+    border-color: hsl(var(--primary) / 0.5);
+  }
+
   /* Responsive adjustments for better mobile experience */
   @media (max-width: 640px) {
     .glass-card {
