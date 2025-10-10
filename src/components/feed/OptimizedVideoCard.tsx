@@ -286,93 +286,93 @@ const OptimizedVideoCard = memo(({ video, isActive, onRefresh, isVisible, isMobi
         {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
       </button>
       
-      {/* Right side interactions with neon effects - Compact size */}
-      <div className="absolute right-3 bottom-24 md:bottom-28 flex flex-col gap-3 md:gap-4 z-20">
+      {/* Right side interactions with neon effects - Medium-small balanced size */}
+      <div className="absolute right-3 bottom-20 md:bottom-24 flex flex-col gap-2.5 md:gap-3 z-20">
         <div className="flex flex-col items-center gap-1 animate-fade-in">
           <button 
             onClick={handleLike}
             disabled={loading}
-            className={`w-12 h-12 md:w-14 md:h-14 rounded-xl glass-card flex items-center justify-center transition-all duration-300 hover:scale-110 ${
+            className={`w-10 h-10 md:w-11 md:h-11 rounded-lg glass-card flex items-center justify-center transition-all duration-300 hover:scale-110 ${
               isLiked 
-                ? 'text-red-400 shadow-[0_0_30px_rgba(248,113,113,0.6)]' 
+                ? 'text-red-400 shadow-[0_0_25px_rgba(248,113,113,0.5)]' 
                 : 'text-white hover:shadow-neon-purple'
             } ${loading ? 'opacity-50' : ''}`}
           >
-            <Heart className={`w-6 h-6 md:w-7 md:h-7 ${isLiked ? 'fill-current' : ''}`} strokeWidth={2.5} />
+            <Heart className={`w-5 h-5 md:w-5.5 md:h-5.5 ${isLiked ? 'fill-current' : ''}`} strokeWidth={2.5} />
           </button>
-          <span className="text-white text-xs font-bold drop-shadow-[0_2px_10px_rgba(0,0,0,0.8)] bg-black/30 px-2 py-0.5 rounded-full">{likesCount}</span>
+          <span className="text-white text-[10px] font-bold drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)] bg-black/40 px-1.5 py-0.5 rounded-full">{likesCount}</span>
         </div>
         
         <div className="flex flex-col items-center gap-1 animate-fade-in" style={{ animationDelay: '0.1s' }}>
           <button 
             onClick={handleComment}
-            className="w-12 h-12 md:w-14 md:h-14 rounded-xl glass-card flex items-center justify-center text-white hover:shadow-neon-blue transition-all duration-300 hover:scale-110"
+            className="w-10 h-10 md:w-11 md:h-11 rounded-lg glass-card flex items-center justify-center text-white hover:shadow-neon-blue transition-all duration-300 hover:scale-110"
           >
-            <MessageCircle className="w-6 h-6 md:w-7 md:h-7" strokeWidth={2.5} />
+            <MessageCircle className="w-5 h-5 md:w-5.5 md:h-5.5" strokeWidth={2.5} />
           </button>
-          <span className="text-white text-xs font-bold drop-shadow-[0_2px_10px_rgba(0,0,0,0.8)] bg-black/30 px-2 py-0.5 rounded-full">{commentsCount}</span>
+          <span className="text-white text-[10px] font-bold drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)] bg-black/40 px-1.5 py-0.5 rounded-full">{commentsCount}</span>
         </div>
         
         <button 
           onClick={handleShare} 
-          className="w-12 h-12 md:w-14 md:h-14 rounded-xl glass-card flex items-center justify-center text-white hover:shadow-neon-purple transition-all duration-300 hover:scale-110 animate-fade-in"
+          className="w-10 h-10 md:w-11 md:h-11 rounded-lg glass-card flex items-center justify-center text-white hover:shadow-neon-purple transition-all duration-300 hover:scale-110 animate-fade-in"
           style={{ animationDelay: '0.2s' }}
         >
-          <Share className="w-6 h-6 md:w-7 md:h-7" strokeWidth={2.5} />
+          <Share className="w-5 h-5 md:w-5.5 md:h-5.5" strokeWidth={2.5} />
         </button>
       </div>
       
       {/* Bottom content - Compact username card */}
-      <div className="absolute bottom-0 left-0 right-16 md:right-20 p-3 md:p-4 pb-20 md:pb-24 text-white z-10">
-        {/* User info with subtle glassmorphism - smaller and semi-transparent */}
-        <div className="inline-flex items-center gap-2 mb-3 px-3 py-2 rounded-xl bg-black/40 backdrop-blur-md border border-white/10 animate-fade-in max-w-[280px]">
-          <Avatar className="w-9 h-9 md:w-10 md:h-10 ring-1 ring-primary/40">
+      <div className="absolute bottom-0 left-0 right-14 md:right-16 p-2.5 md:p-3 pb-16 md:pb-20 text-white z-10">
+        {/* User info with subtle glassmorphism - more compact and semi-transparent */}
+        <div className="inline-flex items-center gap-2 mb-2.5 px-2.5 py-1.5 rounded-lg bg-black/25 backdrop-blur-sm border border-white/5 animate-fade-in max-w-[240px]">
+          <Avatar className="w-7 h-7 md:w-8 md:h-8 ring-1 ring-primary/30">
             <AvatarImage src={video.user.avatar_url} alt={displayName} />
-            <AvatarFallback className="bg-gradient-to-br from-primary to-accent text-white text-xs font-bold">
+            <AvatarFallback className="bg-gradient-to-br from-primary to-accent text-white text-[10px] font-bold">
               {displayName.charAt(0).toUpperCase()}
             </AvatarFallback>
           </Avatar>
           <div className="flex-1 min-w-0">
-            <h3 className="font-semibold text-sm text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)] truncate">{displayName}</h3>
-            <p className="text-xs text-white/80 drop-shadow-[0_1px_6px_rgba(0,0,0,0.8)] truncate">{userRole}</p>
+            <h3 className="font-semibold text-xs text-white drop-shadow-[0_2px_6px_rgba(0,0,0,0.9)] truncate">{displayName}</h3>
+            <p className="text-[10px] text-white/70 drop-shadow-[0_1px_4px_rgba(0,0,0,0.8)] truncate">{userRole}</p>
           </div>
           {shouldShowHireButton && (
             <Button
               onClick={handleHire}
               size="sm"
-              className="bg-gradient-to-r from-primary to-accent text-white border-transparent shadow-neon-blue hover:shadow-neon-purple text-xs px-3 py-1.5 h-auto font-bold rounded-lg hover:scale-105 transition-all duration-300 shrink-0"
+              className="bg-gradient-to-r from-primary to-accent text-white border-transparent shadow-neon-blue hover:shadow-neon-purple text-[10px] px-2 py-1 h-auto font-bold rounded-md hover:scale-105 transition-all duration-300 shrink-0"
             >
-              <Briefcase className="w-3 h-3 mr-1" strokeWidth={2.5} />
+              <Briefcase className="w-2.5 h-2.5 mr-0.5" strokeWidth={2.5} />
               Hire
             </Button>
           )}
         </div>
         
-        {/* Video title with strong contrast */}
-        <h2 className="font-bold text-base md:text-lg mb-2 text-white leading-tight line-clamp-2 drop-shadow-[0_2px_12px_rgba(0,0,0,0.95)]">
+        {/* Video title with strong contrast - more compact */}
+        <h2 className="font-bold text-sm md:text-base mb-1.5 text-white leading-tight line-clamp-2 drop-shadow-[0_2px_10px_rgba(0,0,0,0.95)]">
           {video.title}
         </h2>
         
-        {/* Description with enhanced readability */}
+        {/* Description with enhanced readability - more compact */}
         {video.description && (
-          <p className="text-xs md:text-sm text-white/90 mb-2 leading-relaxed line-clamp-2 drop-shadow-[0_2px_10px_rgba(0,0,0,0.9)]">
+          <p className="text-[10px] md:text-xs text-white/85 mb-1.5 leading-relaxed line-clamp-2 drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)]">
             {video.description}
           </p>
         )}
         
-        {/* Tags with neon accents */}
+        {/* Tags with neon accents - more compact */}
         {video.tags && video.tags.length > 0 && (
-          <div className="flex flex-wrap gap-1.5 animate-fade-in">
+          <div className="flex flex-wrap gap-1 animate-fade-in">
             {video.tags.slice(0, 3).map((tag, index) => (
               <span
                 key={index}
-                className="glass-card text-white text-xs px-3 py-1 rounded-full font-semibold hover:shadow-neon-blue transition-all duration-300 hover:scale-105 cursor-pointer"
+                className="glass-card text-white text-[10px] px-2 py-0.5 rounded-full font-medium hover:shadow-neon-blue transition-all duration-300 hover:scale-105 cursor-pointer"
               >
                 #{tag}
               </span>
             ))}
             {video.tags.length > 3 && (
-              <span className="text-xs text-white/80 flex items-center font-semibold drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)] glass-card px-2 py-1 rounded-full">
+              <span className="text-[10px] text-white/75 flex items-center font-medium drop-shadow-[0_2px_6px_rgba(0,0,0,0.8)] glass-card px-1.5 py-0.5 rounded-full">
                 +{video.tags.length - 3}
               </span>
             )}

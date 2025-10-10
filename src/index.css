@@ -379,6 +379,42 @@
   .upload-progress .bg-primary {
     background: var(--gradient-accent);
   }
+
+  /* Notification badge animations */
+  .notification-badge {
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  .notification-badge-new {
+    animation: bounce 0.6s ease-in-out;
+  }
+
+  @keyframes bounce {
+    0%, 20%, 53%, 80%, 100% {
+      transform: translate3d(0, 0, 0);
+    }
+    40%, 43% {
+      transform: translate3d(0, -8px, 0);
+    }
+    70% {
+      transform: translate3d(0, -4px, 0);
+    }
+    90% {
+      transform: translate3d(0, -2px, 0);
+    }
+  }
+
+  /* Responsive adjustments for better mobile experience */
+  @media (max-width: 640px) {
+    .glass-card {
+      backdrop-filter: blur(12px) saturate(150%);
+    }
+    
+    .interaction-btn {
+      width: 2.5rem;
+      height: 2.5rem;
+    }
+  }
 }
 
 /* Add these minimal utility definitions so @apply can expand semantic utilities
