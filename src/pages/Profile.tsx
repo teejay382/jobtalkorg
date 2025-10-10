@@ -1,13 +1,45 @@
 
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Edit, Settings, Star, Video, Bookmark, LogOut, User, Building2, Trash2 } from 'lucide-react';
+import { 
+  Edit, 
+  Settings, 
+  Star, 
+  Video, 
+  Bookmark, 
+  LogOut, 
+  User, 
+  Building2, 
+  Trash2, 
+  Heart, 
+  MessageCircle, 
+  Play, 
+  Camera, 
+  FileText,
+  Linkedin,
+  Github,
+  ExternalLink,
+  Plus,
+  Upload
+} from 'lucide-react';
 import Header from '@/components/layout/Header';
 import BottomNavigation from '@/components/layout/BottomNavigation';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -26,9 +58,23 @@ import { useToast } from '@/hooks/use-toast';
 const Profile = () => {
   const [activeTab, setActiveTab] = useState('videos');
   const [userVideos, setUserVideos] = useState([]);
+  const [savedJobs, setSavedJobs] = useState([]);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editForm, setEditForm] = useState({
+    full_name: '',
+    bio: '',
+    company_name: '',
+    skills: [] as string[],
+    linkedin_url: '',
+    github_url: '',
+    portfolio_url: '',
+    resume_url: ''
+  });
+  const [newSkill, setNewSkill] = useState('');
+  const [isUploading, setIsUploading] = useState(false);
   // Rename local loading state to avoid confusion with auth loading
   const [videosLoading, setVideosLoading] = useState(true);
-  const { user, profile, signOut, loading: authLoading } = useAuth();
+  const { user, profile, signOut, loading: authLoading, updateProfile } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -115,6 +161,126 @@ const Profile = () => {
     navigate('/auth');
   };
 
+  // Calculate profile completion percentage
+  const calculateProfileCompletion = () => {
+    if (!profile) return 0;
+    
+    const fields = [
+      profile.full_name,
+      profile.bio,
+      profile.avatar_url,
+      profile.skills?.length > 0,
+      profile.company_name || profile.username
+    ];
+    
+    const completedFields = fields.filter(Boolean).length;
+    return Math.round((completedFields / fields.length) * 100);
+  };
+
+  // Initialize edit form when profile changes
+  useEffect(() => {
+    if (profile) {
+      setEditForm({
+        full_name: profile.full_name || '',
+        bio: profile.bio || '',
+        company_name: profile.company_name || '',
+        skills: profile.skills || [],
+        linkedin_url: '',
+        github_url: '',
+        portfolio_url: '',
+        resume_url: ''
+      });
+    }
+  }, [profile]);
+
+  // Handle profile updates
+  const handleProfileUpdate = async () => {
+    if (!user) return;
+
+    try {
+      setIsUploading(true);
+      const { error } = await updateProfile({
+        full_name: editForm.full_name,
+        bio: editForm.bio,
+        company_name: editForm.company_name,
+        skills: editForm.skills
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Profile updated",
+        description: "Your profile has been successfully updated.",
+      });
+      setIsEditModalOpen(false);
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update profile. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  // Handle avatar upload
+  const handleAvatarUpload = async (file: File) => {
+    if (!user) return;
+
+    try {
+      setIsUploading(true);
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${user.id}-${Date.now()}.${fileExt}`;
+      
+      const { data, error } = await supabase.storage
+        .from('avatars')
+        .upload(fileName, file);
+
+      if (error) throw error;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(fileName);
+
+      await updateProfile({ avatar_url: publicUrl });
+      
+      toast({
+        title: "Avatar updated",
+        description: "Your profile picture has been updated.",
+      });
+    } catch (error) {
+      console.error('Error uploading avatar:', error);
+      toast({
+        title: "Error",
+        description: "Failed to upload avatar. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  // Handle skill addition
+  const handleAddSkill = () => {
+    if (newSkill.trim() && !editForm.skills.includes(newSkill.trim())) {
+      setEditForm(prev => ({
+        ...prev,
+        skills: [...prev.skills, newSkill.trim()]
+      }));
+      setNewSkill('');
+    }
+  };
+
+  // Handle skill removal
+  const handleRemoveSkill = (skillToRemove: string) => {
+    setEditForm(prev => ({
+      ...prev,
+      skills: prev.skills.filter(skill => skill !== skillToRemove)
+    }));
+  };
+
   // Show a loader until auth is resolved and profile is available
   if (authLoading || !profile) {
     return (
@@ -127,117 +293,318 @@ const Profile = () => {
     );
   }
 
-  const mockVideos = [
-    { id: '1', title: 'React Performance Tips', views: 1200, likes: 89 },
-    { id: '2', title: 'My Development Setup', views: 850, likes: 67 },
-    { id: '3', title: 'Building APIs with Node.js', views: 2100, likes: 156 },
-  ];
-
-  const savedJobs = [
-    { id: '1', company: 'TechStart', role: 'Senior React Developer', salary: '$90k-120k' },
-    { id: '2', company: 'WebCorp', role: 'Full-Stack Engineer', salary: '$80k-110k' },
-  ];
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-primary/5 to-accent/5">
       <Header />
       
-      <main className="pt-20 pb-20 px-4 max-w-md mx-auto animate-fade-in">
-        {/* Profile header */}
-        <div className="profile-header mb-6 glass-card-premium p-5 rounded-2xl border border-primary/20 shadow-glass">
-          <div className="flex items-center gap-4 mb-4">
-            <Avatar className="w-20 h-20 border-4 border-primary/30 shadow-[0_0_20px_hsl(var(--primary)/0.3)] ring-2 ring-primary/10 ring-offset-2 ring-offset-background">
-              {profile.avatar_url ? (
-                <AvatarImage src={profile.avatar_url} alt={profile.full_name || profile.username || ''} />
-              ) : (
-                <AvatarFallback className="bg-white/20 text-white text-xl font-bold">
-                  {(profile.full_name || profile.username || profile.email)
-                    .split(' ')
-                    .map(n => n[0])
-                    .join('')
-                    .toUpperCase()}
-                </AvatarFallback>
-              )}
-            </Avatar>
-            <div className="flex-1">
-              <div className="flex items-center gap-2 mb-1">
-                <h1 className="text-2xl font-bold text-white">
-                  {profile.full_name || profile.username || 'User'}
-                </h1>
-                {getProfileRole(profile) === 'freelancer' ? (
-                  <User className="w-5 h-5 text-blue-400" />
-                ) : (
-                  <Building2 className="w-5 h-5 text-green-400" />
-                )}
+      <main className="pt-16 pb-16 px-4 max-w-4xl mx-auto animate-fade-in">
+        {/* Profile Card - Main Section */}
+        <div className="glass-card-premium rounded-3xl p-6 md:p-8 mb-6 border border-primary/20 shadow-glass relative overflow-hidden">
+          {/* Background gradient overlay */}
+          <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-accent/10 rounded-3xl" />
+          
+          <div className="relative z-10">
+            <div className="flex flex-col md:flex-row items-center md:items-start gap-6 mb-6">
+              {/* Profile Picture with Edit Overlay */}
+              <div className="relative group">
+                <Avatar className="w-24 h-24 md:w-32 md:h-32 border-4 border-primary/30 shadow-[0_0_25px_hsl(var(--primary)/0.4)] ring-2 ring-primary/20 ring-offset-4 ring-offset-background">
+                  {profile.avatar_url ? (
+                    <AvatarImage src={profile.avatar_url} alt={profile.full_name || profile.username || ''} />
+                  ) : (
+                    <AvatarFallback className="bg-gradient-to-br from-primary/20 to-accent/20 text-white text-2xl font-bold">
+                      {(profile.full_name || profile.username || profile.email)
+                        ?.split(' ')
+                        .map(n => n[0])
+                        .join('')
+                        .toUpperCase()}
+                    </AvatarFallback>
+                  )}
+                </Avatar>
+                
+                {/* Edit overlay */}
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <button className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 backdrop-blur-sm">
+                      <Camera className="w-6 h-6 text-white" />
+                    </button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                      <DialogTitle>Update Profile Picture</DialogTitle>
+                      <DialogDescription>
+                        Upload a new profile picture from your device.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                      <Input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) handleAvatarUpload(file);
+                        }}
+                        className="cursor-pointer"
+                      />
+                    </div>
+                  </DialogContent>
+                </Dialog>
               </div>
-              <p className="text-white/90">
-                {getProfileRole(profile) === 'freelancer' ? 'Freelancer' : 'Employer'}
-                {profile.company_name && ` at ${profile.company_name}`}
+
+              {/* Profile Info */}
+              <div className="flex-1 text-center md:text-left">
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
+                  <div>
+                    <div className="flex items-center justify-center md:justify-start gap-3 mb-2">
+                      <h1 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent">
+                        {profile.full_name || profile.username || 'User'}
+                      </h1>
+                      {getProfileRole(profile) === 'freelancer' ? (
+                        <User className="w-6 h-6 text-blue-400" />
+                      ) : (
+                        <Building2 className="w-6 h-6 text-green-400" />
+                      )}
+                    </div>
+                    <p className="text-muted-foreground text-lg">
+                      {getProfileRole(profile) === 'freelancer' ? 'Freelancer' : 'Employer'}
+                      {profile.company_name && ` at ${profile.company_name}`}
+                    </p>
+                  </div>
+                  
+                  {/* Edit Button */}
+                  <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
+                    <DialogTrigger asChild>
+                      <Button className="w-12 h-12 rounded-full bg-gradient-to-r from-primary to-accent hover:shadow-glow transition-all duration-300 hover:scale-105">
+                        <Edit className="w-5 h-5" />
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
+                      <DialogHeader>
+                        <DialogTitle>Edit Profile</DialogTitle>
+                        <DialogDescription>
+                          Update your profile information and social links.
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="space-y-4">
+                        {/* Basic Info */}
+                        <div className="space-y-2">
+                          <Label htmlFor="full_name">Full Name</Label>
+                          <Input
+                            id="full_name"
+                            value={editForm.full_name}
+                            onChange={(e) => setEditForm(prev => ({ ...prev, full_name: e.target.value }))}
+                            placeholder="Enter your full name"
+                          />
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <Label htmlFor="bio">Bio</Label>
+                          <Textarea
+                            id="bio"
+                            value={editForm.bio}
+                            onChange={(e) => setEditForm(prev => ({ ...prev, bio: e.target.value }))}
+                            placeholder="Tell us about yourself"
+                            rows={3}
+                          />
+                        </div>
+                        
+                        {getProfileRole(profile) === 'employer' && (
+                          <div className="space-y-2">
+                            <Label htmlFor="company_name">Company Name</Label>
+                            <Input
+                              id="company_name"
+                              value={editForm.company_name}
+                              onChange={(e) => setEditForm(prev => ({ ...prev, company_name: e.target.value }))}
+                              placeholder="Enter company name"
+                            />
+                          </div>
+                        )}
+                        
+                        {/* Skills */}
+                        <div className="space-y-2">
+                          <Label>Skills</Label>
+                          <div className="flex flex-wrap gap-2 mb-2">
+                            {editForm.skills.map((skill, index) => (
+                              <Badge
+                                key={index}
+                                variant="secondary"
+                                className="bg-primary/10 text-primary hover:bg-primary/20"
+                              >
+                                {skill}
+                                <button
+                                  onClick={() => handleRemoveSkill(skill)}
+                                  className="ml-1 hover:text-red-500"
+                                >
+                                  ×
+                                </button>
+                              </Badge>
+                            ))}
+                          </div>
+                          <div className="flex gap-2">
+                            <Input
+                              value={newSkill}
+                              onChange={(e) => setNewSkill(e.target.value)}
+                              placeholder="Add a skill"
+                              onKeyPress={(e) => e.key === 'Enter' && handleAddSkill()}
+                            />
+                            <Button onClick={handleAddSkill} size="sm">
+                              <Plus className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </div>
+                        
+                        {/* Social Links */}
+                        <div className="space-y-2">
+                          <Label htmlFor="linkedin">LinkedIn URL</Label>
+                          <Input
+                            id="linkedin"
+                            value={editForm.linkedin_url}
+                            onChange={(e) => setEditForm(prev => ({ ...prev, linkedin_url: e.target.value }))}
+                            placeholder="https://linkedin.com/in/yourname"
+                            type="url"
+                          />
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <Label htmlFor="github">GitHub URL</Label>
+                          <Input
+                            id="github"
+                            value={editForm.github_url}
+                            onChange={(e) => setEditForm(prev => ({ ...prev, github_url: e.target.value }))}
+                            placeholder="https://github.com/yourname"
+                            type="url"
+                          />
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <Label htmlFor="portfolio">Portfolio URL</Label>
+                          <Input
+                            id="portfolio"
+                            value={editForm.portfolio_url}
+                            onChange={(e) => setEditForm(prev => ({ ...prev, portfolio_url: e.target.value }))}
+                            placeholder="https://yourportfolio.com"
+                            type="url"
+                          />
+                        </div>
+                        
+                        {/* Resume Upload */}
+                        <div className="space-y-2">
+                          <Label>Resume (PDF)</Label>
+                          <div className="flex items-center gap-2 p-3 border-2 border-dashed border-primary/30 rounded-lg">
+                            <FileText className="w-5 h-5 text-primary" />
+                            <span className="text-sm text-muted-foreground">Upload resume</span>
+                            <Input type="file" accept=".pdf" className="hidden" />
+                          </div>
+                        </div>
+                        
+                        {/* Action Buttons */}
+                        <div className="flex gap-3 pt-4">
+                          <Button
+                            onClick={handleProfileUpdate}
+                            disabled={isUploading}
+                            className="flex-1 bg-gradient-to-r from-primary to-accent hover:shadow-glow"
+                          >
+                            {isUploading ? 'Updating...' : 'Save Changes'}
+                          </Button>
+                          <Button
+                            variant="outline"
+                            onClick={() => setIsEditModalOpen(false)}
+                          >
+                            Cancel
+                          </Button>
+                        </div>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+                </div>
+                
+                {/* Rating and Stats */}
+                <div className="flex items-center justify-center md:justify-start gap-6 text-sm">
+                  <div className="flex items-center gap-1">
+                    <Star className="w-4 h-4 text-yellow-400 fill-current" />
+                    <span className="font-semibold">4.8</span>
+                    <span className="text-muted-foreground">rating</span>
+                  </div>
+                  <div className="text-muted-foreground">
+                    {userVideos.length} video{userVideos.length !== 1 ? 's' : ''}
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            {/* Bio */}
+            {profile.bio && (
+              <p className="text-muted-foreground mb-4 text-center md:text-left leading-relaxed">
+                {profile.bio}
               </p>
-              <div className="flex items-center gap-4 mt-2">
-                <div className="flex items-center gap-1">
-                  <Star className="w-4 h-4 text-yellow-400 fill-current" />
-                  <span className="text-white/90 text-sm">4.8</span>
-                </div>
-                <div className="text-white/90 text-sm">
-                  {userVideos.length} video{userVideos.length !== 1 ? 's' : ''}
-                </div>
+            )}
+            
+            {/* Skills/Tags */}
+            {profile.skills && profile.skills.length > 0 && (
+              <div className="flex flex-wrap gap-2 justify-center md:justify-start">
+                {profile.skills.map((skill, index) => (
+                  <Badge
+                    key={index}
+                    variant="secondary"
+                    className="bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
+                  >
+                    {skill}
+                  </Badge>
+                ))}
               </div>
-            </div>
-            <button className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
-              <Edit className="w-5 h-5 text-white" />
-            </button>
+            )}
           </div>
-          
-          {profile.bio && (
-            <p className="text-white/90 text-sm mb-4">{profile.bio}</p>
-          )}
-          
-          {profile.skills && profile.skills.length > 0 && (
-            <div className="flex flex-wrap gap-2">
-              {profile.skills.map((skill, index) => (
-                <Badge
-                  key={index}
-                  variant="secondary"
-                  className="bg-white/20 text-white border-white/30 hover:bg-white/30"
-                >
-                  {skill}
-                </Badge>
-              ))}
-            </div>
-          )}
         </div>
 
-        {/* Stats */}
-        <div className="grid grid-cols-3 gap-4 mb-6">
-          <div className="glass-card-premium rounded-xl p-4 text-center border border-primary/20 hover:border-primary/40 transition-all duration-300 hover:shadow-glass group animate-fade-in">
-            <div className="text-2xl font-bold text-primary group-hover:scale-110 transition-transform">{userVideos.length}</div>
-            <div className="text-sm text-muted-foreground">Videos</div>
+        {/* Profile Completion Progress */}
+        <div className="glass-card rounded-2xl p-4 mb-6 border border-primary/15">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm font-medium">Profile Completion</span>
+            <span className="text-sm text-muted-foreground">{calculateProfileCompletion()}%</span>
           </div>
-          <div className="glass-card-premium rounded-xl p-4 text-center border border-accent/20 hover:border-accent/40 transition-all duration-300 hover:shadow-glass group animate-fade-in" style={{ animationDelay: '0.05s' }}>
-            <div className="text-2xl font-bold text-accent group-hover:scale-110 transition-transform">0</div>
-            <div className="text-sm text-muted-foreground">
+          <Progress value={calculateProfileCompletion()} className="h-2" />
+        </div>
+
+        {/* Stats Row */}
+        <div className="grid grid-cols-3 gap-3 md:gap-4 mb-6">
+          <div className="glass-card-premium rounded-2xl p-4 text-center border border-primary/20 hover:border-primary/40 transition-all duration-300 hover:shadow-glass group animate-fade-in">
+            <Video className="w-6 h-6 md:w-7 md:h-7 text-primary mx-auto mb-2 group-hover:scale-110 transition-transform" />
+            <div className="text-xl md:text-2xl font-bold text-primary group-hover:scale-110 transition-transform">{userVideos.length}</div>
+            <div className="text-xs md:text-sm text-muted-foreground">Videos</div>
+          </div>
+          <div className="glass-card-premium rounded-2xl p-4 text-center border border-accent/20 hover:border-accent/40 transition-all duration-300 hover:shadow-glass group animate-fade-in" style={{ animationDelay: '0.05s' }}>
+            <Building2 className="w-6 h-6 md:w-7 md:h-7 text-accent mx-auto mb-2 group-hover:scale-110 transition-transform" />
+            <div className="text-xl md:text-2xl font-bold text-accent group-hover:scale-110 transition-transform">0</div>
+            <div className="text-xs md:text-sm text-muted-foreground">
               {getProfileRole(profile) === 'freelancer' ? 'Projects' : 'Hires'}
             </div>
           </div>
-          <div className="glass-card-premium rounded-xl p-4 text-center border border-primary/20 hover:border-primary/40 transition-all duration-300 hover:shadow-glass group animate-fade-in" style={{ animationDelay: '0.1s' }}>
-            <div className="text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent group-hover:scale-110 transition-transform">0</div>
-            <div className="text-sm text-muted-foreground">
+          <div className="glass-card-premium rounded-2xl p-4 text-center border border-primary/20 hover:border-primary/40 transition-all duration-300 hover:shadow-glass group animate-fade-in" style={{ animationDelay: '0.1s' }}>
+            <Bookmark className="w-6 h-6 md:w-7 md:h-7 text-primary mx-auto mb-2 group-hover:scale-110 transition-transform" />
+            <div className="text-xl md:text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent group-hover:scale-110 transition-transform">0</div>
+            <div className="text-xs md:text-sm text-muted-foreground">
               {getProfileRole(profile) === 'freelancer' ? 'Saved Jobs' : 'Favorites'}
             </div>
           </div>
         </div>
 
-        {/* Content tabs */}
+        {/* Tab Section */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-2 bg-secondary rounded-xl">
-            <TabsTrigger value="videos" className="flex items-center gap-2">
+          <TabsList className="grid w-full grid-cols-2 glass-card-premium rounded-2xl p-1 border border-primary/20">
+            <TabsTrigger 
+              value="videos" 
+              className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-accent data-[state=active]:text-white data-[state=active]:shadow-glow rounded-xl transition-all duration-300"
+            >
               <Video className="w-4 h-4" />
-              My Videos
+              <span className="hidden sm:inline">My Videos</span>
+              <span className="sm:hidden">Videos</span>
             </TabsTrigger>
-            <TabsTrigger value="saved" className="flex items-center gap-2">
+            <TabsTrigger 
+              value="saved" 
+              className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-accent data-[state=active]:text-white data-[state=active]:shadow-glow rounded-xl transition-all duration-300"
+            >
               <Bookmark className="w-4 h-4" />
-              Saved Jobs
+              <span className="hidden sm:inline">Saved Jobs</span>
+              <span className="sm:hidden">Saved</span>
             </TabsTrigger>
           </TabsList>
           
@@ -250,19 +617,19 @@ const Profile = () => {
                 </div>
               </div>
             ) : userVideos.length > 0 ? (
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                 {userVideos.map((video: any) => (
                   <div
                     key={video.id}
-                    className="bg-card rounded-xl overflow-hidden shadow-soft relative group"
+                    className="glass-card rounded-2xl overflow-hidden shadow-soft relative group hover:shadow-glass transition-all duration-300 hover:scale-105"
                   >
                     <div className="aspect-[9/16] bg-gradient-to-br from-primary/20 to-accent/20 relative">
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
                       
                       {/* Delete button */}
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
-                          <button className="absolute top-2 right-2 w-8 h-8 bg-red-500/80 rounded-full flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-sm">
+                          <button className="absolute top-2 right-2 w-8 h-8 bg-red-500/80 rounded-full flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-sm hover:bg-red-500">
                             <Trash2 className="w-4 h-4" />
                           </button>
                         </AlertDialogTrigger>
@@ -285,16 +652,31 @@ const Profile = () => {
                         </AlertDialogContent>
                       </AlertDialog>
 
+                      {/* Play overlay */}
+                      <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-sm">
+                        <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
+                          <Play className="w-6 h-6 text-white ml-1" />
+                        </div>
+                      </div>
+
+                      {/* Video info */}
                       <div className="absolute bottom-2 left-2 right-2">
-                        <p className="text-white text-xs font-medium line-clamp-2">
+                        <p className="text-white text-xs font-medium line-clamp-2 mb-1">
                           {video.title}
                         </p>
-                      </div>
-                    </div>
-                    <div className="p-3">
-                      <div className="flex justify-between text-xs text-muted-foreground">
-                        <span>{video.views_count || 0} views</span>
-                        <span>{video.likes_count || 0} likes</span>
+                        <div className="flex items-center justify-between text-[10px] text-white/80">
+                          <span>{video.views_count || 0} views</span>
+                          <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-1">
+                              <Heart className="w-3 h-3" />
+                              <span>{video.likes_count || 0}</span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <MessageCircle className="w-3 h-3" />
+                              <span>{video.comments_count || 0}</span>
+                            </div>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -302,12 +684,16 @@ const Profile = () => {
               </div>
             ) : (
               <div className="text-center py-12">
-                <Video className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+                <Video className="mx-auto h-16 w-16 text-muted-foreground mb-4 opacity-50" />
                 <h3 className="text-lg font-medium text-foreground mb-2">No videos yet</h3>
-                <p className="text-muted-foreground mb-4">
+                <p className="text-muted-foreground mb-6 max-w-md mx-auto">
                   Start showcasing your {getProfileRole(profile) === 'freelancer' ? 'skills' : 'job opportunities'} with videos
                 </p>
-                <Button onClick={() => navigate('/upload')}>
+                <Button 
+                  onClick={() => navigate('/upload')}
+                  className="bg-gradient-to-r from-primary to-accent hover:shadow-glow"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
                   Create Your First Video
                 </Button>
               </div>
@@ -316,32 +702,34 @@ const Profile = () => {
           
           <TabsContent value="saved" className="mt-6">
             <div className="text-center py-12">
-              <Bookmark className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+              <Bookmark className="mx-auto h-16 w-16 text-muted-foreground mb-4 opacity-50" />
               <h3 className="text-lg font-medium text-foreground mb-2">
                 No saved {getProfileRole(profile) === 'freelancer' ? 'jobs' : 'profiles'} yet
               </h3>
-              <p className="text-muted-foreground mb-4">
+              <p className="text-muted-foreground mb-6 max-w-md mx-auto">
                 Save {getProfileRole(profile) === 'freelancer' ? 'job opportunities' : 'freelancer profiles'} you're interested in
               </p>
-              <Button variant="outline" onClick={() => navigate('/search')}>
+              <Button 
+                variant="outline" 
+                onClick={() => navigate('/search')}
+                className="border-primary/20 hover:border-primary/40 hover:bg-primary/5"
+              >
+                <ExternalLink className="w-4 h-4 mr-2" />
                 Start Exploring
               </Button>
             </div>
           </TabsContent>
-
-          {/* Settings section */}
-          <div className="mt-8 pt-6 border-t border-border">
-            <Button 
-              variant="outline" 
-              onClick={handleSignOut}
-              className="w-full justify-center"
-            >
-              <LogOut className="mr-2 h-4 w-4" />
-              Sign Out
-            </Button>
-          </div>
         </Tabs>
       </main>
+      
+      {/* Floating Edit Button */}
+      <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
+        <DialogTrigger asChild>
+          <button className="fixed bottom-20 right-4 md:right-8 w-14 h-14 bg-gradient-to-r from-primary to-accent rounded-full shadow-glow hover:shadow-strong transition-all duration-300 hover:scale-110 flex items-center justify-center z-40">
+            <Edit className="w-6 h-6 text-white" />
+          </button>
+        </DialogTrigger>
+      </Dialog>
       
       <BottomNavigation />
     </div>
