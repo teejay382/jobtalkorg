@@ -575,19 +575,19 @@ const Profile = () => {
         <div className="grid grid-cols-3 gap-2 md:gap-3 mb-4">
           <div className="glass-card-premium rounded-xl p-3 text-center border border-primary/15 hover:border-primary/30 transition-all duration-300 hover:shadow-glass group animate-fade-in">
             <Video className="w-4 h-4 md:w-5 md:h-5 text-primary mx-auto mb-1.5 group-hover:scale-110 transition-transform" />
-            <div className="text-lg md:text-xl font-semibold text-primary group-hover:scale-110 transition-transform">{userVideos.length}</div>
+            <div className="text-lg md:text-xl font-semibold text-foreground group-hover:scale-110 transition-transform">{userVideos.length}</div>
             <div className="text-[10px] md:text-xs text-muted-foreground">Videos</div>
           </div>
           <div className="glass-card-premium rounded-xl p-3 text-center border border-accent/15 hover:border-accent/30 transition-all duration-300 hover:shadow-glass group animate-fade-in" style={{ animationDelay: '0.05s' }}>
             <Building2 className="w-4 h-4 md:w-5 md:h-5 text-accent mx-auto mb-1.5 group-hover:scale-110 transition-transform" />
-            <div className="text-lg md:text-xl font-semibold text-accent group-hover:scale-110 transition-transform">0</div>
+            <div className="text-lg md:text-xl font-semibold text-foreground group-hover:scale-110 transition-transform">0</div>
             <div className="text-[10px] md:text-xs text-muted-foreground">
               {getProfileRole(profile) === 'freelancer' ? 'Projects' : 'Hires'}
             </div>
           </div>
           <div className="glass-card-premium rounded-xl p-3 text-center border border-primary/15 hover:border-primary/30 transition-all duration-300 hover:shadow-glass group animate-fade-in" style={{ animationDelay: '0.1s' }}>
             <Bookmark className="w-4 h-4 md:w-5 md:h-5 text-primary mx-auto mb-1.5 group-hover:scale-110 transition-transform" />
-            <div className="text-lg md:text-xl font-semibold text-primary group-hover:scale-110 transition-transform">0</div>
+            <div className="text-lg md:text-xl font-semibold text-foreground group-hover:scale-110 transition-transform">0</div>
             <div className="text-[10px] md:text-xs text-muted-foreground">
               {getProfileRole(profile) === 'freelancer' ? 'Saved Jobs' : 'Favorites'}
             </div>
