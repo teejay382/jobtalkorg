@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Upload as UploadIcon, Video, Camera, X, Image } from 'lucide-react';
+import { Upload as UploadIcon, Video, Camera, X, Image, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -10,6 +10,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { generateBestVideoThumbnail, createThumbnailFile } from '@/utils/thumbnailGenerator';
+import { useUploadContext } from '@/contexts/UploadContext';
 
 interface VideoUploaderProps {
   onSuccess: () => void;
@@ -27,9 +28,13 @@ export const VideoUploader = ({ onSuccess }: VideoUploaderProps) => {
   const [videoPreviewUrl, setVideoPreviewUrl] = useState<string | null>(null);
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
   const [generatingThumbnail, setGeneratingThumbnail] = useState(false);
+  const [uploadStage, setUploadStage] = useState<'preparing' | 'video' | 'thumbnail' | 'database' | 'complete'>('preparing');
+  const [backgroundMode, setBackgroundMode] = useState(false);
+  const [uploadComplete, setUploadComplete] = useState(false);
 
   const { user } = useAuth();
   const { toast } = useToast();
+  const { addUpload, updateUpload, removeUpload } = useUploadContext();
 
   const handleVideoFileChange = async (file: File) => {
     setVideoFile(file);
@@ -66,50 +71,58 @@ export const VideoUploader = ({ onSuccess }: VideoUploaderProps) => {
     setSkills(skills.filter(skill => skill !== skillToRemove));
   };
 
-  const uploadVideoToStorage = async (file: File): Promise<string> => {
+  const uploadVideoToStorage = async (file: File, uploadId: string): Promise<string> => {
     const fileExt = file.name.split('.').pop() || 'mp4';
     const fileName = `${user?.id}/${Date.now()}.${fileExt}`;
 
-    // Create a custom upload with progress tracking
-    return new Promise((resolve, reject) => {
-      const xhr = new XMLHttpRequest();
-      
-      xhr.upload.onprogress = (event) => {
-        if (event.lengthComputable) {
-          const progress = (event.loaded / event.total) * 100;
-          setUploadProgress(progress);
-        }
-      };
-      
-      xhr.onload = async () => {
-        if (xhr.status === 200) {
-          // Get public URL
-          const { data: { publicUrl } } = supabase.storage
-            .from('videos')
-            .getPublicUrl(fileName);
-          resolve(publicUrl);
-        } else {
-          reject(new Error('Upload failed'));
-        }
-      };
-      
-      xhr.onerror = () => reject(new Error('Upload failed'));
-      
-      // Use supabase storage upload
-      supabase.storage
+    try {
+      // Get the upload URL from Supabase
+      const { data, error } = await supabase.storage
         .from('videos')
-        .upload(fileName, file)
-        .then(({ data, error }) => {
-          if (error) {
-            reject(error);
-          } else {
+        .createSignedUploadUrl(fileName);
+
+      if (error) {
+        throw error;
+      }
+
+      // Get session token for authorization
+      const { data: session } = await supabase.auth.getSession();
+
+      return new Promise((resolve, reject) => {
+        // Upload with XMLHttpRequest for progress tracking
+        const xhr = new XMLHttpRequest();
+        
+        xhr.upload.onprogress = (event) => {
+          if (event.lengthComputable) {
+            // Map video upload progress to overall progress (5-70%)
+            const videoProgress = (event.loaded / event.total) * 65 + 5;
+            setUploadProgress(videoProgress);
+            updateUpload(uploadId, { progress: videoProgress });
+          }
+        };
+        
+        xhr.onload = () => {
+          if (xhr.status === 200) {
+            // Get public URL
             const { data: { publicUrl } } = supabase.storage
               .from('videos')
               .getPublicUrl(fileName);
             resolve(publicUrl);
+          } else {
+            reject(new Error('Upload failed'));
           }
-        });
-    });
+        };
+        
+        xhr.onerror = () => reject(new Error('Upload failed'));
+        
+        // Upload the file
+        xhr.open('POST', data.signedUrl);
+        xhr.setRequestHeader('Authorization', `Bearer ${session.session?.access_token}`);
+        xhr.send(file);
+      });
+    } catch (error) {
+      throw error;
+    }
   };
 
   const uploadThumbnailToStorage = async (file: File): Promise<string> => {
@@ -143,14 +156,29 @@ export const VideoUploader = ({ onSuccess }: VideoUploaderProps) => {
       return;
     }
 
+    const uploadId = `upload_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    
     setUploading(true);
     setUploadProgress(0);
+    setUploadStage('preparing');
+    
+    // Add to global upload context
+    addUpload(uploadId, fileToUpload.name);
 
     try {
-      // Upload video to storage with progress
-      const videoUrl = await uploadVideoToStorage(fileToUpload);
+      // Stage 1: Upload video to storage (0-70%)
+      setUploadStage('video');
+      setUploadProgress(5);
+      updateUpload(uploadId, { stage: 'video', progress: 5 });
+      
+      const videoUrl = await uploadVideoToStorage(fileToUpload, uploadId);
+      setUploadProgress(70);
+      updateUpload(uploadId, { stage: 'video', progress: 70 });
 
-      // Upload thumbnail if available
+      // Stage 2: Upload thumbnail if available (70-85%)
+      setUploadStage('thumbnail');
+      updateUpload(uploadId, { stage: 'thumbnail', progress: 70 });
+      
       let thumbnailUrl = null;
       if (thumbnailFile) {
         try {
@@ -160,8 +188,13 @@ export const VideoUploader = ({ onSuccess }: VideoUploaderProps) => {
           // Continue without thumbnail
         }
       }
+      setUploadProgress(85);
+      updateUpload(uploadId, { stage: 'thumbnail', progress: 85 });
 
-      // Save video data to database
+      // Stage 3: Save video data to database (85-95%)
+      setUploadStage('database');
+      updateUpload(uploadId, { stage: 'database', progress: 85 });
+      
       const { error } = await supabase
         .from('videos')
         .insert({
@@ -176,23 +209,58 @@ export const VideoUploader = ({ onSuccess }: VideoUploaderProps) => {
       if (error) {
         throw error;
       }
+      setUploadProgress(95);
+      updateUpload(uploadId, { stage: 'database', progress: 95 });
+
+      // Stage 4: Complete (95-100%)
+      setUploadStage('complete');
+      setUploadProgress(100);
+      updateUpload(uploadId, { stage: 'complete', progress: 100 });
 
       toast({
         title: "Success!",
         description: "Your video has been uploaded successfully",
       });
 
-      onSuccess();
+      // Allow user to continue or go back to feed
+      setTimeout(() => {
+        setUploadComplete(true);
+        // Remove from context after completion
+        setTimeout(() => removeUpload(uploadId), 5000);
+        onSuccess();
+      }, 1000);
+
     } catch (error) {
       console.error('Error uploading video:', error);
+      updateUpload(uploadId, { 
+        stage: 'error', 
+        error: error instanceof Error ? error.message : 'Upload failed' 
+      });
+      
       toast({
         title: "Upload Failed",
         description: "There was an error uploading your video. Please try again.",
         variant: "destructive",
       });
-    } finally {
       setUploading(false);
+      setUploadStage('preparing');
+      setUploadProgress(0);
+      
+      // Remove from context after showing error
+      setTimeout(() => removeUpload(uploadId), 5000);
     }
+  };
+
+  const enableBackgroundMode = () => {
+    setBackgroundMode(true);
+    toast({
+      title: "Uploading in Background",
+      description: "Your video is uploading. You can continue using the app.",
+    });
+    // Navigate away from upload page to show background functionality
+    setTimeout(() => {
+      window.history.back();
+    }, 1000);
   };
 
   if (step === 1) {
@@ -275,24 +343,69 @@ export const VideoUploader = ({ onSuccess }: VideoUploaderProps) => {
       {/* Upload Progress */}
       {uploading && (
         <div className="upload-card animate-scale-in">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="upload-spinner"></div>
-            <div>
-              <span className="text-sm font-semibold text-accent">Publishing your story</span>
-              <p className="text-xs text-muted-foreground">Sharing with the world</p>
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-3">
+              <div className="upload-spinner"></div>
+              <div>
+                <span className="text-sm font-semibold text-accent">
+                  {uploadStage === 'preparing' && 'Preparing upload...'}
+                  {uploadStage === 'video' && 'Uploading video...'}
+                  {uploadStage === 'thumbnail' && 'Processing thumbnail...'}
+                  {uploadStage === 'database' && 'Saving to database...'}
+                  {uploadStage === 'complete' && 'Upload complete!'}
+                </span>
+                <p className="text-xs text-muted-foreground">
+                  {uploadStage === 'preparing' && 'Getting ready to upload'}
+                  {uploadStage === 'video' && 'Uploading your video file'}
+                  {uploadStage === 'thumbnail' && 'Generating and uploading thumbnail'}
+                  {uploadStage === 'database' && 'Saving video information'}
+                  {uploadStage === 'complete' && 'Your video is now live!'}
+                </p>
+              </div>
             </div>
+            {!backgroundMode && uploadStage !== 'complete' && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={enableBackgroundMode}
+                className="text-xs"
+              >
+                Upload in Background
+              </Button>
+            )}
           </div>
+          
           <div className="relative">
             <Progress value={uploadProgress} className="h-3 upload-progress" />
             <div className="flex justify-between items-center mt-2">
               <span className="text-xs text-muted-foreground">
-                {uploadProgress.toFixed(0)}% uploaded
+                {uploadProgress.toFixed(0)}% complete
               </span>
               <span className="text-xs font-medium text-accent">
-                {uploadProgress < 30 ? 'Preparing...' : uploadProgress < 70 ? 'Uploading...' : 'Almost done!'}
+                {uploadProgress < 5 ? 'Starting...' : 
+                 uploadProgress < 70 ? 'Uploading video...' : 
+                 uploadProgress < 85 ? 'Processing thumbnail...' : 
+                 uploadProgress < 95 ? 'Saving data...' : 
+                 'Almost done!'}
               </span>
             </div>
           </div>
+          
+          {uploadComplete && (
+            <div className="mt-3 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
+                  <Check className="w-2 h-2 text-white" />
+                </div>
+                <span className="text-sm font-medium text-green-700 dark:text-green-300">
+                  Video uploaded successfully!
+                </span>
+              </div>
+              <p className="text-xs text-green-600 dark:text-green-400 mt-1">
+                Your video is now live and visible to everyone.
+              </p>
+            </div>
+          )}
         </div>
       )}
 

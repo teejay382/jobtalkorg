@@ -7,6 +7,8 @@ import { useNotifications } from '@/hooks/useNotifications';
 import FeedbackModal from '@/components/ui/FeedbackModal';
 import { useAuth } from '@/hooks/useAuth';
 import { ThemeProvider } from '@/components/providers/ThemeProvider';
+import { UploadProvider } from '@/contexts/UploadContext';
+import { BackgroundUploadNotification } from '@/components/ui/BackgroundUploadNotification';
 
 // Lazy-load pages (code splitting)
 const Welcome = lazy(() => import('./pages/Welcome'));
@@ -186,12 +188,15 @@ const App = () => {
         disableTransitionOnChange
       >
         <QueryClientProvider client={queryClient}>
-          <TooltipProvider>
-            <Suspense fallback={null}>
-              <Toaster />
-            </Suspense>
-            <MainApp />
-          </TooltipProvider>
+          <UploadProvider>
+            <TooltipProvider>
+              <Suspense fallback={null}>
+                <Toaster />
+              </Suspense>
+              <MainApp />
+              <BackgroundUploadNotification />
+            </TooltipProvider>
+          </UploadProvider>
         </QueryClientProvider>
       </ThemeProvider>
     </ErrorBoundary>
