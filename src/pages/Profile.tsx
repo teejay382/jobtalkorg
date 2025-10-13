@@ -116,6 +116,8 @@ const Profile = () => {
   };
 
   const handleDeleteVideo = async (videoId: string, videoUrl: string) => {
+    console.log('handleDeleteVideo called with:', { videoId, videoUrl });
+
     try {
       // Delete from database
       const { error: dbError } = await supabase
@@ -123,12 +125,16 @@ const Profile = () => {
         .delete()
         .eq('id', videoId);
 
-      if (dbError) throw dbError;
+      if (dbError) {
+        console.error('DB delete error:', dbError);
+        throw dbError;
+      }
 
       // Extract file path from video URL for storage deletion
       const urlParts = videoUrl.split('/');
       const fileName = urlParts[urlParts.length - 1];
-      
+      console.log('Deleting from storage:', fileName);
+
       // Delete from storage
       const { error: storageError } = await supabase.storage
         .from('videos')
@@ -141,7 +147,8 @@ const Profile = () => {
 
       // Update local state
       setUserVideos(prev => prev.filter((video: any) => video.id !== videoId));
-      
+      console.log('Video deleted successfully, updated state');
+
       toast({
         title: "Video deleted",
         description: "Your video has been successfully deleted.",
