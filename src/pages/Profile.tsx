@@ -630,7 +630,15 @@ const Profile = () => {
                     key={video.id}
                     className="glass-card rounded-xl overflow-hidden shadow-soft relative group hover:shadow-glass transition-all duration-300 hover:scale-102"
                   >
-                    <div className="aspect-[9/16] bg-gradient-to-br from-primary/15 to-accent/15 relative">
+                    <div className="aspect-[9/16] bg-gradient-to-br from-primary/15 to-accent/15 relative overflow-hidden">
+                      {/* Video thumbnail */}
+                      {video.thumbnail_url && (
+                        <img 
+                          src={video.thumbnail_url} 
+                          alt={video.title}
+                          className="w-full h-full object-cover"
+                        />
+                      )}
                       <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
                       
                       {/* Delete button */}

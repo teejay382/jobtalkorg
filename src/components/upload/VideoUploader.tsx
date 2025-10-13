@@ -31,6 +31,8 @@ export const VideoUploader = ({ onSuccess }: VideoUploaderProps) => {
   const [uploadStage, setUploadStage] = useState<'preparing' | 'video' | 'thumbnail' | 'database' | 'complete'>('preparing');
   const [backgroundMode, setBackgroundMode] = useState(false);
   const [uploadComplete, setUploadComplete] = useState(false);
+  const [uploadAborted, setUploadAborted] = useState(false);
+  const [currentXHR, setCurrentXHR] = useState<XMLHttpRequest | null>(null);
 
   const { user } = useAuth();
   const { toast } = useToast();
@@ -91,9 +93,10 @@ export const VideoUploader = ({ onSuccess }: VideoUploaderProps) => {
       return new Promise((resolve, reject) => {
         // Upload with XMLHttpRequest for progress tracking
         const xhr = new XMLHttpRequest();
+        setCurrentXHR(xhr);
         
         xhr.upload.onprogress = (event) => {
-          if (event.lengthComputable) {
+          if (event.lengthComputable && !uploadAborted) {
             // Map video upload progress to overall progress (5-70%)
             const videoProgress = (event.loaded / event.total) * 65 + 5;
             setUploadProgress(videoProgress);
@@ -102,11 +105,12 @@ export const VideoUploader = ({ onSuccess }: VideoUploaderProps) => {
         };
         
         xhr.onload = () => {
-          if (xhr.status === 200) {
+          if (xhr.status === 200 && !uploadAborted) {
             // Get public URL
             const { data: { publicUrl } } = supabase.storage
               .from('videos')
               .getPublicUrl(fileName);
+            setCurrentXHR(null);
             resolve(publicUrl);
           } else {
             reject(new Error('Upload failed'));
@@ -114,6 +118,11 @@ export const VideoUploader = ({ onSuccess }: VideoUploaderProps) => {
         };
         
         xhr.onerror = () => reject(new Error('Upload failed'));
+        
+        xhr.onabort = () => {
+          setCurrentXHR(null);
+          reject(new Error('Upload cancelled'));
+        };
         
         // Upload the file
         xhr.open('POST', data.signedUrl);
@@ -171,6 +180,8 @@ export const VideoUploader = ({ onSuccess }: VideoUploaderProps) => {
       setUploadProgress(5);
       updateUpload(uploadId, { stage: 'video', progress: 5 });
       
+      if (uploadAborted) throw new Error('Upload cancelled');
+      
       const videoUrl = await uploadVideoToStorage(fileToUpload, uploadId);
       setUploadProgress(70);
       updateUpload(uploadId, { stage: 'video', progress: 70 });
@@ -178,6 +189,8 @@ export const VideoUploader = ({ onSuccess }: VideoUploaderProps) => {
       // Stage 2: Upload thumbnail if available (70-85%)
       setUploadStage('thumbnail');
       updateUpload(uploadId, { stage: 'thumbnail', progress: 70 });
+      
+      if (uploadAborted) throw new Error('Upload cancelled');
       
       let thumbnailUrl = null;
       if (thumbnailFile) {
@@ -194,6 +207,8 @@ export const VideoUploader = ({ onSuccess }: VideoUploaderProps) => {
       // Stage 3: Save video data to database (85-95%)
       setUploadStage('database');
       updateUpload(uploadId, { stage: 'database', progress: 85 });
+      
+      if (uploadAborted) throw new Error('Upload cancelled');
       
       const { error } = await supabase
         .from('videos')
@@ -232,23 +247,51 @@ export const VideoUploader = ({ onSuccess }: VideoUploaderProps) => {
 
     } catch (error) {
       console.error('Error uploading video:', error);
-      updateUpload(uploadId, { 
-        stage: 'error', 
-        error: error instanceof Error ? error.message : 'Upload failed' 
-      });
       
-      toast({
-        title: "Upload Failed",
-        description: "There was an error uploading your video. Please try again.",
-        variant: "destructive",
-      });
+      const errorMessage = error instanceof Error ? error.message : 'Upload failed';
+      const isCancelled = errorMessage === 'Upload cancelled';
+      
+      if (!isCancelled) {
+        updateUpload(uploadId, { 
+          stage: 'error', 
+          error: errorMessage
+        });
+        
+        toast({
+          title: "Upload Failed",
+          description: "There was an error uploading your video. Please try again.",
+          variant: "destructive",
+        });
+      }
+      
       setUploading(false);
       setUploadStage('preparing');
       setUploadProgress(0);
+      setUploadAborted(false);
       
-      // Remove from context after showing error
-      setTimeout(() => removeUpload(uploadId), 5000);
+      // Remove from context after showing error (unless cancelled)
+      if (!isCancelled) {
+        setTimeout(() => removeUpload(uploadId), 5000);
+      } else {
+        removeUpload(uploadId);
+      }
     }
+  };
+
+  const cancelUpload = () => {
+    if (currentXHR) {
+      currentXHR.abort();
+      setCurrentXHR(null);
+    }
+    setUploadAborted(true);
+    setUploading(false);
+    setUploadProgress(0);
+    setUploadStage('preparing');
+    toast({
+      title: "Upload Cancelled",
+      description: "Video upload has been cancelled.",
+      variant: "destructive",
+    });
   };
 
   const enableBackgroundMode = () => {
@@ -340,10 +383,10 @@ export const VideoUploader = ({ onSuccess }: VideoUploaderProps) => {
       </div>
 
 
-      {/* Upload Progress */}
+      {/* Upload Status */}
       {uploading && (
         <div className="upload-card animate-scale-in">
-          <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="upload-spinner"></div>
               <div>
@@ -363,31 +406,27 @@ export const VideoUploader = ({ onSuccess }: VideoUploaderProps) => {
                 </p>
               </div>
             </div>
-            {!backgroundMode && uploadStage !== 'complete' && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={enableBackgroundMode}
-                className="text-xs"
-              >
-                Upload in Background
-              </Button>
-            )}
-          </div>
-          
-          <div className="relative">
-            <Progress value={uploadProgress} className="h-3 upload-progress" />
-            <div className="flex justify-between items-center mt-2">
-              <span className="text-xs text-muted-foreground">
-                {uploadProgress.toFixed(0)}% complete
-              </span>
-              <span className="text-xs font-medium text-accent">
-                {uploadProgress < 5 ? 'Starting...' : 
-                 uploadProgress < 70 ? 'Uploading video...' : 
-                 uploadProgress < 85 ? 'Processing thumbnail...' : 
-                 uploadProgress < 95 ? 'Saving data...' : 
-                 'Almost done!'}
-              </span>
+            <div className="flex gap-2">
+              {uploadStage !== 'complete' && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={cancelUpload}
+                  className="text-xs"
+                >
+                  Cancel
+                </Button>
+              )}
+              {!backgroundMode && uploadStage !== 'complete' && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={enableBackgroundMode}
+                  className="text-xs"
+                >
+                  Background
+                </Button>
+              )}
             </div>
           </div>
           
