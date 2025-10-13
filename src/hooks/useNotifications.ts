@@ -4,46 +4,86 @@ import { useAuth } from './useAuth';
 import { toast } from '@/hooks/use-toast';
 import type { Database } from '@/integrations/supabase/types';
 
+type Notification = {
+  id: string;
+  type: 'comment' | 'like' | 'message';
+  content: string;
+  created_at: string;
+  user_id?: string;
+  sender_id?: string;
+};
+
 // Subscribes to comments, likes and messages and triggers UI/browser notifications
 export const useNotifications = () => {
   const { user } = useAuth();
   const [unreadCount, setUnreadCount] = useState(0);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
 
-  // Fetch initial unread count
+  // Fetch initial notifications
   useEffect(() => {
     if (!user) return;
 
-    const fetchUnreadCount = async () => {
+    const fetchNotifications = async () => {
       try {
-        // Get unread messages count
-        const { count: messageCount } = await supabase
+        // Get recent messages
+        const { data: messages } = await supabase
           .from('messages')
-          .select('*', { count: 'exact', head: true })
+          .select('id, content, created_at, sender_id')
           .neq('sender_id', user.id)
-          .gte('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()); // Last 24 hours
+          .gte('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
+          .order('created_at', { ascending: false })
+          .limit(20);
 
-        // Get recent likes count (last 24 hours)
-        const { count: likeCount } = await supabase
+        // Get recent likes
+        const { data: likes } = await supabase
           .from('video_likes')
-          .select('*', { count: 'exact', head: true })
+          .select('id, created_at, user_id')
           .neq('user_id', user.id)
-          .gte('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString());
+          .gte('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
+          .order('created_at', { ascending: false })
+          .limit(20);
 
-        // Get recent comments count (last 24 hours)
-        const { count: commentCount } = await supabase
+        // Get recent comments
+        const { data: comments } = await supabase
           .from('comments')
-          .select('*', { count: 'exact', head: true })
+          .select('id, content, created_at, user_id')
           .neq('user_id', user.id)
-          .gte('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString());
+          .gte('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
+          .order('created_at', { ascending: false })
+          .limit(20);
 
-        const totalUnread = (messageCount || 0) + (likeCount || 0) + (commentCount || 0);
-        setUnreadCount(Math.min(totalUnread, 99)); // Cap at 99
+        const allNotifications: Notification[] = [
+          ...(messages?.map(msg => ({
+            id: msg.id,
+            type: 'message' as const,
+            content: msg.content || 'New message',
+            created_at: msg.created_at,
+            sender_id: msg.sender_id,
+          })) || []),
+          ...(likes?.map(like => ({
+            id: like.id,
+            type: 'like' as const,
+            content: 'Someone liked your content',
+            created_at: like.created_at,
+            user_id: like.user_id,
+          })) || []),
+          ...(comments?.map(comment => ({
+            id: comment.id,
+            type: 'comment' as const,
+            content: comment.content || 'New comment',
+            created_at: comment.created_at,
+            user_id: comment.user_id,
+          })) || []),
+        ].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
+        setNotifications(allNotifications);
+        setUnreadCount(Math.min(allNotifications.length, 99));
       } catch (error) {
-        console.error('Error fetching unread count:', error);
+        console.error('Error fetching notifications:', error);
       }
     };
 
-    fetchUnreadCount();
+    fetchNotifications();
   }, [user]);
 
   useEffect(() => {
@@ -58,6 +98,14 @@ export const useNotifications = () => {
           const comment = payload.new as Database['public']['Tables']['comments']['Row'];
           try {
             if (comment.user_id !== user.id) {
+              const newNotification: Notification = {
+                id: comment.id,
+                type: 'comment',
+                content: comment.content || 'New comment',
+                created_at: comment.created_at,
+                user_id: comment.user_id,
+              };
+              setNotifications(prev => [newNotification, ...prev].slice(0, 50)); // Keep last 50
               setUnreadCount(prev => Math.min(prev + 1, 99));
               const text = comment.content || 'New comment';
               toast({ title: 'New comment', description: text });
@@ -82,8 +130,16 @@ export const useNotifications = () => {
           try {
             const userId = (like as { user_id?: string }).user_id;
             if (userId && userId !== user.id) {
+              const newNotification: Notification = {
+                id: (like as { id: string }).id,
+                type: 'like',
+                content: 'Someone liked your content',
+                created_at: (like as { created_at: string }).created_at,
+                user_id: userId,
+              };
+              setNotifications(prev => [newNotification, ...prev].slice(0, 50));
               setUnreadCount(prev => Math.min(prev + 1, 99));
-              const text = (like as { description?: string }).description || 'Someone liked your content';
+              const text = 'Someone liked your content';
               toast({ title: 'New like', description: text });
               if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
                 new Notification('New like', { body: text });
@@ -105,6 +161,14 @@ export const useNotifications = () => {
           const msg = payload.new as Database['public']['Tables']['messages']['Row'];
           try {
             if (msg.sender_id !== user.id) {
+              const newNotification: Notification = {
+                id: msg.id,
+                type: 'message',
+                content: msg.content || 'New message',
+                created_at: msg.created_at,
+                sender_id: msg.sender_id,
+              };
+              setNotifications(prev => [newNotification, ...prev].slice(0, 50));
               setUnreadCount(prev => Math.min(prev + 1, 99));
               const text = msg.content || 'New message';
               toast({ title: 'New message', description: text });
@@ -126,5 +190,9 @@ export const useNotifications = () => {
     };
   }, [user]);
 
-  return { unreadCount };
+  const markAsRead = () => {
+    setUnreadCount(0);
+  };
+
+  return { unreadCount, notifications, markAsRead };
 };
