@@ -6,6 +6,7 @@ import ErrorBoundary from "./components/ErrorBoundary";
 import { useNotifications } from '@/hooks/useNotifications';
 import FeedbackModal from '@/components/ui/FeedbackModal';
 import { useAuth } from '@/hooks/useAuth';
+import { ThemeProvider } from '@/components/providers/ThemeProvider';
 
 // Lazy-load pages (code splitting)
 const Welcome = lazy(() => import('./pages/Welcome'));
@@ -178,14 +179,21 @@ const App = () => {
   // Let routing handle auth flow naturally (Index page shows welcome screen for non-authenticated)
   return (
     <ErrorBoundary>
-      <QueryClientProvider client={queryClient}>
-        <TooltipProvider>
-          <Suspense fallback={null}>
-            <Toaster />
-          </Suspense>
-          <MainApp />
-        </TooltipProvider>
-      </QueryClientProvider>
+      <ThemeProvider
+        attribute="class"
+        defaultTheme="system"
+        enableSystem
+        disableTransitionOnChange
+      >
+        <QueryClientProvider client={queryClient}>
+          <TooltipProvider>
+            <Suspense fallback={null}>
+              <Toaster />
+            </Suspense>
+            <MainApp />
+          </TooltipProvider>
+        </QueryClientProvider>
+      </ThemeProvider>
     </ErrorBoundary>
   );
 };

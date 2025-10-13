@@ -82,7 +82,7 @@ export const ChatRoom = ({ conversationId, otherUser, onBack }: ChatRoomProps) =
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* Chat header */}
-      <div className="fixed top-0 left-0 right-0 bg-white border-b border-border shadow-soft z-40">
+      <div className="fixed top-0 left-0 right-0 bg-background/80 backdrop-blur-xl border-b border-border shadow-soft z-40">
         <div className="flex items-center justify-between px-4 py-4 max-w-md mx-auto">
           <div className="flex items-center gap-3">
             <button
@@ -123,7 +123,7 @@ export const ChatRoom = ({ conversationId, otherUser, onBack }: ChatRoomProps) =
                       toast({ title: 'Error', description: 'Failed to create hire.' });
                     }
                 }}
-                className="px-3 py-1 rounded-md bg-primary text-white text-sm"
+                className="px-3 py-1 rounded-md bg-primary text-primary-foreground text-sm"
               >
                 Hire
               </button>
@@ -159,7 +159,7 @@ export const ChatRoom = ({ conversationId, otherUser, onBack }: ChatRoomProps) =
       </div>
 
       {/* Message input */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-border p-4 z-40">
+      <div className="fixed bottom-0 left-0 right-0 bg-background/80 backdrop-blur-xl border-t border-border p-4 z-40">
         <div className="flex gap-3 max-w-md mx-auto">
           <Input
             placeholder="Type a message..."

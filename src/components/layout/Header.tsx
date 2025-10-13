@@ -3,6 +3,7 @@ import { Bell, Menu } from 'lucide-react';
 import logo from '@/assets/logo.png';
 import MobileMenu from './MobileMenu';
 import { useNotifications } from '@/hooks/useNotifications';
+import { ThemeToggle } from '@/components/ui/theme-toggle';
 
 const Header = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -25,11 +26,12 @@ const Header = () => {
             <button className="relative w-9 h-9 rounded-lg bg-background/40 backdrop-blur-sm hover:bg-muted/70 transition-all duration-300 flex items-center justify-center border border-primary/15 hover:border-primary/30 hover:shadow-soft active:scale-95 group">
               <Bell className="w-4 h-4 text-foreground group-hover:text-primary transition-colors" strokeWidth={2} />
               {unreadCount > 0 && (
-                <span className="absolute -top-1 -right-1 w-5 h-5 bg-gradient-to-r from-red-500 to-red-600 text-white text-xs font-bold rounded-full flex items-center justify-center shadow-lg notification-badge">
+                <span className="absolute -top-1 -right-1 w-5 h-5 bg-gradient-to-r from-red-500 to-red-600 text-primary-foreground text-xs font-bold rounded-full flex items-center justify-center shadow-lg notification-badge">
                   {unreadCount > 9 ? '9+' : unreadCount}
                 </span>
               )}
             </button>
+            <ThemeToggle />
             <button
               onClick={() => setIsMobileMenuOpen(true)}
               className="w-9 h-9 rounded-lg bg-background/40 backdrop-blur-sm hover:bg-muted/70 transition-all duration-300 flex items-center justify-center border border-primary/15 hover:border-primary/30 hover:shadow-soft active:scale-95 group"

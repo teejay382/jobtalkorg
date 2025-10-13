@@ -140,10 +140,23 @@
     --border: 240 3.7% 15.9%;
     --input: 240 3.7% 15.9%;
     --ring: 221 83% 53%;
+
+    --success: 142 76% 36%;
+    --success-foreground: 0 0% 100%;
+
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 100%;
+
+    /* Video feed specific for dark mode */
+    --video-overlay: 0 0% 0% / 0.6;
+    --video-text: 0 0% 100%;
+    --interaction-bg: 0 0% 0% / 0.8;
+
+    /* Sidebar dark mode colors */
     --sidebar-background: 240 5.9% 10%;
     --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-primary: 0 0% 98%;
+    --sidebar-primary-foreground: 240 5.9% 10%;
     --sidebar-accent: 240 3.7% 15.9%;
     --sidebar-accent-foreground: 240 4.8% 95.9%;
     --sidebar-border: 240 3.7% 15.9%;
@@ -230,7 +243,7 @@
   /* Profile components */
   .profile-header {
     background: var(--gradient-hero);
-    color: white;
+    color: hsl(var(--primary-foreground));
     padding: 1.5rem;
     border-radius: 1rem;
     box-shadow: var(--shadow-strong);
@@ -253,7 +266,7 @@
   /* Chat components */
   .chat-bubble-sent {
     background: var(--gradient-primary);
-    color: white;
+    color: hsl(var(--primary-foreground));
     padding: 0.75rem;
     border-radius: 1rem;
     border-bottom-right-radius: 0.25rem;
@@ -263,8 +276,9 @@
   }
 
   .chat-bubble-received {
-    background: white;
-    border: 1px solid var(--border);
+    background: hsl(var(--card));
+    color: hsl(var(--card-foreground));
+    border: 1px solid hsl(var(--border));
     border-radius: 1rem;
     border-bottom-left-radius: 0.25rem;
     padding: 0.75rem;
@@ -283,13 +297,13 @@
 
   /* Floating action button */
   .fab {
-    @apply fixed bottom-20 left-1/2 transform -translate-x-1/2 w-14 h-14 bg-gradient-to-r from-accent to-accent-light rounded-full shadow-glow flex items-center justify-center text-white transition-all duration-300 hover:scale-110 hover:shadow-strong;
+    @apply fixed bottom-20 left-1/2 transform -translate-x-1/2 w-14 h-14 bg-gradient-to-r from-accent to-accent-light rounded-full shadow-glow flex items-center justify-center text-primary-foreground transition-all duration-300 hover:scale-110 hover:shadow-strong;
   }
 
   /* Button variants */
   .btn-hero {
     background: var(--gradient-primary);
-    color: white;
+    color: hsl(var(--primary-foreground));
     padding: 0.5rem 2rem;
     border-radius: 9999px;
     font-weight: 600;
@@ -320,7 +334,7 @@
   /* Enhanced Hire Button */
   .hire-btn {
     background: var(--gradient-primary);
-    color: white;
+    color: hsl(var(--primary-foreground));
     border: 0;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     font-weight: 600;
@@ -432,7 +446,7 @@
 
   .profile-tab-active {
     background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--accent)));
-    color: white;
+    color: hsl(var(--primary-foreground));
     box-shadow: var(--shadow-glow);
   }
 
@@ -490,7 +504,7 @@
   /* Improved button contrast */
   .profile-btn-primary {
     background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--accent)));
-    color: white;
+    color: hsl(var(--primary-foreground));
     border: 1px solid hsl(var(--primary) / 0.3);
   }
 

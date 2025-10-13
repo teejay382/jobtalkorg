@@ -261,7 +261,7 @@ export const CommentSection = ({ videoId, isOpen, onClose, onCommentAdded }: Com
                   <div key={comment.id} className="flex gap-3">
                     <Avatar className="w-8 h-8 flex-shrink-0">
                       <AvatarImage src={comment.user?.avatar_url} />
-                      <AvatarFallback className="bg-primary text-white text-xs">
+                      <AvatarFallback className="bg-primary text-primary-foreground text-xs">
                         {(comment.user?.full_name || comment.user?.username || 'U').charAt(0).toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
@@ -291,7 +291,7 @@ export const CommentSection = ({ videoId, isOpen, onClose, onCommentAdded }: Com
             <div className="flex gap-3">
               <Avatar className="w-8 h-8 flex-shrink-0">
                 <AvatarImage src={user.user_metadata?.avatar_url} />
-                <AvatarFallback className="bg-primary text-white text-xs">
+                <AvatarFallback className="bg-primary text-primary-foreground text-xs">
                   {(user.user_metadata?.full_name || user.email || 'U').charAt(0).toUpperCase()}
                 </AvatarFallback>
               </Avatar>
@@ -311,7 +311,7 @@ export const CommentSection = ({ videoId, isOpen, onClose, onCommentAdded }: Com
                   className="px-3 bg-primary hover:bg-primary/90"
                 >
                   {submitting ? (
-                    <div className="w-4 h-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
+                    <div className="w-4 h-4 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent"></div>
                   ) : (
                     <Send className="w-4 h-4" />
                   )}

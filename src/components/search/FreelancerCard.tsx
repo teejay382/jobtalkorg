@@ -34,7 +34,7 @@ export const FreelancerCard = ({ freelancer }: FreelancerCardProps) => {
             src={freelancer.avatar_url} 
             onError={() => setImageError(true)}
           />
-          <AvatarFallback className="bg-gradient-to-br from-primary to-accent text-white text-lg">
+          <AvatarFallback className="bg-gradient-to-br from-primary to-accent text-primary-foreground text-lg">
             <User className="w-8 h-8" />
           </AvatarFallback>
         </Avatar>
@@ -55,7 +55,7 @@ export const FreelancerCard = ({ freelancer }: FreelancerCardProps) => {
             <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
             <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
             <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-            <Star className="w-4 h-4 text-gray-300" />
+            <Star className="w-4 h-4 text-muted-foreground" />
             <span className="text-sm text-muted-foreground ml-1">4.8</span>
           </div>
         </div>

@@ -285,27 +285,27 @@ const VideoCard = ({ video, isActive, onRefresh }: VideoCardProps) => {
             onClick={handleLike}
             disabled={loading}
             className={`w-12 h-12 rounded-full backdrop-blur-sm flex items-center justify-center transition-all duration-300 hover:scale-110 ${
-              isLiked ? 'text-red-500 bg-red-500/20' : 'text-white bg-white/20 hover:bg-white/30'
+              isLiked ? 'text-red-500 bg-red-500/20 border border-red-500/30' : 'text-white bg-white/20 hover:bg-white/30 border border-white/30'
             } ${loading ? 'opacity-50' : ''}`}
           >
             <Heart className={`w-6 h-6 ${isLiked ? 'fill-current' : ''}`} />
           </button>
-          <span className="text-white text-xs font-medium">{likesCount}</span>
+          <span className="text-white text-xs font-medium drop-shadow-lg">{likesCount}</span>
         </div>
         
         <div className="flex flex-col items-center gap-2">
           <button 
             onClick={handleComment}
-            className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center text-white hover:bg-white/30 transition-all duration-300 hover:scale-110"
+            className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center text-white hover:bg-white/30 transition-all duration-300 hover:scale-110 border border-white/30"
           >
             <MessageCircle className="w-6 h-6" />
           </button>
-          <span className="text-white text-xs font-medium">{commentsCount}</span>
+          <span className="text-white text-xs font-medium drop-shadow-lg">{commentsCount}</span>
         </div>
         
         <button
           onClick={handleShare}
-          className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center text-white hover:bg-white/30 transition-all duration-300 hover:scale-110"
+          className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center text-white hover:bg-white/30 transition-all duration-300 hover:scale-110 border border-white/30"
         >
           <Share className="w-6 h-6" />
         </button>
@@ -313,7 +313,7 @@ const VideoCard = ({ video, isActive, onRefresh }: VideoCardProps) => {
         {shouldShowHireButton && (
           <button
             onClick={handleHire}
-            className="w-12 h-12 rounded-full bg-emerald-600/20 backdrop-blur-sm flex items-center justify-center text-emerald-400 hover:bg-emerald-600/30 transition-all duration-300 hover:scale-110"
+            className="w-12 h-12 rounded-full bg-emerald-600/20 backdrop-blur-sm flex items-center justify-center text-emerald-400 hover:bg-emerald-600/30 transition-all duration-300 hover:scale-110 border border-emerald-500/30"
             aria-label="Hire"
           >
             <Briefcase className="w-6 h-6" />
@@ -322,18 +322,18 @@ const VideoCard = ({ video, isActive, onRefresh }: VideoCardProps) => {
       </div>
       
       {/* Bottom content - positioned higher to be visible above transparent nav */}
-      <div className="absolute bottom-0 left-0 right-20 p-4 pb-28 text-white z-10">
+      <div className="absolute bottom-0 left-0 right-20 p-4 pb-28 z-10">
         {/* User info */}
         <div className="flex items-center gap-3 mb-4">
           <Avatar className="w-12 h-12 border-2 border-white/30">
             <AvatarImage src={video.user.avatar_url} alt={displayName} />
-            <AvatarFallback className="bg-primary text-white text-sm font-semibold">
+            <AvatarFallback className="bg-primary text-primary-foreground text-sm font-semibold">
               {displayName.charAt(0).toUpperCase()}
             </AvatarFallback>
           </Avatar>
           <div className="flex-1 min-w-0">
-            <h3 className="font-semibold text-base text-white truncate">{displayName}</h3>
-            <p className="text-sm text-white/80 truncate">{userRole}</p>
+            <h3 className="font-semibold text-base text-white truncate drop-shadow-lg">{displayName}</h3>
+            <p className="text-sm text-white/80 truncate drop-shadow-md">{userRole}</p>
           </div>
         </div>
         

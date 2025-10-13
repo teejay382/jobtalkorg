@@ -38,7 +38,7 @@ export const JobCard = ({ job }: JobCardProps) => {
             src={job.employer?.avatar_url} 
             onError={() => setImageError(true)}
           />
-          <AvatarFallback className="bg-gradient-to-br from-primary to-accent text-white">
+          <AvatarFallback className="bg-gradient-to-br from-primary to-accent text-primary-foreground">
             <Briefcase className="w-6 h-6" />
           </AvatarFallback>
         </Avatar>
@@ -54,7 +54,7 @@ export const JobCard = ({ job }: JobCardProps) => {
           variant="outline" 
           size="sm"
           onClick={handleMessage}
-          className="border-primary text-primary hover:bg-primary hover:text-white"
+          className="border-primary text-primary hover:bg-primary hover:text-primary-foreground"
         >
           <MessageCircle className="w-4 h-4 mr-1" />
           Message

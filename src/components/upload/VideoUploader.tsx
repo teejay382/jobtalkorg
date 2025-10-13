@@ -156,7 +156,7 @@ export const VideoUploader = ({ onSuccess }: VideoUploaderProps) => {
         <div className="upload-area">
           <div className="space-y-4">
             <div className="w-16 h-16 bg-gradient-to-r from-primary to-accent rounded-full flex items-center justify-center mx-auto">
-              <UploadIcon className="w-8 h-8 text-white" />
+              <UploadIcon className="w-8 h-8 text-primary-foreground" />
             </div>
             <div className="text-center">
               <h3 className="font-semibold text-foreground mb-2">Upload Video</h3>
