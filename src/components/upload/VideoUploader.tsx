@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Upload as UploadIcon, Video, Camera, X } from 'lucide-react';
+import { Upload as UploadIcon, Video, Camera, X, Image } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -9,6 +9,7 @@ import { Progress } from '@/components/ui/progress';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { generateBestVideoThumbnail, createThumbnailFile } from '@/utils/thumbnailGenerator';
 
 interface VideoUploaderProps {
   onSuccess: () => void;
@@ -24,14 +25,33 @@ export const VideoUploader = ({ onSuccess }: VideoUploaderProps) => {
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [videoPreviewUrl, setVideoPreviewUrl] = useState<string | null>(null);
+  const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
+  const [generatingThumbnail, setGeneratingThumbnail] = useState(false);
 
   const { user } = useAuth();
   const { toast } = useToast();
 
-  const handleVideoFileChange = (file: File) => {
+  const handleVideoFileChange = async (file: File) => {
     setVideoFile(file);
     setVideoPreviewUrl(URL.createObjectURL(file));
     setStep(2);
+    
+    // Generate thumbnail
+    try {
+      setGeneratingThumbnail(true);
+      const thumbnailBlob = await generateBestVideoThumbnail(file);
+      const thumbnailFile = createThumbnailFile(thumbnailBlob, file.name);
+      setThumbnailFile(thumbnailFile);
+    } catch (error) {
+      console.error('Failed to generate thumbnail:', error);
+      toast({
+        title: "Thumbnail Generation Failed",
+        description: "Video uploaded but thumbnail could not be generated. You can still proceed.",
+        variant: "destructive",
+      });
+    } finally {
+      setGeneratingThumbnail(false);
+    }
   };
 
 
@@ -92,6 +112,25 @@ export const VideoUploader = ({ onSuccess }: VideoUploaderProps) => {
     });
   };
 
+  const uploadThumbnailToStorage = async (file: File): Promise<string> => {
+    const fileExt = 'jpg';
+    const fileName = `${user?.id}/${Date.now()}.${fileExt}`;
+
+    const { data, error } = await supabase.storage
+      .from('thumbnails')
+      .upload(fileName, file);
+
+    if (error) {
+      throw error;
+    }
+
+    const { data: { publicUrl } } = supabase.storage
+      .from('thumbnails')
+      .getPublicUrl(fileName);
+
+    return publicUrl;
+  };
+
   const handleSubmit = async () => {
     const fileToUpload = videoFile;
     
@@ -111,6 +150,17 @@ export const VideoUploader = ({ onSuccess }: VideoUploaderProps) => {
       // Upload video to storage with progress
       const videoUrl = await uploadVideoToStorage(fileToUpload);
 
+      // Upload thumbnail if available
+      let thumbnailUrl = null;
+      if (thumbnailFile) {
+        try {
+          thumbnailUrl = await uploadThumbnailToStorage(thumbnailFile);
+        } catch (error) {
+          console.error('Failed to upload thumbnail:', error);
+          // Continue without thumbnail
+        }
+      }
+
       // Save video data to database
       const { error } = await supabase
         .from('videos')
@@ -118,6 +168,7 @@ export const VideoUploader = ({ onSuccess }: VideoUploaderProps) => {
           title: title.trim(),
           description: description.trim(),
           video_url: videoUrl,
+          thumbnail_url: thumbnailUrl,
           tags: skills,
           user_id: user.id,
         });
@@ -267,6 +318,20 @@ export const VideoUploader = ({ onSuccess }: VideoUploaderProps) => {
             <p className="text-xs text-muted-foreground">
               Size: {(videoFile.size / 1024 / 1024).toFixed(1)}MB
             </p>
+          )}
+          
+          {/* Thumbnail status */}
+          {generatingThumbnail && (
+            <div className="flex items-center justify-center gap-2 mt-2">
+              <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+              <p className="text-xs text-muted-foreground">Generating thumbnail...</p>
+            </div>
+          )}
+          {thumbnailFile && !generatingThumbnail && (
+            <div className="flex items-center justify-center gap-2 mt-2 text-xs text-green-600">
+              <Image className="w-3 h-3" />
+              <p>Thumbnail ready</p>
+            </div>
           )}
         </div>
       </div>
