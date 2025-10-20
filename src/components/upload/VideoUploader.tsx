@@ -287,9 +287,16 @@ export const VideoUploader = ({ onSuccess }: VideoUploaderProps) => {
     setUploading(false);
     setUploadProgress(0);
     setUploadStage('preparing');
+
+    // Clean up upload context
+    if (videoFile) {
+      const uploadId = `upload_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      removeUpload(uploadId);
+    }
+
     toast({
       title: "Upload Cancelled",
-      description: "Video upload has been cancelled.",
+      description: "Video upload has been cancelled and no data was uploaded.",
       variant: "destructive",
     });
   };
@@ -385,12 +392,12 @@ export const VideoUploader = ({ onSuccess }: VideoUploaderProps) => {
 
       {/* Upload Status */}
       {uploading && (
-        <div className="upload-card animate-scale-in">
-          <div className="flex items-center justify-between">
+        <div className="bg-card rounded-xl p-4 border border-border animate-scale-in">
+          <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-3">
-              <div className="upload-spinner"></div>
+              <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
               <div>
-                <span className="text-sm font-semibold text-accent">
+                <span className="text-sm font-semibold text-foreground">
                   {uploadStage === 'preparing' && 'Preparing upload...'}
                   {uploadStage === 'video' && 'Uploading video...'}
                   {uploadStage === 'thumbnail' && 'Processing thumbnail...'}
@@ -412,7 +419,7 @@ export const VideoUploader = ({ onSuccess }: VideoUploaderProps) => {
                   variant="outline"
                   size="sm"
                   onClick={cancelUpload}
-                  className="text-xs"
+                  className="text-xs border-red-200 hover:bg-red-50 hover:border-red-300 dark:border-red-800 dark:hover:bg-red-900/20"
                 >
                   Cancel
                 </Button>
@@ -429,7 +436,16 @@ export const VideoUploader = ({ onSuccess }: VideoUploaderProps) => {
               )}
             </div>
           </div>
-          
+
+          {/* Progress Bar */}
+          <div className="space-y-2">
+            <div className="flex justify-between text-xs text-muted-foreground">
+              <span>Progress</span>
+              <span>{uploadProgress.toFixed(0)}%</span>
+            </div>
+            <Progress value={uploadProgress} className="h-2" />
+          </div>
+
           {uploadComplete && (
             <div className="mt-3 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
               <div className="flex items-center gap-2">

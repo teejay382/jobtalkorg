@@ -115,8 +115,8 @@ const Profile = () => {
     }
   };
 
-  const handleDeleteVideo = async (videoId: string, videoUrl: string) => {
-    console.log('handleDeleteVideo called with:', { videoId, videoUrl });
+  const handleDeleteVideo = async (videoId: string, videoUrl: string, thumbnailUrl?: string) => {
+    console.log('handleDeleteVideo called with:', { videoId, videoUrl, thumbnailUrl });
 
     try {
       // Delete from database
@@ -131,18 +131,34 @@ const Profile = () => {
       }
 
       // Extract file path from video URL for storage deletion
-      const urlParts = videoUrl.split('/');
-      const fileName = urlParts[urlParts.length - 1];
-      console.log('Deleting from storage:', fileName);
+      const videoUrlParts = videoUrl.split('/');
+      const videoFileName = videoUrlParts[videoUrlParts.length - 1];
+      console.log('Deleting video from storage:', videoFileName);
 
-      // Delete from storage
-      const { error: storageError } = await supabase.storage
+      // Delete video from storage
+      const { error: videoStorageError } = await supabase.storage
         .from('videos')
-        .remove([fileName]);
+        .remove([videoFileName]);
 
-      if (storageError) {
-        console.warn('Error deleting from storage:', storageError);
+      if (videoStorageError) {
+        console.warn('Error deleting video from storage:', videoStorageError);
         // Don't throw here as the DB deletion was successful
+      }
+
+      // Delete thumbnail from storage if it exists
+      if (thumbnailUrl) {
+        const thumbnailUrlParts = thumbnailUrl.split('/');
+        const thumbnailFileName = thumbnailUrlParts[thumbnailUrlParts.length - 1];
+        console.log('Deleting thumbnail from storage:', thumbnailFileName);
+
+        const { error: thumbnailStorageError } = await supabase.storage
+          .from('thumbnails')
+          .remove([thumbnailFileName]);
+
+        if (thumbnailStorageError) {
+          console.warn('Error deleting thumbnail from storage:', thumbnailStorageError);
+          // Don't throw here as the DB deletion was successful
+        }
       }
 
       // Update local state
@@ -665,7 +681,7 @@ const Profile = () => {
                           <AlertDialogFooter>
                             <AlertDialogCancel>Cancel</AlertDialogCancel>
                             <AlertDialogAction
-                              onClick={() => handleDeleteVideo(video.id, video.video_url)}
+                              onClick={() => handleDeleteVideo(video.id, video.video_url, video.thumbnail_url)}
                               className="bg-red-500 hover:bg-red-600"
                             >
                               Delete
