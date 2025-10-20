@@ -46,6 +46,7 @@ const OptimizedVideoCard = memo(({ video, isActive, onRefresh, isVisible, isMobi
   const [loading, setLoading] = useState(false);
   const [videoLoaded, setVideoLoaded] = useState(false);
   const [showComments, setShowComments] = useState(false);
+  const [videoError, setVideoError] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const { user, profile } = useAuth();
   const { toast } = useToast();
@@ -243,7 +244,7 @@ const OptimizedVideoCard = memo(({ video, isActive, onRefresh, isVisible, isMobi
     <div className="relative w-full h-full bg-black overflow-hidden">
       {/* Video container with 9:16 aspect ratio */}
       <div className="absolute inset-0 flex items-center justify-center">
-        {isVisible && isValidVideoUrl ? (
+        {isVisible && isValidVideoUrl && !videoError ? (
           <video
             ref={videoRef}
             src={video.video_url}
@@ -257,6 +258,7 @@ const OptimizedVideoCard = memo(({ video, isActive, onRefresh, isVisible, isMobi
             onLoadedData={() => setVideoLoaded(true)}
             onError={(e) => {
               console.warn('Video failed to load:', video.video_url);
+              setVideoError(true);
               // Hide the video element on error
               e.currentTarget.style.display = 'none';
             }}

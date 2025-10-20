@@ -46,6 +46,7 @@ const VideoCard = ({ video, isActive, onRefresh }: VideoCardProps) => {
   const [isMuted, setIsMuted] = useState(false); // Changed to false for audible videos
   const [loading, setLoading] = useState(false);
   const [showComments, setShowComments] = useState(false);
+  const [videoError, setVideoError] = useState(false);
   // Removed modal state for hire
   const videoRef = useRef<HTMLVideoElement>(null);
   const { user, profile } = useAuth();
@@ -249,7 +250,7 @@ const VideoCard = ({ video, isActive, onRefresh }: VideoCardProps) => {
     <div className="relative w-full h-full bg-black overflow-hidden">
       {/* Video - improved scaling to fit naturally */}
       <div className="absolute inset-0 flex items-center justify-center">
-        {isValidVideoUrl ? (
+        {isValidVideoUrl && !videoError ? (
           <video
             ref={videoRef}
             src={video.video_url}
@@ -261,12 +262,13 @@ const VideoCard = ({ video, isActive, onRefresh }: VideoCardProps) => {
             onClick={handleVideoClick}
             onError={(e) => {
               console.warn('Video failed to load:', video.video_url);
+              setVideoError(true);
               // Hide the video element on error
               e.currentTarget.style.display = 'none';
             }}
           />
         ) : (
-          // Fallback for invalid video URL
+          // Fallback for invalid video URL or error
           <div className="w-full h-full bg-gradient-to-br from-gray-800 to-gray-900 flex items-center justify-center">
             <div className="text-center text-white/70">
               <Video className="w-12 h-12 mx-auto mb-2 opacity-50" />
