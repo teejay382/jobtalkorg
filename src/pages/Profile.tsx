@@ -131,14 +131,29 @@ const Profile = () => {
       }
 
       // Extract file path from video URL for storage deletion
-      const videoUrlParts = videoUrl.split('/');
-      const videoFileName = videoUrlParts[videoUrlParts.length - 1];
-      console.log('Deleting video from storage:', videoFileName);
+      // URL format: https://xxx.supabase.co/storage/v1/object/public/videos/user-id/filename
+      let videoFilePath: string;
+      try {
+        const url = new URL(videoUrl);
+        const pathParts = url.pathname.split('/');
+        // Find the index of 'videos' in the path
+        const videosIndex = pathParts.indexOf('videos');
+        if (videosIndex === -1 || videosIndex === pathParts.length - 1) {
+          console.error('Invalid video URL format for deletion:', videoUrl);
+          throw new Error('Invalid video URL format');
+        }
+        // Get everything after 'videos/'
+        videoFilePath = pathParts.slice(videosIndex + 1).join('/');
+        console.log('Deleting video from storage:', videoFilePath);
+      } catch (urlError) {
+        console.error('Error parsing video URL:', urlError);
+        throw new Error('Invalid video URL format');
+      }
 
       // Delete video from storage
       const { error: videoStorageError } = await supabase.storage
         .from('videos')
-        .remove([videoFileName]);
+        .remove([videoFilePath]);
 
       if (videoStorageError) {
         console.warn('Error deleting video from storage:', videoStorageError);
