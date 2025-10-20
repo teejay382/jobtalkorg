@@ -1,6 +1,6 @@
 
 import { useState, useEffect, useRef } from 'react';
-import { Heart, MessageCircle, Share, Briefcase, Play, Volume2, VolumeX } from 'lucide-react';
+import { Heart, MessageCircle, Share, Briefcase, Play, Volume2, VolumeX, Video } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth, getProfileRole } from '@/hooks/useAuth';
@@ -242,20 +242,38 @@ const VideoCard = ({ video, isActive, onRefresh }: VideoCardProps) => {
   // Show hire button only to employers viewing freelancer content
   const shouldShowHireButton = !isVideoFromEmployer && isCurrentUserEmployer;
 
+  // Validate video URL
+  const isValidVideoUrl = video.video_url && video.video_url.trim() !== '';
+
   return (
     <div className="relative w-full h-full bg-black overflow-hidden">
       {/* Video - improved scaling to fit naturally */}
       <div className="absolute inset-0 flex items-center justify-center">
-        <video
-          ref={videoRef}
-          src={video.video_url}
-          className="w-full h-full object-contain bg-black"
-          loop
-          muted={isMuted}
-          playsInline
-          poster={video.thumbnail_url}
-          onClick={handleVideoClick}
-        />
+        {isValidVideoUrl ? (
+          <video
+            ref={videoRef}
+            src={video.video_url}
+            className="w-full h-full object-contain bg-black"
+            loop
+            muted={isMuted}
+            playsInline
+            poster={video.thumbnail_url}
+            onClick={handleVideoClick}
+            onError={(e) => {
+              console.warn('Video failed to load:', video.video_url);
+              // Hide the video element on error
+              e.currentTarget.style.display = 'none';
+            }}
+          />
+        ) : (
+          // Fallback for invalid video URL
+          <div className="w-full h-full bg-gradient-to-br from-gray-800 to-gray-900 flex items-center justify-center">
+            <div className="text-center text-white/70">
+              <Video className="w-12 h-12 mx-auto mb-2 opacity-50" />
+              <p className="text-sm">Video unavailable</p>
+            </div>
+          </div>
+        )}
       </div>
       
       {/* Video overlay gradient */}

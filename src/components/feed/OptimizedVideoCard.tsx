@@ -236,11 +236,14 @@ const OptimizedVideoCard = memo(({ video, isActive, onRefresh, isVisible, isMobi
   const userRole = isVideoFromEmployer ? (video.user.company_name || 'Employer') : 'Job Seeker';
   const shouldShowHireButton = !isVideoFromEmployer && isCurrentUserEmployer;
 
+  // Validate video URL
+  const isValidVideoUrl = video.video_url && video.video_url.trim() !== '';
+
   return (
     <div className="relative w-full h-full bg-black overflow-hidden">
       {/* Video container with 9:16 aspect ratio */}
       <div className="absolute inset-0 flex items-center justify-center">
-        {isVisible ? (
+        {isVisible && isValidVideoUrl ? (
           <video
             ref={videoRef}
             src={video.video_url}
@@ -252,12 +255,17 @@ const OptimizedVideoCard = memo(({ video, isActive, onRefresh, isVisible, isMobi
             onClick={handleVideoClick}
             preload="none"
             onLoadedData={() => setVideoLoaded(true)}
+            onError={(e) => {
+              console.warn('Video failed to load:', video.video_url);
+              // Hide the video element on error
+              e.currentTarget.style.display = 'none';
+            }}
             style={{ aspectRatio: '9/16' }}
           />
         ) : (
-          <div 
+          <div
             className="w-full h-full bg-center bg-contain bg-no-repeat bg-black"
-            style={{ 
+            style={{
               backgroundImage: `url(${video.thumbnail_url})`,
               aspectRatio: '9/16'
             }}
