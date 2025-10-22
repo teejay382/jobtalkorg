@@ -30,9 +30,9 @@ export const BackgroundUploadNotification: React.FC = () => {
 
   const getStageIcon = (stage: string) => {
     switch (stage) {
-      case 'complete': return <CheckCircle className="w-4 h-4 text-green-500" />;
-      case 'error': return <AlertCircle className="w-4 h-4 text-red-500" />;
-      default: return <Clock className="w-4 h-4 text-blue-500" />;
+      case 'complete': return <CheckCircle className="w-4 h-4 text-primary" />;
+      case 'error': return <AlertCircle className="w-4 h-4 text-destructive" />;
+      default: return <Clock className="w-4 h-4 text-primary" />;
     }
   };
 
@@ -96,11 +96,11 @@ export const BackgroundUploadNotification: React.FC = () => {
           
           <div className="text-xs text-muted-foreground">
             {upload.stage === 'complete' ? (
-              <span className="text-green-600 dark:text-green-400">
+              <span className="text-primary">
                 Upload completed successfully!
               </span>
             ) : (
-              <span className="text-red-600 dark:text-red-400">
+              <span className="text-destructive">
                 {upload.error || 'Upload failed'}
               </span>
             )}

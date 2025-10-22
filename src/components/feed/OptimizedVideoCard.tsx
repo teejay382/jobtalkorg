@@ -376,13 +376,13 @@ const OptimizedVideoCard = memo(({ video, isActive, onRefresh, isVisible, isMobi
             {video.tags.slice(0, 3).map((tag, index) => (
               <span
                 key={index}
-                className="glass-card text-white text-[10px] px-2 py-0.5 rounded-full font-medium hover:shadow-neon-blue transition-all duration-300 hover:scale-105 cursor-pointer"
+                className="glass-card text-primary text-[10px] px-2 py-0.5 rounded-full font-medium hover:shadow-neon-blue transition-all duration-300 hover:scale-105 cursor-pointer"
               >
                 #{tag}
               </span>
             ))}
             {video.tags.length > 3 && (
-              <span className="text-[10px] text-white/75 flex items-center font-medium drop-shadow-[0_2px_6px_rgba(0,0,0,0.8)] glass-card px-1.5 py-0.5 rounded-full">
+              <span className="text-[10px] text-muted-foreground flex items-center font-medium drop-shadow-[0_2px_6px_rgba(0,0,0,0.8)] glass-card px-1.5 py-0.5 rounded-full">
                 +{video.tags.length - 3}
               </span>
             )}

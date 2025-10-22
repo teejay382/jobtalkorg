@@ -419,7 +419,7 @@ export const VideoUploader = ({ onSuccess }: VideoUploaderProps) => {
                   variant="outline"
                   size="sm"
                   onClick={cancelUpload}
-                  className="text-xs border-red-200 hover:bg-red-50 hover:border-red-300 dark:border-red-800 dark:hover:bg-red-900/20"
+                  className="text-xs border-destructive hover:bg-destructive/10 hover:border-destructive"
                 >
                   Cancel
                 </Button>
@@ -447,16 +447,16 @@ export const VideoUploader = ({ onSuccess }: VideoUploaderProps) => {
           </div>
 
           {uploadComplete && (
-            <div className="mt-3 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
+            <div className="mt-3 p-3 bg-muted/50 rounded-lg border border-border">
               <div className="flex items-center gap-2">
-                <div className="w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
-                  <Check className="w-2 h-2 text-white" />
+                <div className="w-4 h-4 bg-primary rounded-full flex items-center justify-center">
+                  <Check className="w-2 h-2 text-primary-foreground" />
                 </div>
-                <span className="text-sm font-medium text-green-700 dark:text-green-300">
+                <span className="text-sm font-medium text-foreground">
                   Video uploaded successfully!
                 </span>
               </div>
-              <p className="text-xs text-green-600 dark:text-green-400 mt-1">
+              <p className="text-xs text-muted-foreground mt-1">
                 Your video is now live and visible to everyone.
               </p>
             </div>
@@ -496,7 +496,7 @@ export const VideoUploader = ({ onSuccess }: VideoUploaderProps) => {
             </div>
           )}
           {thumbnailFile && !generatingThumbnail && (
-            <div className="flex items-center justify-center gap-2 mt-2 text-xs text-green-600">
+            <div className="flex items-center justify-center gap-2 mt-2 text-xs text-primary">
               <Image className="w-3 h-3" />
               <p>Thumbnail ready</p>
             </div>

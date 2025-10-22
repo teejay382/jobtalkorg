@@ -6,7 +6,7 @@ interface LazyErrorDisplayProps {
 
 const LazyErrorDisplay: React.FC<LazyErrorDisplayProps> = ({ error }) => {
   return (
-    <div className="p-4 bg-red-100 text-red-800 rounded">
+    <div className="p-4 bg-destructive/10 text-destructive rounded">
       <h1 className="text-xl font-bold">Something went wrong</h1>
       {error && <p>{error.message}</p>}
     </div>
