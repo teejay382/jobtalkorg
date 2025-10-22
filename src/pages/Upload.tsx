@@ -5,12 +5,16 @@ import BottomNavigation from '@/components/layout/BottomNavigation';
 import { Button } from '@/components/ui/button';
 import { VideoUploader } from '@/components/upload/VideoUploader';
 import { useAuth } from '@/hooks/useAuth';
+import { useVideoFeedData } from '@/components/feed/useVideoFeedData';
 
 const Upload = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { fetchVideos } = useVideoFeedData();
 
   const handleSuccess = () => {
+    // Refresh the feed immediately after successful upload
+    fetchVideos();
     navigate('/');
   };
 

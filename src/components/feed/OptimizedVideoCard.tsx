@@ -254,12 +254,12 @@ const OptimizedVideoCard = memo(({ video, isActive, onRefresh, isVisible, isMobi
         {isVisible && isValidVideoUrl && !videoError ? (
           <video
             ref={videoRef}
-            src={video.video_url}
-            className="w-full h-full object-contain"
+            src={encodeURI(video.video_url)}
+            controls
+            autoPlay
             loop
             muted={isMuted}
             playsInline
-            poster={video.thumbnail_url}
             onClick={handleVideoClick}
             preload="none"
             onLoadedData={() => setVideoLoaded(true)}
@@ -269,7 +269,7 @@ const OptimizedVideoCard = memo(({ video, isActive, onRefresh, isVisible, isMobi
               // Hide the video element on error
               e.currentTarget.style.display = 'none';
             }}
-            style={{ aspectRatio: '9/16' }}
+            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
           />
         ) : (
           <div

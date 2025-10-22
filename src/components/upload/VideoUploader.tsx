@@ -39,10 +39,37 @@ export const VideoUploader = ({ onSuccess }: VideoUploaderProps) => {
   const { addUpload, updateUpload, removeUpload } = useUploadContext();
 
   const handleVideoFileChange = async (file: File) => {
+    // Validate file before processing
+    const validVideoTypes = ['video/mp4', 'video/webm', 'video/ogg', 'video/quicktime', 'video/x-msvideo'];
+    const validExtensions = ['.mp4', '.webm', '.ogg', '.mov', '.avi'];
+
+    const fileExtension = file.name.toLowerCase().substring(file.name.lastIndexOf('.'));
+    const isValidType = validVideoTypes.includes(file.type) || validExtensions.includes(fileExtension);
+
+    if (!isValidType) {
+      toast({
+        title: "Invalid File Type",
+        description: "Please upload a valid video file (MP4, WebM, OGG, MOV, or AVI).",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Check file size (limit to 100MB)
+    const maxSize = 100 * 1024 * 1024; // 100MB
+    if (file.size > maxSize) {
+      toast({
+        title: "File Too Large",
+        description: "Please upload a video smaller than 100MB.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setVideoFile(file);
     setVideoPreviewUrl(URL.createObjectURL(file));
     setStep(2);
-    
+
     // Generate thumbnail
     try {
       setGeneratingThumbnail(true);
@@ -138,7 +165,7 @@ export const VideoUploader = ({ onSuccess }: VideoUploaderProps) => {
         // Upload the file with explicit MIME type
         xhr.open('POST', data.signedUrl);
         xhr.setRequestHeader('Authorization', `Bearer ${session.session?.access_token}`);
-        xhr.setRequestHeader('Content-Type', file.type || 'video/mp4');
+        xhr.setRequestHeader('Content-Type', 'video/mp4');
         xhr.send(file);
       });
     } catch (error) {

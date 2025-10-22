@@ -1,38 +1,20 @@
-# Video Upload and Display Fixes - TODO
+# Fix Video Upload + Feed Playback Issues
 
-## Current Status
-- [x] Analysis completed - identified autoplay policy violation and MIME type issue
-- [x] Plan approved by user
+## Issues Identified
+1. Content-Type not always set to 'video/mp4' (currently uses file.type || 'video/mp4')
+2. Video element doesn't use encodeURI(videoUrl), objectFit: 'cover', and exact attributes from requirements
+3. Feed doesn't refresh immediately after upload (relies on realtime subscription which may not work reliably)
+4. Error handling could be improved
 
-## Tasks to Complete
+## Tasks
+- [ ] Fix VideoUploader.tsx: Always set contentType: 'video/mp4' in uploadVideoToStorage
+- [ ] Update OptimizedVideoCard.tsx: Video element to use encodeURI(videoUrl), objectFit: 'cover', and exact attributes
+- [ ] Add explicit feed refresh in Upload.tsx after successful upload
+- [ ] Improve error handling in VideoUploader.tsx for invalid files
+- [ ] Update useVideoFeedData.tsx if needed for better refresh handling
 
-### 1. Fix Autoplay Policy Violation in OptimizedVideoCard.tsx
-- [ ] Remove automatic video.play() calls that trigger NotAllowedError
-- [ ] Ensure videos only play on explicit user interaction (click)
-- [ ] Keep play button overlay visible when video is paused
-
-### 2. Fix MIME Type Issue in VideoUploader.tsx
-- [ ] Modify uploadVideoToStorage function to set 'video/mp4' Content-Type header
-- [ ] Add proper file validation for video files
-- [ ] Ensure file extension is properly handled
-
-### 3. Enhance Video Display Error Handling
-- [ ] Improve error handling for video loading failures
-- [ ] Add better fallback display when videos fail to load
-- [ ] Add MIME type validation before rendering
-
-### 4. Testing and Validation
-- [ ] Test video upload with correct MIME type
-- [ ] Verify video playback requires user interaction
-- [ ] Test progress bar and background upload
-- [ ] Confirm video deletion works properly
-
-## Files to Edit
-- src/components/feed/OptimizedVideoCard.tsx
+## Dependent Files
 - src/components/upload/VideoUploader.tsx
-
-## Notes
-- Upload process already has progress bars and background mode
-- Profile page already shows thumbnails with delete buttons
-- Need to ensure MIME type is set during XMLHttpRequest upload
-- Autoplay policy requires user gesture for video playback
+- src/components/feed/OptimizedVideoCard.tsx
+- src/pages/Upload.tsx
+- src/components/feed/useVideoFeedData.tsx
