@@ -1,51 +1,38 @@
-# Video Upload and Display System Fixes
+# Video Upload and Display Fixes - TODO
 
 ## Current Status
-- [x] Analyzed existing codebase
-- [x] Identified issues with cancel functionality, feed refresh, and styling
+- [x] Analysis completed - identified MIME type issue in VideoUploader.tsx
+- [x] Plan approved by user
 
 ## Tasks to Complete
 
-### 1. Fix Video Upload Cancel Functionality
-- [ ] Ensure XMLHttpRequest abort properly stops upload in VideoUploader.tsx
-- [ ] Prevent partial uploads when cancel is clicked
-- [ ] Clean up upload context when cancelled
+### 1. Fix MIME Type Issue in VideoUploader.tsx
+- [ ] Modify uploadVideoToStorage function to set 'video/mp4' Content-Type header
+- [ ] Add proper file validation for video files
+- [ ] Ensure file extension is properly handled
 
-### 2. Fix Profile Video Delete Functionality
-- [ ] Ensure delete removes from both database and storage in Profile.tsx
-- [ ] Update UI immediately without refresh
-- [ ] Handle delete errors gracefully
+### 2. Enhance Video Display in OptimizedVideoCard.tsx
+- [ ] Add explicit type="video/mp4" to video elements
+- [ ] Improve error handling and fallback display
+- [ ] Add MIME type validation before rendering
 
-### 3. Improve Feed Refresh After Upload
-- [ ] Ensure new videos appear immediately in feed after upload
-- [ ] Update useVideoFeedData hook to refresh properly
-- [ ] Test feed updates across components
+### 3. Verify Profile Page Features
+- [ ] Confirm video thumbnails display properly
+- [ ] Test delete functionality removes from storage and database
+- [ ] Ensure responsive layout works on mobile
 
-### 4. Enhance Progress Bar Responsiveness
-- [ ] Make progress bar more visible on mobile/desktop
-- [ ] Improve progress bar styling and animations
-- [ ] Add better visual feedback during upload stages
-
-### 5. Add Dark/Light Mode Support
-- [ ] Ensure all text and buttons are visible in both modes
-- [ ] Fix any invisible colors in upload components
-- [ ] Test theme switching during upload
-
-### 6. Test and Fix Display Bugs
-- [ ] Verify videos display properly after posting
-- [ ] Test thumbnail generation and display
-- [ ] Ensure mobile responsiveness
+### 4. Testing and Validation
+- [ ] Test video upload with correct MIME type
+- [ ] Verify video playback on desktop and mobile
+- [ ] Test progress bar and background upload
+- [ ] Confirm video deletion works properly
 
 ## Files to Edit
 - src/components/upload/VideoUploader.tsx
-- src/pages/Profile.tsx
-- src/components/feed/useVideoFeedData.tsx
-- src/components/feed/VirtualizedVideoFeed.tsx
-- src/contexts/UploadContext.tsx
+- src/components/feed/OptimizedVideoCard.tsx
+- src/pages/Profile.tsx (verification only)
 
-## Testing Checklist
-- [ ] Upload video and cancel - verify no upload occurs
-- [ ] Delete video from profile - verify removal from UI and storage
-- [ ] Upload video - verify immediate appearance in feed
-- [ ] Test on mobile and desktop
-- [ ] Test dark and light modes
+## Notes
+- Upload process already has progress bars and background mode
+- Profile page already shows thumbnails with delete buttons
+- Need to ensure MIME type is set during XMLHttpRequest upload

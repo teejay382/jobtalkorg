@@ -248,6 +248,7 @@ const OptimizedVideoCard = memo(({ video, isActive, onRefresh, isVisible, isMobi
           <video
             ref={videoRef}
             src={video.video_url}
+            type="video/mp4"
             className="w-full h-full object-contain"
             loop
             muted={isMuted}
@@ -257,7 +258,7 @@ const OptimizedVideoCard = memo(({ video, isActive, onRefresh, isVisible, isMobi
             preload="none"
             onLoadedData={() => setVideoLoaded(true)}
             onError={(e) => {
-              console.warn('Video failed to load:', video.video_url);
+              console.warn('Video failed to load:', video.video_url, e);
               setVideoError(true);
               // Hide the video element on error
               e.currentTarget.style.display = 'none';

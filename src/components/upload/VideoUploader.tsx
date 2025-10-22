@@ -74,8 +74,19 @@ export const VideoUploader = ({ onSuccess }: VideoUploaderProps) => {
   };
 
   const uploadVideoToStorage = async (file: File, uploadId: string): Promise<string> => {
-    const fileExt = file.name.split('.').pop() || 'mp4';
-    const fileName = `${user?.id}/${Date.now()}.${fileExt}`;
+    // Validate file type
+    const validVideoTypes = ['video/mp4', 'video/webm', 'video/ogg', 'video/quicktime', 'video/x-msvideo'];
+    const validExtensions = ['.mp4', '.webm', '.ogg', '.mov', '.avi'];
+
+    const fileExtension = file.name.toLowerCase().substring(file.name.lastIndexOf('.'));
+    const isValidType = validVideoTypes.includes(file.type) || validExtensions.includes(fileExtension);
+
+    if (!isValidType) {
+      throw new Error('Invalid video file type. Please upload MP4, WebM, OGG, MOV, or AVI files.');
+    }
+
+    // Force MP4 extension for consistency
+    const fileName = `${user?.id}/${Date.now()}.mp4`;
 
     try {
       // Get the upload URL from Supabase
@@ -94,7 +105,7 @@ export const VideoUploader = ({ onSuccess }: VideoUploaderProps) => {
         // Upload with XMLHttpRequest for progress tracking
         const xhr = new XMLHttpRequest();
         setCurrentXHR(xhr);
-        
+
         xhr.upload.onprogress = (event) => {
           if (event.lengthComputable && !uploadAborted) {
             // Map video upload progress to overall progress (5-70%)
@@ -103,7 +114,7 @@ export const VideoUploader = ({ onSuccess }: VideoUploaderProps) => {
             updateUpload(uploadId, { progress: videoProgress });
           }
         };
-        
+
         xhr.onload = () => {
           if (xhr.status === 200 && !uploadAborted) {
             // Get public URL
@@ -116,17 +127,18 @@ export const VideoUploader = ({ onSuccess }: VideoUploaderProps) => {
             reject(new Error('Upload failed'));
           }
         };
-        
+
         xhr.onerror = () => reject(new Error('Upload failed'));
-        
+
         xhr.onabort = () => {
           setCurrentXHR(null);
           reject(new Error('Upload cancelled'));
         };
-        
-        // Upload the file
+
+        // Upload the file with explicit MIME type
         xhr.open('POST', data.signedUrl);
         xhr.setRequestHeader('Authorization', `Bearer ${session.session?.access_token}`);
+        xhr.setRequestHeader('Content-Type', 'video/mp4');
         xhr.send(file);
       });
     } catch (error) {
