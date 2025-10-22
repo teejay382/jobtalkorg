@@ -138,7 +138,7 @@ export const VideoUploader = ({ onSuccess }: VideoUploaderProps) => {
         // Upload the file with explicit MIME type
         xhr.open('POST', data.signedUrl);
         xhr.setRequestHeader('Authorization', `Bearer ${session.session?.access_token}`);
-        xhr.setRequestHeader('Content-Type', 'video/mp4');
+        xhr.setRequestHeader('Content-Type', file.type || 'video/mp4');
         xhr.send(file);
       });
     } catch (error) {

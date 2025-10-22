@@ -82,12 +82,19 @@ const OptimizedVideoCard = memo(({ video, isActive, onRefresh, isVisible, isMobi
     checkIfLiked();
   }, [checkIfLiked]);
 
-  // Optimized video playback
+  // Optimized video playback - autoplay muted videos when active and visible
   useEffect(() => {
     if (!videoRef.current) return;
 
     if (isActive && isVisible) {
-      videoRef.current.play().catch(console.error);
+      // Try to autoplay (browsers allow muted autoplay)
+      videoRef.current.play().catch((error) => {
+        // If autoplay fails, show play button but don't log error for expected behavior
+        if (error.name !== 'NotAllowedError') {
+          console.warn('Video play failed:', error);
+        }
+        setIsPlaying(false);
+      });
       setIsPlaying(true);
     } else {
       videoRef.current.pause();
@@ -248,7 +255,6 @@ const OptimizedVideoCard = memo(({ video, isActive, onRefresh, isVisible, isMobi
           <video
             ref={videoRef}
             src={video.video_url}
-            type="video/mp4"
             className="w-full h-full object-contain"
             loop
             muted={isMuted}
