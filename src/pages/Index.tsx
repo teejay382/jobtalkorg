@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { X } from 'lucide-react';
 import Header from '@/components/layout/Header';
@@ -14,36 +14,36 @@ const Index = () => {
   const navigate = useNavigate();
   const [showWelcome, setShowWelcome] = useState(false);
 
-  console.log('Index page state:', { 
-    hasUser: !!user, 
-    hasProfile: !!profile, 
-    onboardingCompleted: profile?.onboarding_completed,
-    loading 
-  });
+  // Memoize computed values to prevent re-renders
+  const needsOnboarding = useMemo(() => 
+    user && profile && !profile.onboarding_completed,
+    [user, profile]
+  );
+  
+  const isAuthenticated = useMemo(() => !loading && user, [loading, user]);
 
+  // Combine useEffect hooks to reduce re-renders
   useEffect(() => {
+    // Handle authentication and onboarding redirects
+    if (loading) return;
+
+    if (!user) {
+      navigate('/welcome', { replace: true });
+      return;
+    }
+
+    if (needsOnboarding) {
+      navigate('/onboarding', { replace: true });
+      return;
+    }
+
     // Check if this is user's first time after onboarding
     const hasSeenWelcome = localStorage.getItem('hasSeenDashboardWelcome');
     if (!hasSeenWelcome && profile?.onboarding_completed) {
       setShowWelcome(true);
       localStorage.setItem('hasSeenDashboardWelcome', 'true');
     }
-  }, [profile]);
-
-  useEffect(() => {
-    if (user && profile && !profile.onboarding_completed) {
-      console.log('Redirecting to onboarding from Index');
-      navigate('/onboarding');
-    }
-  }, [user, profile, navigate]);
-
-  // Redirect non-authenticated users to welcome page
-  useEffect(() => {
-    if (!loading && !user) {
-      console.log('Redirecting to welcome - no user');
-      navigate('/welcome');
-    }
-  }, [loading, user, navigate]);
+  }, [loading, user, profile, needsOnboarding, navigate]);
 
   if (loading) {
     return (

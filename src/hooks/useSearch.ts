@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { debounce } from '@/utils/debounce';
 
 export interface Job {
   id: string;
@@ -63,7 +64,14 @@ export const useSearch = () => {
     try {
       let query = supabase
         .from('jobs')
-        .select('*');
+        .select(`
+          *,
+          employer:profiles!jobs_employer_id_fkey(
+            username,
+            company_name,
+            avatar_url
+          )
+        `);
 
       // Full-text search
       if (searchFilters.query) {
@@ -99,23 +107,7 @@ export const useSearch = () => {
 
       if (error) throw error;
 
-      // Fetch employer profiles separately
-      const jobsWithEmployers = await Promise.all(
-        (data || []).map(async (job) => {
-          const { data: employer } = await supabase
-            .from('profiles')
-            .select('username, company_name, avatar_url')
-            .eq('user_id', job.employer_id)
-            .single();
-
-          return {
-            ...job,
-            employer
-          } as Job;
-        })
-      );
-
-      setJobs(jobsWithEmployers);
+      setJobs((data || []) as Job[]);
     } catch (error) {
       console.error('Error searching jobs:', error);
       setJobs([]);
@@ -129,7 +121,15 @@ export const useSearch = () => {
     try {
       let query = supabase
         .from('profiles')
-        .select('*')
+        .select(`
+          *,
+          videos:videos!videos_user_id_fkey(
+            id,
+            title,
+            thumbnail_url,
+            video_url
+          )
+        `)
         .eq('account_type', 'freelancer');
 
       // Search in name, bio, skills
@@ -152,23 +152,13 @@ export const useSearch = () => {
 
       if (error) throw error;
 
-      // Fetch videos separately
-      const freelancersWithVideos = await Promise.all(
-        (data || []).map(async (profile) => {
-          const { data: videos } = await supabase
-            .from('videos')
-            .select('id, title, thumbnail_url, video_url')
-            .eq('user_id', profile.user_id)
-            .limit(3);
+      // Limit videos to 3 per freelancer on client side
+      const freelancersWithLimitedVideos = (data || []).map(profile => ({
+        ...profile,
+        videos: (profile.videos || []).slice(0, 3)
+      })) as FreelancerProfile[];
 
-          return {
-            ...profile,
-            videos: videos || []
-          } as FreelancerProfile;
-        })
-      );
-
-      setFreelancers(freelancersWithVideos);
+      setFreelancers(freelancersWithLimitedVideos);
     } catch (error) {
       console.error('Error searching freelancers:', error);
       setFreelancers([]);
@@ -177,9 +167,20 @@ export const useSearch = () => {
     }
   };
 
-  const updateFilters = (newFilters: Partial<SearchFilters>) => {
+  const updateFilters = useCallback((newFilters: Partial<SearchFilters>) => {
     setFilters(prev => ({ ...prev, ...newFilters }));
-  };
+  }, []);
+
+  // Memoize debounced search functions
+  const debouncedSearchJobs = useMemo(
+    () => debounce(searchJobs, 300),
+    []
+  );
+
+  const debouncedSearchFreelancers = useMemo(
+    () => debounce(searchFreelancers, 300),
+    []
+  );
 
   const clearFilters = () => {
     setFilters({ query: '' });
@@ -192,8 +193,8 @@ export const useSearch = () => {
     freelancers,
     loading,
     filters,
-    searchJobs,
-    searchFreelancers,
+    searchJobs: debouncedSearchJobs,
+    searchFreelancers: debouncedSearchFreelancers,
     updateFilters,
     clearFilters,
   };

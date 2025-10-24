@@ -97,7 +97,7 @@ const MainApp = () => {
 
   // DEBUG: Log modal open state changes
   useEffect(() => {
-    console.log('Feedback modal open state:', feedbackModalOpen);
+    if (import.meta.env.DEV) console.log('Feedback modal open state:', feedbackModalOpen);
   }, [feedbackModalOpen]);
 
   // Handle logout detection by checking session change
@@ -156,15 +156,18 @@ const MainApp = () => {
 };
 
 const App = () => {
-  console.log("App component is loading...");
+  if (import.meta.env.DEV) console.log("App component is loading...");
 
   // create a memoized QueryClient so it's stable across renders
   const queryClient = useMemo(() => new QueryClient({
     defaultOptions: {
       queries: {
-        // cacheTime removed because it's not allowed by current react-query types; use staleTime instead
-        staleTime: 0,
+        staleTime: 5 * 60 * 1000, // 5 minutes - data considered fresh
+        gcTime: 10 * 60 * 1000, // 10 minutes - cache garbage collection (was cacheTime)
         refetchOnWindowFocus: false,
+        refetchOnMount: false,
+        refetchOnReconnect: true,
+        retry: 1,
       },
     },
   }), []);
@@ -184,10 +187,10 @@ const App = () => {
   // Show loading while auth is initializing
   const { loading } = useAuth();
   
-  console.log('App loading state:', loading);
+  if (import.meta.env.DEV) console.log('App loading state:', loading);
   
   if (loading) {
-    console.log('App showing loading skeleton');
+    if (import.meta.env.DEV) console.log('App showing loading skeleton');
     return <LoadingSkeleton />;
   }
 
