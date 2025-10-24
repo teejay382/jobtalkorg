@@ -155,8 +155,8 @@ export const VideoUploader = ({ onSuccess }: VideoUploaderProps) => {
           if (xhr.status === 200 && !uploadAborted) {
             console.log('[Upload] Upload completed, verifying file...');
             
-            // Wait a moment for file to be available
-            await new Promise(resolve => setTimeout(resolve, 500));
+            // Wait for file to be available
+            await new Promise(resolve => setTimeout(resolve, 1000));
             
             // Verify the file exists before returning URL
             const { data: fileList, error: listError } = await supabase.storage
@@ -165,10 +165,23 @@ export const VideoUploader = ({ onSuccess }: VideoUploaderProps) => {
                 search: fileName.split('/')[1]
               });
 
+            console.log('[Upload] File verification:', { fileList, listError, fileName });
+
             if (listError || !fileList || fileList.length === 0) {
-              console.error('[Upload] File not found after upload:', listError);
-              reject(new Error('Upload succeeded but file not accessible'));
-              return;
+              console.error('[Upload] File not found after upload. Checking with direct download...');
+              
+              // Try to download to verify it exists
+              const { data: downloadData, error: downloadError } = await supabase.storage
+                .from('videos')
+                .download(fileName);
+              
+              if (downloadError) {
+                console.error('[Upload] File definitely not accessible:', downloadError);
+                reject(new Error('Upload succeeded but file not accessible: ' + downloadError.message));
+                return;
+              }
+              
+              console.log('[Upload] File exists but list failed. Proceeding with URL generation.');
             }
 
             // Get public URL
@@ -177,11 +190,33 @@ export const VideoUploader = ({ onSuccess }: VideoUploaderProps) => {
               .getPublicUrl(fileName);
             
             console.log('[Upload] Public URL generated:', publicUrl);
+            
+            // Test the URL is actually accessible
+            try {
+              const testResponse = await fetch(publicUrl, { method: 'HEAD' });
+              console.log('[Upload] URL accessibility test:', {
+                status: testResponse.status,
+                ok: testResponse.ok,
+                contentType: testResponse.headers.get('content-type')
+              });
+              
+              if (!testResponse.ok) {
+                console.error('[Upload] URL test failed:', testResponse.status, testResponse.statusText);
+                reject(new Error(`URL not accessible: ${testResponse.status} ${testResponse.statusText}`));
+                return;
+              }
+            } catch (testError) {
+              console.error('[Upload] URL test error:', testError);
+              reject(new Error('URL accessibility test failed: ' + testError));
+              return;
+            }
+            
             setCurrentXHR(null);
             resolve(publicUrl);
           } else {
-            console.error('[Upload] Upload failed with status:', xhr.status);
-            reject(new Error(`Upload failed with status ${xhr.status}`));
+            console.error('[Upload] Upload failed with status:', xhr.status, xhr.statusText);
+            console.error('[Upload] Response:', xhr.responseText);
+            reject(new Error(`Upload failed with status ${xhr.status}: ${xhr.statusText}`));
           }
         };
 

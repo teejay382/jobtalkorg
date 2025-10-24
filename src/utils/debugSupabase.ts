@@ -80,6 +80,80 @@ export async function checkVideosTable(): Promise<DiagnosticResult> {
 }
 
 /**
+ * Check video URLs accessibility
+ */
+export async function checkVideoURLs(): Promise<DiagnosticResult> {
+  try {
+    const { data: videos, error } = await supabase
+      .from('videos')
+      .select('id, video_url, created_at')
+      .order('created_at', { ascending: false })
+      .limit(5);
+
+    if (error) {
+      return {
+        success: false,
+        message: 'Failed to fetch video URLs',
+        error: error
+      };
+    }
+
+    if (!videos || videos.length === 0) {
+      return {
+        success: true,
+        message: 'No videos to check',
+        data: { videos: [] }
+      };
+    }
+
+    // Test each URL
+    const urlTests = await Promise.all(
+      videos.map(async (video) => {
+        try {
+          const response = await fetch(video.video_url, { method: 'HEAD' });
+          return {
+            id: video.id,
+            url: video.video_url,
+            status: response.status,
+            ok: response.ok,
+            contentType: response.headers.get('content-type')
+          };
+        } catch (error) {
+          return {
+            id: video.id,
+            url: video.video_url,
+            status: 0,
+            ok: false,
+            error: error instanceof Error ? error.message : 'Unknown error'
+          };
+        }
+      })
+    );
+
+    const failedVideos = urlTests.filter(test => !test.ok);
+
+    return {
+      success: failedVideos.length === 0,
+      message: failedVideos.length === 0 
+        ? 'All video URLs are accessible' 
+        : `${failedVideos.length} out of ${videos.length} videos have inaccessible URLs`,
+      data: { 
+        total: videos.length,
+        accessible: videos.length - failedVideos.length,
+        failed: failedVideos.length,
+        tests: urlTests
+      }
+    };
+  } catch (error) {
+    return {
+      success: false,
+      message: 'Error checking video URLs',
+      error: error
+    };
+  }
+}
+
+/**
  * Check if profiles table has data
  */
 export async function checkProfilesTable(): Promise<DiagnosticResult> {
@@ -166,17 +240,24 @@ export async function runAllDiagnostics() {
   const videos = await checkVideosTable();
   console.log('🎥 Videos:', videos.success ? '✅' : '❌', videos.message, videos.data || videos.error);
 
+  const videoURLs = await checkVideoURLs();
+  console.log('🔗 Video URLs:', videoURLs.success ? '✅' : '❌', videoURLs.message);
+  if (videoURLs.data && videoURLs.data.tests) {
+    console.log('   URL Test Results:', videoURLs.data.tests);
+  }
+
   const profiles = await checkProfilesTable();
   console.log('👤 Profiles:', profiles.success ? '✅' : '❌', profiles.message, profiles.data || profiles.error);
 
   console.log('\n--- Diagnostic Summary ---');
-  const allPassed = auth.success && buckets.success && videos.success && profiles.success;
+  const allPassed = auth.success && buckets.success && videos.success && videoURLs.success && profiles.success;
   
   if (!allPassed) {
     console.log('⚠️ Issues detected:');
     if (!auth.success) console.log('  - Authentication issue');
     if (!buckets.success) console.log('  - Storage bucket issue');
     if (!videos.success) console.log('  - Videos table issue');
+    if (!videoURLs.success) console.log('  - Video URL accessibility issue (400 errors)');
     if (!profiles.success) console.log('  - Profiles table issue');
   } else {
     console.log('✅ All checks passed!');
@@ -186,6 +267,7 @@ export async function runAllDiagnostics() {
     auth,
     buckets,
     videos,
+    videoURLs,
     profiles,
     allPassed
   };
