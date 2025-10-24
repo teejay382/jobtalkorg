@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback, memo } from 'react';
-import { Heart, MessageCircle, Share, Briefcase, Play, Volume2, VolumeX } from 'lucide-react';
+import { Heart, MessageCircle, Share, Briefcase, Play, Volume2, VolumeX, Trash2 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth, getProfileRole } from '@/hooks/useAuth';
@@ -7,6 +7,17 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 import { CommentSection } from './CommentSection';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 
 interface VideoCardProps {
   video: {
@@ -237,12 +248,97 @@ const OptimizedVideoCard = memo(({ video, isActive, onRefresh, isVisible, isMobi
     onRefresh();
   }, [onRefresh]);
 
+  const handleDelete = useCallback(async () => {
+    if (!user || video.user.id !== user.id) {
+      toast({
+        title: "Error",
+        description: "You can only delete your own videos",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      console.log('[VideoCard] Deleting video:', video.id);
+      
+      // Delete from database
+      const { error: dbError } = await supabase
+        .from('videos')
+        .delete()
+        .eq('id', video.id);
+
+      if (dbError) throw dbError;
+
+      // Extract file path from video URL for storage deletion
+      if (video.video_url) {
+        try {
+          const url = new URL(video.video_url);
+          const pathParts = url.pathname.split('/');
+          const videosIndex = pathParts.indexOf('videos');
+          
+          if (videosIndex !== -1 && videosIndex < pathParts.length - 1) {
+            const videoFilePath = pathParts.slice(videosIndex + 1).join('/');
+            
+            const { error: storageError } = await supabase.storage
+              .from('videos')
+              .remove([videoFilePath]);
+            
+            if (storageError) {
+              console.warn('[VideoCard] Storage deletion warning:', storageError);
+            }
+          }
+        } catch (urlError) {
+          console.warn('[VideoCard] URL parsing warning:', urlError);
+        }
+      }
+
+      // Delete thumbnail from storage if it exists
+      if (video.thumbnail_url) {
+        try {
+          const url = new URL(video.thumbnail_url);
+          const pathParts = url.pathname.split('/');
+          const thumbnailsIndex = pathParts.indexOf('thumbnails');
+          
+          if (thumbnailsIndex !== -1 && thumbnailsIndex < pathParts.length - 1) {
+            const thumbnailFilePath = pathParts.slice(thumbnailsIndex + 1).join('/');
+            
+            const { error: thumbnailError } = await supabase.storage
+              .from('thumbnails')
+              .remove([thumbnailFilePath]);
+            
+            if (thumbnailError) {
+              console.warn('[VideoCard] Thumbnail deletion warning:', thumbnailError);
+            }
+          }
+        } catch (urlError) {
+          console.warn('[VideoCard] Thumbnail URL parsing warning:', urlError);
+        }
+      }
+
+      toast({
+        title: "Video deleted",
+        description: "Your video has been successfully deleted.",
+      });
+
+      // Refresh the feed to remove the deleted video
+      onRefresh();
+    } catch (error) {
+      console.error('[VideoCard] Error deleting video:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete video. Please try again.",
+        variant: "destructive",
+      });
+    }
+  }, [user, video, toast, onRefresh]);
+
   // Memoized computed values
   const isVideoFromEmployer = (video.user.role || (video.user as any).account_type) === 'employer';
   const isCurrentUserEmployer = getProfileRole(profile) === 'employer';
   const displayName = video.user.full_name || video.user.username || `User ${video.user.id.slice(0, 8)}`;
   const userRole = isVideoFromEmployer ? (video.user.company_name || 'Employer') : 'Job Seeker';
   const shouldShowHireButton = !isVideoFromEmployer && isCurrentUserEmployer;
+  const isOwnVideo = user && video.user.id === user.id;
 
   // Validate video URL - must be HTTPS Supabase URL
   const isValidVideoUrl = video.video_url && 
@@ -334,6 +430,37 @@ const OptimizedVideoCard = memo(({ video, isActive, onRefresh, isVisible, isMobi
       >
         {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
       </button>
+      
+      {/* Delete button - only show for own videos */}
+      {isOwnVideo && (
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <button
+              className="absolute top-4 left-4 glass-card rounded-2xl p-3 text-white bg-red-500/80 hover:bg-red-500 hover:shadow-[0_0_20px_rgba(239,68,68,0.6)] transition-all duration-300 z-20 hover:scale-110 backdrop-blur-sm"
+              title="Delete video"
+            >
+              <Trash2 className="w-5 h-5" />
+            </button>
+          </AlertDialogTrigger>
+          <AlertDialogContent className="glass-card-premium border-2 border-red-500/20">
+            <AlertDialogHeader>
+              <AlertDialogTitle className="text-xl font-bold">Delete Video?</AlertDialogTitle>
+              <AlertDialogDescription className="text-base">
+                Are you sure you want to delete "{video.title}"? This action cannot be undone and will permanently remove the video from our servers.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel className="hover:bg-secondary">Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleDelete}
+                className="bg-red-500 hover:bg-red-600 text-white hover:shadow-[0_0_20px_rgba(239,68,68,0.5)]"
+              >
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      )}
       
       {/* Right side interactions with neon effects - Medium-small balanced size */}
       <div className="absolute right-3 bottom-20 md:bottom-24 flex flex-col gap-2.5 md:gap-3 z-20">
