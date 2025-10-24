@@ -89,6 +89,28 @@ const VirtualizedVideoFeed = () => {
     );
   }
 
+  // Show empty state when no videos exist (not an error, just empty)
+  if (!loading && videos.length === 0 && !error) {
+    return (
+      <div className="h-screen w-full bg-gradient-to-br from-background via-primary/5 to-accent/5 flex items-center justify-center p-6">
+        <div className="text-center max-w-md">
+          <div className="w-24 h-24 mx-auto mb-6 bg-gradient-to-r from-primary to-accent rounded-full flex items-center justify-center">
+            <svg className="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+            </svg>
+          </div>
+          <h2 className="text-2xl font-bold text-foreground mb-3">No Videos Yet</h2>
+          <p className="text-muted-foreground mb-6">
+            Be the first to share your skills! Upload a video to get started.
+          </p>
+          <a href="/upload" className="inline-flex items-center justify-center px-6 py-3 bg-primary text-primary-foreground rounded-lg hover:opacity-90 transition-opacity">
+            Upload Your First Video
+          </a>
+        </div>
+      </div>
+    );
+  }
+
   if (error && videos.length === 0) {
     return <VideoFeedLoader onRefresh={fetchVideos} />;
   }

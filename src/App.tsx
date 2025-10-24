@@ -9,6 +9,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { ThemeProvider } from '@/components/providers/ThemeProvider';
 import { UploadProvider } from '@/contexts/UploadContext';
 import { BackgroundUploadNotification } from '@/components/ui/BackgroundUploadNotification';
+import { runAllDiagnostics } from '@/utils/debugSupabase';
 
 // Lazy-load pages (code splitting)
 const Welcome = lazy(() => import('./pages/Welcome'));
@@ -167,6 +168,18 @@ const App = () => {
       },
     },
   }), []);
+
+  // Run diagnostics in development mode
+  useEffect(() => {
+    if (import.meta.env.DEV) {
+      console.log('🚀 Running initial Supabase diagnostics...');
+      runAllDiagnostics().then(results => {
+        if (!results.allPassed) {
+          console.warn('⚠️ Some diagnostics failed. Check the logs above for details.');
+        }
+      });
+    }
+  }, []);
 
   // Show loading while auth is initializing
   const { loading } = useAuth();

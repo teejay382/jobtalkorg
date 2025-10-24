@@ -108,7 +108,13 @@ export const useVideoFeedData = () => {
 
       if (videosError) {
         console.error('Error fetching videos:', videosError);
-        setError('Failed to load videos');
+        console.error('Error details:', {
+          code: videosError.code,
+          message: videosError.message,
+          details: videosError.details,
+          hint: videosError.hint
+        });
+        setError(`Failed to load videos: ${videosError.message}`);
         return [];
       }
 
@@ -116,7 +122,7 @@ export const useVideoFeedData = () => {
         console.log('[VideoFeed] No videos found');
         if (offset === 0) {
           setVideos([]);
-          setError('No videos available');
+          setError(null); // No videos is not an error, just empty state
         }
         return [];
       }
