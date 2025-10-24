@@ -1,18 +1,37 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, Upload, CheckCircle, AlertCircle, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { useUploadContext } from '@/contexts/UploadContext';
 
 export const BackgroundUploadNotification: React.FC = () => {
-  const { activeUploads, removeUpload, clearCompletedUploads } = useUploadContext();
+  const { activeUploads, getCurrentUploads, removeUpload, clearCompletedUploads } = useUploadContext();
+  const [localUploads, setLocalUploads] = useState(activeUploads);
 
-  if (activeUploads.length === 0) return null;
+  // Update local state when context state changes (stage changes only)
+  useEffect(() => {
+    setLocalUploads(activeUploads);
+  }, [activeUploads]);
 
-  const completedUploads = activeUploads.filter(upload => 
+  // Poll for progress updates at 60fps for smooth progress bar
+  useEffect(() => {
+    if (localUploads.length === 0) return;
+
+    const interval = setInterval(() => {
+      // Get fresh data from ref without triggering parent re-renders
+      const currentUploads = getCurrentUploads();
+      setLocalUploads([...currentUploads]);
+    }, 16); // ~60fps
+
+    return () => clearInterval(interval);
+  }, [localUploads.length, getCurrentUploads]);
+
+  if (localUploads.length === 0) return null;
+
+  const completedUploads = localUploads.filter(upload => 
     upload.stage === 'complete' || upload.stage === 'error'
   );
-  const inProgressUploads = activeUploads.filter(upload => 
+  const inProgressUploads = localUploads.filter(upload => 
     upload.stage !== 'complete' && upload.stage !== 'error'
   );
 

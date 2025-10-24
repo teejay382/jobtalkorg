@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useRef, useCallback, ReactNode } from 'react';
 
 interface UploadStatus {
   id: string;
@@ -11,6 +11,7 @@ interface UploadStatus {
 
 interface UploadContextType {
   activeUploads: UploadStatus[];
+  getCurrentUploads: () => UploadStatus[];
   addUpload: (id: string, fileName: string) => void;
   updateUpload: (id: string, updates: Partial<UploadStatus>) => void;
   removeUpload: (id: string) => void;
@@ -33,42 +34,64 @@ interface UploadProviderProps {
 
 export const UploadProvider: React.FC<UploadProviderProps> = ({ children }) => {
   const [activeUploads, setActiveUploads] = useState<UploadStatus[]>([]);
+  const uploadsRef = useRef<UploadStatus[]>([]);
+  const listenersRef = useRef<Set<() => void>>(new Set());
 
-  const addUpload = (id: string, fileName: string) => {
-    setActiveUploads(prev => [
-      ...prev,
-      {
-        id,
-        fileName,
-        progress: 0,
-        stage: 'preparing',
-        startTime: Date.now(),
-      }
-    ]);
-  };
+  // Notify listeners without causing re-renders in unrelated components
+  const notifyListeners = useCallback(() => {
+    listenersRef.current.forEach(listener => listener());
+  }, []);
 
-  const updateUpload = (id: string, updates: Partial<UploadStatus>) => {
-    setActiveUploads(prev =>
-      prev.map(upload =>
-        upload.id === id ? { ...upload, ...updates } : upload
-      )
+  const addUpload = useCallback((id: string, fileName: string) => {
+    const newUpload = {
+      id,
+      fileName,
+      progress: 0,
+      stage: 'preparing' as const,
+      startTime: Date.now(),
+    };
+    uploadsRef.current = [...uploadsRef.current, newUpload];
+    setActiveUploads(uploadsRef.current);
+    notifyListeners();
+  }, [notifyListeners]);
+
+  const updateUpload = useCallback((id: string, updates: Partial<UploadStatus>) => {
+    // Update ref immediately without triggering React re-render
+    uploadsRef.current = uploadsRef.current.map(upload =>
+      upload.id === id ? { ...upload, ...updates } : upload
     );
-  };
+    
+    // Only update state (causing re-render) for stage changes, not progress
+    if (updates.stage !== undefined) {
+      setActiveUploads([...uploadsRef.current]);
+    }
+    
+    notifyListeners();
+  }, [notifyListeners]);
 
-  const removeUpload = (id: string) => {
-    setActiveUploads(prev => prev.filter(upload => upload.id !== id));
-  };
+  const removeUpload = useCallback((id: string) => {
+    uploadsRef.current = uploadsRef.current.filter(upload => upload.id !== id);
+    setActiveUploads(uploadsRef.current);
+    notifyListeners();
+  }, [notifyListeners]);
 
-  const clearCompletedUploads = () => {
-    setActiveUploads(prev => prev.filter(upload => 
+  const clearCompletedUploads = useCallback(() => {
+    uploadsRef.current = uploadsRef.current.filter(upload => 
       upload.stage !== 'complete' && upload.stage !== 'error'
-    ));
-  };
+    );
+    setActiveUploads(uploadsRef.current);
+    notifyListeners();
+  }, [notifyListeners]);
+
+  const getCurrentUploads = useCallback(() => {
+    return uploadsRef.current;
+  }, []);
 
   return (
     <UploadContext.Provider
       value={{
         activeUploads,
+        getCurrentUploads,
         addUpload,
         updateUpload,
         removeUpload,

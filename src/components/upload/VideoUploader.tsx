@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Upload as UploadIcon, Video, Camera, X, Image, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -37,6 +37,15 @@ export const VideoUploader = ({ onSuccess }: VideoUploaderProps) => {
   const { user } = useAuth();
   const { toast } = useToast();
   const { addUpload, updateUpload, removeUpload } = useUploadContext();
+
+  // Cleanup blob URL on unmount to prevent memory leak
+  useEffect(() => {
+    return () => {
+      if (videoPreviewUrl) {
+        URL.revokeObjectURL(videoPreviewUrl);
+      }
+    };
+  }, [videoPreviewUrl]);
 
   const handleVideoFileChange = async (file: File) => {
     // Validate file before processing
