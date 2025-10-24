@@ -17,21 +17,25 @@ const VirtualizedVideoFeed = () => {
   useEffect(() => {
     if (!containerRef.current) return;
 
+    // Clean up previous observer
+    if (observerRef.current) {
+      observerRef.current.disconnect();
+    }
+
     observerRef.current = new IntersectionObserver(
       (entries) => {
-        const newVisibleVideos = new Set(visibleVideos);
-        
         entries.forEach((entry) => {
           const index = parseInt(entry.target.getAttribute('data-index') || '0');
           
           if (entry.isIntersecting) {
-            newVisibleVideos.add(index);
+            setVisibleVideos(prev => new Set(prev).add(index));
+            
             // Update active video when 50% visible
             if (entry.intersectionRatio > 0.5) {
               setActiveVideoIndex(index);
             }
             
-            // Load more when approaching the end
+            // Load more when approaching the end (debounced)
             if (index >= videos.length - 2 && hasMore && !loadingMore.current) {
               loadingMore.current = true;
               loadMore().finally(() => {
@@ -39,15 +43,18 @@ const VirtualizedVideoFeed = () => {
               });
             }
           } else {
-            newVisibleVideos.delete(index);
+            setVisibleVideos(prev => {
+              const newSet = new Set(prev);
+              newSet.delete(index);
+              return newSet;
+            });
           }
         });
-        
-        setVisibleVideos(newVisibleVideos);
       },
       { 
         threshold: [0.1, 0.5, 0.9],
-        rootMargin: '50px 0px' // Preload videos slightly before they become visible
+        rootMargin: '50px 0px', // Preload videos slightly before they become visible
+        root: null // Use viewport as root
       }
     );
 
@@ -58,9 +65,12 @@ const VirtualizedVideoFeed = () => {
     });
 
     return () => {
-      observerRef.current?.disconnect();
+      if (observerRef.current) {
+        observerRef.current.disconnect();
+        observerRef.current = null;
+      }
     };
-  }, [videos.length, hasMore, loadMore, visibleVideos]);
+  }, [videos.length, hasMore, loadMore]);
 
   // Keyboard navigation for accessibility and desktop users
   useEffect(() => {
@@ -123,7 +133,9 @@ const VirtualizedVideoFeed = () => {
         scrollBehavior: 'smooth',
         height: '100vh',
         width: '100vw',
-        position: 'relative'
+        position: 'relative',
+        overscrollBehavior: 'contain',
+        WebkitOverflowScrolling: 'touch'
       }}
     >
       {/* TikTok-style vertical feed - one video at a time */}
