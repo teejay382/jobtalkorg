@@ -15,7 +15,7 @@ const Auth = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState<'role' | 'details'>('role');
-  const [role, setRole] = useState<'worker' | 'hirer' | null>(null);
+  const [role, setRole] = useState<'freelancer' | 'employer' | null>(null);
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -75,17 +75,33 @@ const Auth = () => {
           return;
         }
 
-        const { error } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
           email: formData.email,
           password: formData.password,
           options: {
             emailRedirectTo: `${window.location.origin}/`,
             data: {
               full_name: formData.fullName,
-              role: role
+              role: role,
+              account_type: role
             }
           }
         });
+
+        // Immediately create profile with role
+        if (data.user && !error) {
+          await supabase
+            .from('profiles')
+            .upsert({
+              user_id: data.user.id,
+              email: formData.email,
+              full_name: formData.fullName,
+              username: formData.email.split('@')[0],
+              role: role,
+              account_type: role,
+              onboarding_completed: false
+            }, { onConflict: 'user_id' });
+        }
 
         if (error) {
           if (error.message.includes('User already registered')) {
@@ -205,9 +221,9 @@ const Auth = () => {
               <div className="grid grid-cols-1 gap-3">
                 <button
                   type="button"
-                  onClick={() => setRole('worker')}
+                  onClick={() => setRole('freelancer')}
                   className={`p-6 rounded-2xl border-2 transition-all text-left ${
-                    role === 'worker'
+                    role === 'freelancer'
                       ? 'border-primary bg-primary/5 shadow-medium'
                       : 'border-border hover:border-primary/50 hover:bg-muted/50'
                   }`}
@@ -217,9 +233,9 @@ const Auth = () => {
                       <User className="h-6 w-6 text-primary" />
                     </div>
                     <div className="flex-1">
-                      <h3 className="font-bold text-lg mb-1">👷 I want to work</h3>
+                      <h3 className="font-bold text-lg mb-1">👷 I'm a Freelancer</h3>
                       <p className="text-sm text-muted-foreground">
-                        Show your skills and find jobs that match what you do
+                        Post videos showcasing my skills and get hired by employers
                       </p>
                     </div>
                   </div>
@@ -227,9 +243,9 @@ const Auth = () => {
 
                 <button
                   type="button"
-                  onClick={() => setRole('hirer')}
+                  onClick={() => setRole('employer')}
                   className={`p-6 rounded-2xl border-2 transition-all text-left ${
-                    role === 'hirer'
+                    role === 'employer'
                       ? 'border-primary bg-primary/5 shadow-medium'
                       : 'border-border hover:border-primary/50 hover:bg-muted/50'
                   }`}
@@ -239,9 +255,9 @@ const Auth = () => {
                       <Building2 className="h-6 w-6 text-primary" />
                     </div>
                     <div className="flex-1">
-                      <h3 className="font-bold text-lg mb-1">💼 I want to hire</h3>
+                      <h3 className="font-bold text-lg mb-1">💼 I'm an Employer</h3>
                       <p className="text-sm text-muted-foreground">
-                        Find talented people and see what they can really do
+                        Discover talented freelancers through their work videos and hire them
                       </p>
                     </div>
                   </div>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback, memo } from 'react';
+import React, { useState, useEffect, useRef, useCallback, memo, useMemo } from 'react';
 import { Heart, MessageCircle, Share, Briefcase, Play, Volume2, VolumeX, Trash2 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { supabase } from '@/integrations/supabase/client';
@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 import { CommentSection } from './CommentSection';
+import { HireModal } from '@/components/hire/HireModal';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -58,6 +59,7 @@ const OptimizedVideoCard = memo(({ video, isActive, onRefresh, isVisible, isMobi
   const [videoLoaded, setVideoLoaded] = useState(false);
   const [showComments, setShowComments] = useState(false);
   const [videoError, setVideoError] = useState(false);
+  const [showHireModal, setShowHireModal] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const { user, profile } = useAuth();
   const { toast } = useToast();
@@ -228,8 +230,20 @@ const OptimizedVideoCard = memo(({ video, isActive, onRefresh, isVisible, isMobi
       });
       return;
     }
-    navigate(`/chat?user=${video.user.id}`);
-  }, [user, video.user.id, navigate, toast]);
+    
+    // Security check: verify user is employer
+    const userRole = getProfileRole(profile);
+    if (userRole !== 'employer') {
+      toast({
+        title: "Access denied",
+        description: "Only employers can hire freelancers",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    setShowHireModal(true);
+  }, [user, profile, toast]);
 
   const handleComment = useCallback(() => {
     if (!user) {
@@ -332,13 +346,40 @@ const OptimizedVideoCard = memo(({ video, isActive, onRefresh, isVisible, isMobi
     }
   }, [user, video, toast, onRefresh]);
 
-  // Memoized computed values
-  const isVideoFromEmployer = (video.user.role || (video.user as any).account_type) === 'employer';
-  const isCurrentUserEmployer = getProfileRole(profile) === 'employer';
-  const displayName = video.user.full_name || video.user.username || `User ${video.user.id.slice(0, 8)}`;
-  const userRole = isVideoFromEmployer ? (video.user.company_name || 'Employer') : 'Job Seeker';
-  const shouldShowHireButton = !isVideoFromEmployer && isCurrentUserEmployer;
-  const isOwnVideo = user && video.user.id === user.id;
+  // Memoized computed values - optimized for performance
+  const isVideoFromEmployer = useMemo(() => 
+    (video.user.role || (video.user as any).account_type) === 'employer',
+    [video.user.role, (video.user as any).account_type]
+  );
+  
+  const isCurrentUserEmployer = useMemo(() => 
+    getProfileRole(profile) === 'employer',
+    [profile]
+  );
+  
+  const displayName = useMemo(() => 
+    video.user.full_name || video.user.username || `User ${video.user.id.slice(0, 8)}`,
+    [video.user.full_name, video.user.username, video.user.id]
+  );
+  
+  const userRole = useMemo(() => 
+    isVideoFromEmployer ? (video.user.company_name || 'Employer') : 'Freelancer',
+    [isVideoFromEmployer, video.user.company_name]
+  );
+  
+  // CRITICAL: Only show hire button if:
+  // 1. Current user is an employer
+  // 2. Video is from a freelancer (not employer)
+  // 3. User is not viewing their own video
+  const shouldShowHireButton = useMemo(() => 
+    isCurrentUserEmployer && !isVideoFromEmployer && user?.id !== video.user.id,
+    [isCurrentUserEmployer, isVideoFromEmployer, user?.id, video.user.id]
+  );
+  
+  const isOwnVideo = useMemo(() => 
+    user && video.user.id === user.id,
+    [user, video.user.id]
+  );
 
   // Validate video URL - must be HTTPS Supabase URL
   const isValidVideoUrl = video.video_url && 
@@ -562,6 +603,19 @@ const OptimizedVideoCard = memo(({ video, isActive, onRefresh, isVisible, isMobi
         isOpen={showComments}
         onClose={() => setShowComments(false)}
         onCommentAdded={handleCommentAdded}
+      />
+
+      {/* Hire Modal */}
+      <HireModal
+        isOpen={showHireModal}
+        onClose={() => setShowHireModal(false)}
+        freelancer={{
+          id: video.user.id,
+          full_name: video.user.full_name,
+          username: video.user.username,
+          avatar_url: video.user.avatar_url,
+          email: video.user.email,
+        }}
       />
     </div>
   );
