@@ -244,50 +244,82 @@ const OptimizedVideoCard = memo(({ video, isActive, onRefresh, isVisible, isMobi
   const userRole = isVideoFromEmployer ? (video.user.company_name || 'Employer') : 'Job Seeker';
   const shouldShowHireButton = !isVideoFromEmployer && isCurrentUserEmployer;
 
-  // Validate video URL
-  const isValidVideoUrl = video.video_url && video.video_url.trim() !== '';
+  // Validate video URL - must be HTTPS Supabase URL
+  const isValidVideoUrl = video.video_url && 
+    video.video_url.trim() !== '' &&
+    (video.video_url.includes('supabase.co') || video.video_url.startsWith('http'));
+
+  // Log video info for debugging
+  useEffect(() => {
+    if (!isValidVideoUrl) {
+      console.warn('[VideoCard] Invalid video URL:', video.video_url, 'for video:', video.id);
+    }
+  }, [video.video_url, video.id, isValidVideoUrl]);
 
   return (
-    <div className="relative w-full h-full bg-black overflow-hidden">
-      {/* Video container with 9:16 aspect ratio */}
-      <div className="absolute inset-0 flex items-center justify-center">
-        {isVisible && isValidVideoUrl && !videoError ? (
-          <video
-            ref={videoRef}
-            src={encodeURI(video.video_url)}
-            controls
-            autoPlay
-            loop
-            muted={isMuted}
-            playsInline
-            onClick={handleVideoClick}
-            preload="none"
-            onLoadedData={() => setVideoLoaded(true)}
-            onError={(e) => {
-              console.warn('Video failed to load:', video.video_url, e);
-              setVideoError(true);
-              // Hide the video element on error
-              e.currentTarget.style.display = 'none';
-            }}
-            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-          />
-        ) : (
-          <div
-            className="w-full h-full bg-center bg-contain bg-no-repeat bg-black"
-            style={{
-              backgroundImage: `url(${video.thumbnail_url})`,
-              aspectRatio: '9/16'
-            }}
-          />
-        )}
-      </div>
-      
-      {/* Enhanced video overlay with glassmorphism */}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent pointer-events-none" />
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-accent/10 pointer-events-none" />
-      
-      {/* Play indicator when paused */}
-      {!isPlaying && (
+  <div className="relative w-full h-full bg-black overflow-hidden">
+    {/* Video container with 9:16 aspect ratio */}
+    <div className="absolute inset-0 flex items-center justify-center">
+      {isVisible && isValidVideoUrl && !videoError ? (
+        <video
+          ref={videoRef}
+          src={video.video_url}
+          controls
+          autoPlay
+          loop
+          muted={isMuted}
+          playsInline
+          onClick={handleVideoClick}
+          preload="none"
+          crossOrigin="anonymous"
+          onLoadedData={() => {
+            console.log('[VideoCard] Video loaded successfully:', video.id);
+            setVideoLoaded(true);
+          }}
+          onError={(e) => {
+            const videoElement = e.currentTarget;
+            console.error('[VideoCard] Video failed to load:', {
+              url: video.video_url,
+              videoId: video.id,
+              error: videoElement.error,
+              networkState: videoElement.networkState,
+              readyState: videoElement.readyState
+            });
+            setVideoError(true);
+            // Hide the video element on error
+            e.currentTarget.style.display = 'none';
+          }}
+          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+        />
+      ) : videoError ? (
+        <div className="w-full h-full flex items-center justify-center">
+          <div className="text-center p-6 glass-card rounded-lg max-w-xs">
+            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-destructive/20 flex items-center justify-center">
+              <svg className="w-8 h-8 text-destructive" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <p className="text-white text-sm font-medium mb-2">Video unavailable</p>
+            <p className="text-white/60 text-xs">This video could not be loaded</p>
+          </div>
+        </div>
+      ) : (
+        <div
+          className="w-full h-full bg-center bg-contain bg-no-repeat bg-black"
+          style={{
+            backgroundImage: video.thumbnail_url ? `url(${video.thumbnail_url})` : 'none',
+            aspectRatio: '9/16'
+          }}
+        />
+      )}
+    </div>
+    
+    {/* Enhanced video overlay with glassmorphism */}
+    <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent pointer-events-none" />
+    <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-accent/10 pointer-events-none" />
+    
+    {/* Play indicator when paused */}
+    {!isPlaying && (
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
           <div className="glass-card rounded-full p-6 animate-fade-in">
             <Play className="w-16 h-16 text-white drop-shadow-[0_0_20px_rgba(255,255,255,0.5)]" fill="white" />

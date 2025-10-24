@@ -125,20 +125,20 @@ export const VideoUploader = ({ onSuccess }: VideoUploaderProps) => {
     const fileName = `${user?.id}/${Date.now()}.mp4`;
 
     try {
-      // Get the upload URL from Supabase
-      const { data, error } = await supabase.storage
+      // Use standard upload with progress tracking via XMLHttpRequest
+      const { data: uploadData, error: uploadError } = await supabase.storage
         .from('videos')
         .createSignedUploadUrl(fileName);
 
-      if (error) {
-        throw error;
+      if (uploadError) {
+        console.error('Failed to create upload URL:', uploadError);
+        throw uploadError;
       }
 
-      // Get session token for authorization
-      const { data: session } = await supabase.auth.getSession();
+      console.log('[Upload] Starting upload for:', fileName);
 
+      // Upload with XMLHttpRequest for progress tracking
       return new Promise((resolve, reject) => {
-        // Upload with XMLHttpRequest for progress tracking
         const xhr = new XMLHttpRequest();
         setCurrentXHR(xhr);
 
@@ -151,33 +151,58 @@ export const VideoUploader = ({ onSuccess }: VideoUploaderProps) => {
           }
         };
 
-        xhr.onload = () => {
+        xhr.onload = async () => {
           if (xhr.status === 200 && !uploadAborted) {
+            console.log('[Upload] Upload completed, verifying file...');
+            
+            // Wait a moment for file to be available
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            // Verify the file exists before returning URL
+            const { data: fileList, error: listError } = await supabase.storage
+              .from('videos')
+              .list(user?.id || '', {
+                search: fileName.split('/')[1]
+              });
+
+            if (listError || !fileList || fileList.length === 0) {
+              console.error('[Upload] File not found after upload:', listError);
+              reject(new Error('Upload succeeded but file not accessible'));
+              return;
+            }
+
             // Get public URL
             const { data: { publicUrl } } = supabase.storage
               .from('videos')
               .getPublicUrl(fileName);
+            
+            console.log('[Upload] Public URL generated:', publicUrl);
             setCurrentXHR(null);
             resolve(publicUrl);
           } else {
-            reject(new Error('Upload failed'));
+            console.error('[Upload] Upload failed with status:', xhr.status);
+            reject(new Error(`Upload failed with status ${xhr.status}`));
           }
         };
 
-        xhr.onerror = () => reject(new Error('Upload failed'));
+        xhr.onerror = () => {
+          console.error('[Upload] Network error during upload');
+          reject(new Error('Network error during upload'));
+        };
 
         xhr.onabort = () => {
+          console.log('[Upload] Upload cancelled by user');
           setCurrentXHR(null);
           reject(new Error('Upload cancelled'));
         };
 
-        // Upload the file with explicit MIME type
-        xhr.open('POST', data.signedUrl);
-        xhr.setRequestHeader('Authorization', `Bearer ${session.session?.access_token}`);
+        // Upload the file
+        xhr.open('PUT', uploadData.signedUrl);
         xhr.setRequestHeader('Content-Type', 'video/mp4');
         xhr.send(file);
       });
     } catch (error) {
+      console.error('[Upload] Error in uploadVideoToStorage:', error);
       throw error;
     }
   };
