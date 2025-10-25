@@ -9,21 +9,25 @@ CREATE TABLE IF NOT EXISTS notifications (
   type TEXT NOT NULL CHECK (type IN ('comment', 'like', 'message', 'follow', 'hire')),
   title TEXT NOT NULL,
   content TEXT,
-  link TEXT, -- URL to navigate when clicked
-  reference_id UUID, -- ID of the related item (comment_id, video_id, etc)
+  link TEXT,
+  reference_id UUID,
   sender_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
   is_read BOOLEAN DEFAULT FALSE,
   created_at TIMESTAMPTZ DEFAULT NOW(),
-  read_at TIMESTAMPTZ,
-  
-  -- Indexes for performance
-  INDEX idx_notifications_user_id ON notifications(user_id),
-  INDEX idx_notifications_created_at ON notifications(created_at DESC),
-  INDEX idx_notifications_is_read ON notifications(is_read)
+  read_at TIMESTAMPTZ
 );
+
+-- Create indexes for performance
+CREATE INDEX IF NOT EXISTS idx_notifications_user_id ON notifications(user_id);
+CREATE INDEX IF NOT EXISTS idx_notifications_created_at ON notifications(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_notifications_is_read ON notifications(is_read);
+CREATE INDEX IF NOT EXISTS idx_notifications_sender ON notifications(sender_id);
 
 -- Enable RLS
 ALTER TABLE notifications ENABLE ROW LEVEL SECURITY;
+
+-- Enable real-time for notifications table
+ALTER PUBLICATION supabase_realtime ADD TABLE notifications;
 
 -- RLS Policies
 -- Users can only see their own notifications

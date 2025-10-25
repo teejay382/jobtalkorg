@@ -2,6 +2,42 @@
 JobTolk - Development Changelog
 ==============================================
 
+[2025-01-25] NOTIFICATION SYSTEM + CHAT NAV FIX
+
+Problem:
+- Notifications not firing (comments, likes, messages)
+- Chat back button not working
+
+Root Cause:
+- Migration file created but NEVER APPLIED to database
+- No notifications table, triggers, or functions existed
+- Chat used only callback, no router integration
+
+Solution:
+1. Fixed migration SQL syntax (indexes)
+2. Added real-time enablement to notifications table
+3. Created notification triggers for comments, likes, messages
+4. Fixed chat back button with navigate(-1)
+5. Added click-to-navigate for notifications
+6. Visual read/unread distinction + mark as read
+
+CRITICAL: Must apply migration first!
+  Supabase Dashboard → SQL Editor → Run migration file
+  File: supabase/migrations/20250125000000_notifications_system.sql
+
+Testing:
+- Use NotificationTester component (src/components/debug/)
+- Two-account test: comment/like/message triggers notification
+- Verify real-time updates (< 1 second)
+
+Files Changed:
+- supabase/migrations/20250125000000_notifications_system.sql (database)
+- src/hooks/useNotifications.ts (real-time subscription)
+- src/components/layout/Header.tsx (UI + navigation)
+- src/components/chat/ChatRoom.tsx (back button fix)
+- src/components/debug/NotificationTester.tsx (testing tool)
+- scripts/setup-notifications.sql (verification)
+
 [2025-01-24] TERSER BUILD FIX
 - Added terser@5.36.0 to devDependencies
 - Fixed Vercel build error: "terser not found"
