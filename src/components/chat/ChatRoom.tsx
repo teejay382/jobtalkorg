@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
-import { Send, MoreVertical } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Send, MoreVertical, ArrowLeft } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -24,10 +25,26 @@ export const ChatRoom = ({ conversationId, otherUser, onBack }: ChatRoomProps) =
   const { messages, sendMessage, fetchMessages, sendTypingIndicator } = useChat();
   const { profile } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [message, setMessage] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout>();
+
+  const handleBack = () => {
+    // Use onBack if provided (for state management in parent)
+    if (onBack) {
+      onBack();
+    }
+    // Also navigate back in history for proper browser integration
+    // Check if there's history to go back to
+    if (window.history.length > 1) {
+      navigate(-1);
+    } else {
+      // Fallback to chat page if no history
+      navigate('/chat');
+    }
+  };
 
   const conversationMessages = messages[conversationId] || [];
 
@@ -86,10 +103,11 @@ export const ChatRoom = ({ conversationId, otherUser, onBack }: ChatRoomProps) =
         <div className="flex items-center justify-between px-4 py-4 max-w-md mx-auto">
           <div className="flex items-center gap-3">
             <button
-              onClick={onBack}
-              className="text-muted-foreground hover:text-foreground"
+              onClick={handleBack}
+              className="p-2 -ml-2 rounded-lg hover:bg-muted/50 transition-colors text-foreground flex items-center justify-center"
+              title="Back to conversations"
             >
-              ←
+              <ArrowLeft className="w-5 h-5" />
             </button>
             <Avatar className="w-10 h-10">
               <AvatarImage src={otherUser.avatar_url} />

@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Bell, Menu, MessageCircle, Heart, MessageSquare } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Bell, Menu, MessageCircle, Heart, MessageSquare, Check, X } from 'lucide-react';
 import logo from '@/assets/logo.png';
 import MobileMenu from './MobileMenu';
 import { useNotifications } from '@/hooks/useNotifications';
@@ -10,13 +11,24 @@ import { Badge } from '@/components/ui/badge';
 
 const Header = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const { unreadCount, notifications, markAsRead } = useNotifications();
+  const { unreadCount, notifications, markAsRead, markAllAsRead, deleteNotification } = useNotifications();
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
+  const navigate = useNavigate();
 
   const handlePopoverOpen = (open: boolean) => {
     setIsPopoverOpen(open);
-    if (open) {
-      markAsRead();
+  };
+
+  const handleNotificationClick = async (notification: any) => {
+    // Mark as read
+    if (!notification.is_read) {
+      await markAsRead(notification.id);
+    }
+    
+    // Navigate to link
+    if (notification.link) {
+      setIsPopoverOpen(false);
+      navigate(notification.link);
     }
   };
 
@@ -70,8 +82,17 @@ const Header = () => {
                 </button>
               </PopoverTrigger>
               <PopoverContent className="w-80 p-0" align="end" sideOffset={8}>
-                <div className="p-4 border-b">
+                <div className="p-4 border-b flex items-center justify-between">
                   <h3 className="font-semibold text-sm">Notifications</h3>
+                  {notifications.length > 0 && (
+                    <button
+                      onClick={() => markAllAsRead()}
+                      className="text-xs text-primary hover:text-primary/80 flex items-center gap-1"
+                    >
+                      <Check className="w-3 h-3" />
+                      Mark all read
+                    </button>
+                  )}
                 </div>
                 <ScrollArea className="h-80">
                   {notifications.length === 0 ? (
@@ -81,20 +102,51 @@ const Header = () => {
                   ) : (
                     <div className="divide-y">
                       {notifications.map((notification) => (
-                        <div key={notification.id} className="p-4 hover:bg-muted/50 transition-colors">
+                        <div 
+                          key={notification.id} 
+                          className={`group relative p-4 transition-colors cursor-pointer ${
+                            notification.is_read 
+                              ? 'hover:bg-muted/30' 
+                              : 'bg-primary/5 hover:bg-primary/10'
+                          }`}
+                          onClick={() => handleNotificationClick(notification)}
+                        >
                           <div className="flex items-start gap-3">
                             <div className="flex-shrink-0 mt-0.5">
-                              {getNotificationIcon(notification.type)}
+                              <div className={`p-1.5 rounded-full ${
+                                notification.is_read 
+                                  ? 'bg-muted' 
+                                  : 'bg-primary/20'
+                              }`}>
+                                {getNotificationIcon(notification.type)}
+                              </div>
                             </div>
                             <div className="flex-1 min-w-0">
-                              <p className="text-sm text-foreground line-clamp-2">
+                              <p className={`text-sm line-clamp-2 ${
+                                notification.is_read 
+                                  ? 'text-muted-foreground' 
+                                  : 'text-foreground font-medium'
+                              }`}>
                                 {notification.content}
                               </p>
                               <p className="text-xs text-muted-foreground mt-1">
                                 {formatTime(notification.created_at)}
                               </p>
                             </div>
+                            {!notification.is_read && (
+                              <div className="w-2 h-2 bg-primary rounded-full flex-shrink-0 mt-2" />
+                            )}
                           </div>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              deleteNotification(notification.id);
+                            }}
+                            className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 p-1 hover:bg-destructive/20 rounded transition-opacity"
+                            title="Delete notification"
+                          >
+                            <X className="w-3 h-3 text-muted-foreground hover:text-destructive" />
+                          </button>
                         </div>
                       ))}
                     </div>

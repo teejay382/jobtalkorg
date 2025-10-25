@@ -1,16 +1,20 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 import { toast } from '@/hooks/use-toast';
 import type { Database } from '@/integrations/supabase/types';
 
-type Notification = {
+export type Notification = {
   id: string;
-  type: 'comment' | 'like' | 'message';
+  type: 'comment' | 'like' | 'message' | 'follow' | 'hire';
+  title: string;
   content: string;
+  link?: string | null;
+  reference_id?: string | null;
+  sender_id?: string | null;
+  is_read: boolean;
   created_at: string;
-  user_id?: string;
-  sender_id?: string;
+  read_at?: string | null;
 };
 
 // Subscribes to comments, likes and messages and triggers UI/browser notifications
@@ -19,180 +23,155 @@ export const useNotifications = () => {
   const [unreadCount, setUnreadCount] = useState(0);
   const [notifications, setNotifications] = useState<Notification[]>([]);
 
-  // Fetch initial notifications
-  useEffect(() => {
+  // Fetch notifications from database
+  const fetchNotifications = useCallback(async () => {
     if (!user) return;
 
-    const fetchNotifications = async () => {
-      try {
-        // Get recent messages
-        const { data: messages } = await supabase
-          .from('messages')
-          .select('id, content, created_at, sender_id')
-          .neq('sender_id', user.id)
-          .gte('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
-          .order('created_at', { ascending: false })
-          .limit(20);
+    try {
+      const { data, error } = await supabase
+        .from('notifications' as any)
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(50);
 
-        // Get recent likes
-        const { data: likes } = await supabase
-          .from('video_likes')
-          .select('id, created_at, user_id')
-          .neq('user_id', user.id)
-          .gte('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
-          .order('created_at', { ascending: false })
-          .limit(20);
+      if (error) throw error;
 
-        // Get recent comments
-        const { data: comments } = await supabase
-          .from('comments')
-          .select('id, content, created_at, user_id')
-          .neq('user_id', user.id)
-          .gte('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
-          .order('created_at', { ascending: false })
-          .limit(20);
-
-        const allNotifications: Notification[] = [
-          ...(messages?.map(msg => ({
-            id: msg.id,
-            type: 'message' as const,
-            content: msg.content || 'New message',
-            created_at: msg.created_at,
-            sender_id: msg.sender_id,
-          })) || []),
-          ...(likes?.map(like => ({
-            id: like.id,
-            type: 'like' as const,
-            content: 'Someone liked your content',
-            created_at: like.created_at,
-            user_id: like.user_id,
-          })) || []),
-          ...(comments?.map(comment => ({
-            id: comment.id,
-            type: 'comment' as const,
-            content: comment.content || 'New comment',
-            created_at: comment.created_at,
-            user_id: comment.user_id,
-          })) || []),
-        ].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-
-        setNotifications(allNotifications);
-        setUnreadCount(Math.min(allNotifications.length, 99));
-      } catch (error) {
-        console.error('Error fetching notifications:', error);
+      if (data) {
+        setNotifications(data as any as Notification[]);
+        const unread = (data as any[]).filter((n: any) => !n.is_read).length;
+        setUnreadCount(Math.min(unread, 99));
       }
-    };
-
-    fetchNotifications();
+    } catch (error) {
+      console.error('Error fetching notifications:', error);
+    }
   }, [user]);
 
+  // Fetch initial notifications
+  useEffect(() => {
+    fetchNotifications();
+  }, [fetchNotifications]);
+
+  // Subscribe to new notifications
   useEffect(() => {
     if (!user) return;
 
-    const commentChannel = supabase
-      .channel('notifications-comments')
+    const channel = supabase
+      .channel('user-notifications')
       .on(
         'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'comments' },
+        { 
+          event: 'INSERT', 
+          schema: 'public', 
+          table: 'notifications',
+          filter: `user_id=eq.${user.id}`
+        },
         (payload) => {
-          const comment = payload.new as Database['public']['Tables']['comments']['Row'];
+          const notification = payload.new as Notification;
           try {
-            if (comment.user_id !== user.id) {
-              const newNotification: Notification = {
-                id: comment.id,
-                type: 'comment',
-                content: comment.content || 'New comment',
-                created_at: comment.created_at,
-                user_id: comment.user_id,
-              };
-              setNotifications(prev => [newNotification, ...prev].slice(0, 50)); // Keep last 50
-              setUnreadCount(prev => Math.min(prev + 1, 99));
-              const text = comment.content || 'New comment';
-              toast({ title: 'New comment', description: text });
-              if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
-                new Notification('New comment', { body: text });
-              }
+            // Add to notifications list
+            setNotifications(prev => [notification, ...prev].slice(0, 50));
+            setUnreadCount(prev => Math.min(prev + 1, 99));
+            
+            // Show toast
+            toast({ 
+              title: notification.title, 
+              description: notification.content 
+            });
+            
+            // Show browser notification
+            if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+              new Notification(notification.title, { 
+                body: notification.content 
+              });
             }
           } catch (e) {
-            // ignore
-          }
-        }
-      )
-      .subscribe();
-
-    const likeChannel = supabase
-      .channel('notifications-likes')
-      .on(
-        'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'video_likes' },
-        (payload) => {
-          const like = payload.new as unknown;
-          try {
-            const userId = (like as { user_id?: string }).user_id;
-            if (userId && userId !== user.id) {
-              const newNotification: Notification = {
-                id: (like as { id: string }).id,
-                type: 'like',
-                content: 'Someone liked your content',
-                created_at: (like as { created_at: string }).created_at,
-                user_id: userId,
-              };
-              setNotifications(prev => [newNotification, ...prev].slice(0, 50));
-              setUnreadCount(prev => Math.min(prev + 1, 99));
-              const text = 'Someone liked your content';
-              toast({ title: 'New like', description: text });
-              if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
-                new Notification('New like', { body: text });
-              }
-            }
-          } catch (e) {
-            // ignore
-          }
-        }
-      )
-      .subscribe();
-
-    const messageChannel = supabase
-      .channel('notifications-messages')
-      .on(
-        'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'messages' },
-        (payload) => {
-          const msg = payload.new as Database['public']['Tables']['messages']['Row'];
-          try {
-            if (msg.sender_id !== user.id) {
-              const newNotification: Notification = {
-                id: msg.id,
-                type: 'message',
-                content: msg.content || 'New message',
-                created_at: msg.created_at,
-                sender_id: msg.sender_id,
-              };
-              setNotifications(prev => [newNotification, ...prev].slice(0, 50));
-              setUnreadCount(prev => Math.min(prev + 1, 99));
-              const text = msg.content || 'New message';
-              toast({ title: 'New message', description: text });
-              if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
-                new Notification('New message', { body: text });
-              }
-            }
-          } catch (e) {
-            // ignore
+            console.error('Error handling notification:', e);
           }
         }
       )
       .subscribe();
 
     return () => {
-      supabase.removeChannel(commentChannel);
-      supabase.removeChannel(likeChannel);
-      supabase.removeChannel(messageChannel);
+      supabase.removeChannel(channel);
     };
   }, [user]);
 
-  const markAsRead = () => {
-    setUnreadCount(0);
-  };
+  // Mark single notification as read
+  const markAsRead = useCallback(async (notificationId: string) => {
+    if (!user) return;
 
-  return { unreadCount, notifications, markAsRead };
+    try {
+      const { error } = await supabase.rpc('mark_notification_read' as any, {
+        notification_id: notificationId
+      });
+
+      if (error) throw error;
+
+      // Update local state
+      setNotifications(prev => 
+        prev.map(n => 
+          n.id === notificationId 
+            ? { ...n, is_read: true, read_at: new Date().toISOString() }
+            : n
+        )
+      );
+      setUnreadCount(prev => Math.max(0, prev - 1));
+    } catch (error) {
+      console.error('Error marking notification as read:', error);
+    }
+  }, [user]);
+
+  // Mark all notifications as read
+  const markAllAsRead = useCallback(async () => {
+    if (!user) return;
+
+    try {
+      const { error } = await supabase.rpc('mark_all_notifications_read' as any);
+
+      if (error) throw error;
+
+      // Update local state
+      const now = new Date().toISOString();
+      setNotifications(prev => 
+        prev.map(n => ({ ...n, is_read: true, read_at: now }))
+      );
+      setUnreadCount(0);
+    } catch (error) {
+      console.error('Error marking all notifications as read:', error);
+    }
+  }, [user]);
+
+  // Delete notification
+  const deleteNotification = useCallback(async (notificationId: string) => {
+    if (!user) return;
+
+    try {
+      const { error } = await supabase
+        .from('notifications' as any)
+        .delete()
+        .eq('id', notificationId)
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+
+      // Update local state
+      setNotifications(prev => prev.filter(n => n.id !== notificationId));
+      setUnreadCount(prev => {
+        const wasUnread = notifications.find(n => n.id === notificationId && !n.is_read);
+        return wasUnread ? Math.max(0, prev - 1) : prev;
+      });
+    } catch (error) {
+      console.error('Error deleting notification:', error);
+    }
+  }, [user, notifications]);
+
+  return { 
+    unreadCount, 
+    notifications, 
+    markAsRead, 
+    markAllAsRead,
+    deleteNotification,
+    refetch: fetchNotifications
+  };
 };
