@@ -9,8 +9,11 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Switch } from '@/components/ui/switch';
+import { Badge } from '@/components/ui/badge';
 import Header from '@/components/layout/Header';
 import BottomNavigation from '@/components/layout/BottomNavigation';
+import { MapPin, Navigation, X } from 'lucide-react';
+import { LOCAL_SERVICE_CATEGORIES } from '@/lib/localServiceCategories';
 
 type FormValues = {
   username: string;
@@ -22,6 +25,11 @@ type FormValues = {
   portfolio: string;
   availability: boolean;
   company_name?: string;
+  service_type?: 'remote' | 'local';
+  location_city?: string;
+  latitude?: number | null;
+  longitude?: number | null;
+  service_categories?: string[];
 };
 
 // Use Profile type for update payloads
@@ -39,7 +47,7 @@ const ProfileSettings: React.FC = () => {
     return 'freelancer';
   };
 
-  const { register, handleSubmit, reset, control } = useForm<FormValues>({
+  const { register, handleSubmit, reset, control, watch, setValue } = useForm<FormValues>({
     defaultValues: {
       username: profileTyped?.username || '',
       full_name: profileTyped?.full_name || '',
@@ -49,7 +57,12 @@ const ProfileSettings: React.FC = () => {
       location: profileTyped?.location || '',
       portfolio: profileTyped?.portfolio || '',
       availability: !!profileTyped?.available,
-      company_name: profileTyped?.company_name || ''
+      company_name: profileTyped?.company_name || '',
+      service_type: (profileTyped?.service_type as 'remote' | 'local' | undefined) || 'remote',
+      location_city: profileTyped?.location_city || '',
+      latitude: profileTyped?.latitude || null,
+      longitude: profileTyped?.longitude || null,
+      service_categories: profileTyped?.service_categories || []
     }
   });
 
@@ -57,6 +70,10 @@ const ProfileSettings: React.FC = () => {
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [companyLogo, setCompanyLogo] = useState<File | null>(null);
   const [saving, setSaving] = useState(false);
+  const [detectingLocation, setDetectingLocation] = useState(false);
+  
+  const watchServiceType = watch('service_type');
+  const watchServiceCategories = watch('service_categories') || [];
 
   const uploadToStorage = async (file: File | null, bucket: string) => {
     if (!file || !user) return null;
@@ -90,7 +107,12 @@ const ProfileSettings: React.FC = () => {
         location: values.location || null,
         portfolio: values.portfolio || null,
         available: !!values.availability,
-        company_name: values.account_type === 'employer' ? values.company_name || null : null
+        company_name: values.account_type === 'employer' ? values.company_name || null : null,
+        service_type: values.service_type || null,
+        location_city: values.location_city || null,
+        latitude: values.latitude || null,
+        longitude: values.longitude || null,
+        service_categories: values.service_categories || null
       };
 
       if (avatarFile) {
@@ -121,7 +143,12 @@ const ProfileSettings: React.FC = () => {
           location: data?.location || values.location,
           portfolio: data?.portfolio || values.portfolio,
           availability: !!(data?.available ?? values.availability),
-          company_name: data?.company_name || values.company_name
+          company_name: data?.company_name || values.company_name,
+          service_type: (data?.service_type as 'remote' | 'local' | undefined) || values.service_type,
+          location_city: data?.location_city || values.location_city,
+          latitude: data?.latitude || values.latitude,
+          longitude: data?.longitude || values.longitude,
+          service_categories: data?.service_categories || values.service_categories
         });
       }
     } catch (err) {
@@ -129,6 +156,64 @@ const ProfileSettings: React.FC = () => {
       toast({ title: 'Error', description: 'Unexpected error saving profile', variant: 'destructive' });
     } finally {
       setSaving(false);
+    }
+  };
+
+  const autoDetectLocation = async () => {
+    setDetectingLocation(true);
+    try {
+      if ('geolocation' in navigator) {
+        navigator.geolocation.getCurrentPosition(
+          async (position) => {
+            const { latitude: lat, longitude: lon } = position.coords;
+            
+            setValue('latitude', lat);
+            setValue('longitude', lon);
+            
+            // Use reverse geocoding to get location name
+            const response = await fetch(
+              `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`
+            );
+            const data = await response.json();
+            
+            const city = data.address.city || data.address.town || data.address.village || '';
+            const country = data.address.country || '';
+            setValue('location_city', `${city}, ${country}`.trim());
+            
+            toast({
+              title: "Location detected!",
+              description: `We found you in ${city}, ${country}`,
+            });
+          },
+          (error) => {
+            console.error('Geolocation error:', error);
+            toast({
+              title: "Couldn't detect location",
+              description: "Please enter your location manually",
+              variant: "destructive"
+            });
+          }
+        );
+      }
+    } catch (error) {
+      console.error('Location detection error:', error);
+    } finally {
+      setDetectingLocation(false);
+    }
+  };
+
+  const toggleServiceCategory = (categoryId: string) => {
+    const current = watchServiceCategories;
+    if (current.includes(categoryId)) {
+      setValue('service_categories', current.filter((c: string) => c !== categoryId));
+    } else if (current.length < 3) {
+      setValue('service_categories', [...current, categoryId]);
+    } else {
+      toast({
+        title: 'Maximum categories reached',
+        description: 'You can select up to 3 service categories',
+        variant: 'destructive'
+      });
     }
   };
 
@@ -221,9 +306,115 @@ const ProfileSettings: React.FC = () => {
               </div>
 
               <div>
-                <Label htmlFor="location">Location</Label>
-                <Input id="location" {...register('location')} />
+                <Label htmlFor="location">Location (General)</Label>
+                <Input id="location" {...register('location')} placeholder="e.g., United States" />
               </div>
+
+              {/* Service Type for Freelancers */}
+              {getProfileRole(profile) === 'freelancer' && (
+                <div>
+                  <Label>Service Type</Label>
+                  <div className="flex gap-2 mt-2">
+                    <label className={`px-3 py-2 rounded-md border cursor-pointer ${watchServiceType === 'remote' ? 'bg-primary text-white' : 'bg-transparent'}`}>
+                      <input type="radio" value="remote" {...register('service_type')} className="hidden" /> Remote
+                    </label>
+                    <label className={`px-3 py-2 rounded-md border cursor-pointer ${watchServiceType === 'local' ? 'bg-primary text-white' : 'bg-transparent'}`}>
+                      <input type="radio" value="local" {...register('service_type')} className="hidden" /> Local Services
+                    </label>
+                  </div>
+                </div>
+              )}
+
+              {/* Location Details for Local Service Providers */}
+              {watchServiceType === 'local' && getProfileRole(profile) === 'freelancer' && (
+                <>
+                  <div>
+                    <Label htmlFor="location_city">Service Location (City) <span className="text-destructive">*</span></Label>
+                    <div className="flex gap-2">
+                      <div className="relative flex-1">
+                        <MapPin className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                        <Input 
+                          id="location_city" 
+                          {...register('location_city')} 
+                          placeholder="e.g., Lagos, Nigeria"
+                          className="pl-10"
+                        />
+                      </div>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={autoDetectLocation}
+                        disabled={detectingLocation}
+                      >
+                        <Navigation className="h-4 w-4 mr-2" />
+                        {detectingLocation ? 'Detecting...' : 'Detect'}
+                      </Button>
+                    </div>
+                    {watch('latitude') && watch('longitude') && (
+                      <p className="text-xs text-green-600 dark:text-green-400 flex items-center gap-1 mt-1">
+                        <MapPin className="h-3 w-3" />
+                        GPS coordinates saved
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <Label>Service Categories (Select up to 3)</Label>
+                    <p className="text-xs text-muted-foreground mb-2">Choose the services you provide</p>
+                    
+                    {/* Selected Categories */}
+                    {watchServiceCategories.length > 0 && (
+                      <div className="flex flex-wrap gap-2 mb-3">
+                        {watchServiceCategories.map((categoryId: string) => {
+                          const category = LOCAL_SERVICE_CATEGORIES.find(c => c.id === categoryId);
+                          if (!category) return null;
+                          const Icon = category.icon;
+                          return (
+                            <Badge 
+                              key={categoryId} 
+                              variant="default"
+                              className="px-3 py-2 text-sm rounded-xl flex items-center gap-2"
+                            >
+                              <Icon className="h-3 w-3" />
+                              {category.label}
+                              <button
+                                type="button"
+                                onClick={() => toggleServiceCategory(categoryId)}
+                                className="hover:text-destructive"
+                              >
+                                <X className="h-3 w-3" />
+                              </button>
+                            </Badge>
+                          );
+                        })}
+                      </div>
+                    )}
+
+                    {/* Available Categories */}
+                    <div className="grid grid-cols-2 gap-2 max-h-64 overflow-y-auto border rounded-lg p-3">
+                      {LOCAL_SERVICE_CATEGORIES
+                        .filter(category => !watchServiceCategories.includes(category.id))
+                        .map((category) => {
+                          const Icon = category.icon;
+                          return (
+                            <button
+                              key={category.id}
+                              type="button"
+                              onClick={() => toggleServiceCategory(category.id)}
+                              disabled={watchServiceCategories.length >= 3}
+                              className="p-3 rounded-lg border hover:border-primary hover:bg-primary/5 transition-all text-left disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              <div className="flex items-center gap-2">
+                                <Icon className="h-4 w-4 text-primary" />
+                                <span className="text-sm font-medium">{category.label}</span>
+                              </div>
+                            </button>
+                          );
+                        })}
+                    </div>
+                  </div>
+                </>
+              )}
 
               <div>
                 <Label htmlFor="portfolio">Portfolio link</Label>

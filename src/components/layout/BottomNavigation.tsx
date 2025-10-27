@@ -1,11 +1,12 @@
 
-import { Home, Search, User, MessageCircle, Plus } from 'lucide-react';
+import { Home, Search, User, MessageCircle, Plus, MapPin } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 
 const BottomNavigation = () => {
   const navItems = [
     { path: '/', icon: Home, label: 'Home' },
     { path: '/search', icon: Search, label: 'Search' },
+    { path: '/local-jobs', icon: MapPin, label: 'Local' },
     { path: '/upload', icon: Plus, label: 'Upload', isSpecial: true },
     { path: '/chat', icon: MessageCircle, label: 'Chat' },
     { path: '/profile', icon: User, label: 'Profile' },

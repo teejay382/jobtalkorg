@@ -25,6 +25,12 @@ export interface Profile {
   portfolio?: string | null;
   available?: boolean | null;
   company_logo?: string | null;
+  // local services fields
+  service_type?: 'remote' | 'local' | null;
+  location_city?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
+  service_categories?: string[] | null;
 }
 
 export const useAuth = () => {

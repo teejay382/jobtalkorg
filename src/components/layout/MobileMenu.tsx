@@ -1,7 +1,7 @@
 
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { X, Home, Search, Plus, MessageCircle, User, Settings, LogOut } from 'lucide-react';
+import { X, Home, Search, Plus, MessageCircle, User, Settings, LogOut, MapPin } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 
 interface MobileMenuProps {
@@ -55,6 +55,14 @@ const MobileMenu = ({ isOpen, onClose }: MobileMenuProps) => {
             >
               <Search className="w-5 h-5" />
               <span>Search</span>
+            </button>
+
+            <button
+              onClick={() => handleNavigation('/local-jobs')}
+              className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-secondary transition-colors"
+            >
+              <MapPin className="w-5 h-5" />
+              <span>Local Services</span>
             </button>
 
             <button

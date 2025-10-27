@@ -167,6 +167,11 @@ export type Database = {
           updated_at: string
           user_id: string
           username: string | null
+          service_type: 'remote' | 'local' | null
+          location_city: string | null
+          latitude: number | null
+          longitude: number | null
+          service_categories: string[] | null
         }
         Insert: {
           account_type?: Database["public"]["Enums"]["account_type"] | null
@@ -183,6 +188,11 @@ export type Database = {
           updated_at?: string
           user_id: string
           username?: string | null
+          service_type?: 'remote' | 'local' | null
+          location_city?: string | null
+          latitude?: number | null
+          longitude?: number | null
+          service_categories?: string[] | null
         }
         Update: {
           account_type?: Database["public"]["Enums"]["account_type"] | null
@@ -199,6 +209,11 @@ export type Database = {
           updated_at?: string
           user_id?: string
           username?: string | null
+          service_type?: 'remote' | 'local' | null
+          location_city?: string | null
+          latitude?: number | null
+          longitude?: number | null
+          service_categories?: string[] | null
         }
         Relationships: []
       }
@@ -326,6 +341,26 @@ export type Database = {
       can_access_sensitive_profile_data: {
         Args: { target_user_id: string }
         Returns: boolean
+      }
+      find_nearby_providers: {
+        Args: {
+          user_lat: number
+          user_lon: number
+          max_distance?: number
+          service_category?: string | null
+        }
+        Returns: {
+          user_id: string
+          username: string | null
+          full_name: string | null
+          avatar_url: string | null
+          bio: string | null
+          service_categories: string[] | null
+          location_city: string | null
+          latitude: number
+          longitude: number
+          distance: number
+        }[]
       }
     }
     Enums: {

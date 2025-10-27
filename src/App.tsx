@@ -26,6 +26,7 @@ const NotFound = lazy(() => import('./pages/NotFound'));
 const LoginPage = lazy(() => import('./pages/LoginPage'));
 const Callback = lazy(() => import('./pages/auth/callback'));
 const OAuthTest = lazy(() => import('./pages/OAuthTest'));
+const LocalJobs = lazy(() => import('./pages/LocalJobs'));
 
 // Lazy-load heavy UI pieces (to reduce initial bundle)
 const Toaster = lazy(() => import('@/components/ui/toaster').then(mod => ({ default: mod.Toaster })));
@@ -130,6 +131,7 @@ const MainApp = () => {
             <Route path="/" element={<Index />} />
             <Route path="/feed" element={<Index />} />
             <Route path="/search" element={<Search />} />
+            <Route path="/local-jobs" element={<LocalJobs />} />
             <Route path="/upload" element={<Upload />} />
             <Route path="/chat" element={<Chat />} />
             <Route path="/profile" element={<Profile />} />
