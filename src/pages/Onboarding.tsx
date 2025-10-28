@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { Video, MapPin, X, Plus, Lightbulb, Briefcase, MapPinned } from 'lucide-react';
+import { MapPin, X, Plus, Briefcase, MapPinned } from 'lucide-react';
 import logoImage from '@/assets/logo.png';
 import { LOCAL_SERVICE_CATEGORIES } from '@/lib/localServiceCategories';
 
@@ -17,8 +17,6 @@ const Onboarding = () => {
   const [role, setRole] = useState<'freelancer' | 'employer' | null>(null);
   const [serviceType, setServiceType] = useState<'remote' | 'local' | null>(null);
   const [bio, setBio] = useState('');
-  const [videoFile, setVideoFile] = useState<File | null>(null);
-  const [videoPreview, setVideoPreview] = useState<string | null>(null);
   const [location, setLocation] = useState('');
   const [latitude, setLatitude] = useState<number | null>(null);
   const [longitude, setLongitude] = useState<number | null>(null);
@@ -108,24 +106,6 @@ const Onboarding = () => {
     }
   };
 
-  const handleVideoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      if (file.size > 50 * 1024 * 1024) { // 50MB limit
-        toast({
-          title: "Video too large",
-          description: "Please upload a video under 50MB",
-          variant: "destructive"
-        });
-        return;
-      }
-      
-      setVideoFile(file);
-      const preview = URL.createObjectURL(file);
-      setVideoPreview(preview);
-    }
-  };
-
   const addSkill = (skill: string) => {
     if (skills.length >= 3) {
       toast({
@@ -158,26 +138,6 @@ const Onboarding = () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
 
-      let videoUrl = null;
-      
-      // Upload video if provided
-      if (videoFile) {
-        const fileExt = videoFile.name.split('.').pop();
-        const fileName = `${session.user.id}-intro-${Date.now()}.${fileExt}`;
-        
-        const { error: uploadError } = await supabase.storage
-          .from('videos')
-          .upload(fileName, videoFile);
-
-        if (uploadError) throw uploadError;
-
-        const { data: { publicUrl } } = supabase.storage
-          .from('videos')
-          .getPublicUrl(fileName);
-        
-        videoUrl = publicUrl;
-      }
-
       // Prepare profile update data
       const profileData: any = {
         bio: bio || null,
@@ -208,17 +168,6 @@ const Onboarding = () => {
         .eq('user_id', session.user.id);
 
       if (updateError) throw updateError;
-
-      // If video was uploaded, create a video record
-      if (videoUrl) {
-        await supabase.from('videos').insert({
-          user_id: session.user.id,
-          title: 'My Introduction',
-          description: bio || 'Introduction video',
-          video_url: videoUrl,
-          tags: serviceType === 'local' ? serviceCategories : skills
-        });
-      }
 
       toast({
         title: "Profile completed! 🎉",
@@ -380,59 +329,6 @@ const Onboarding = () => {
               {bio.length}/150 characters
             </p>
           </div>
-
-          {/* Video Upload Section */}
-          {role === 'freelancer' && (
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label className="text-base font-semibold">
-                  Upload a short intro video 🎥
-                </Label>
-                <div className="flex items-center gap-1 text-xs text-primary">
-                  <Lightbulb className="h-3 w-3" />
-                  <span className="font-medium">Profiles with video get 3x more jobs</span>
-                </div>
-              </div>
-              <p className="text-sm text-muted-foreground mb-3">
-                Record or upload a 30-second video — say your name and what you do
-              </p>
-              
-              {videoPreview ? (
-                <div className="relative rounded-xl overflow-hidden border-2 border-border">
-                  <video 
-                    src={videoPreview} 
-                    controls 
-                    className="w-full h-48 object-cover"
-                  />
-                  <button
-                    onClick={() => {
-                      setVideoFile(null);
-                      setVideoPreview(null);
-                    }}
-                    className="absolute top-2 right-2 p-2 bg-destructive text-destructive-foreground rounded-full hover:bg-destructive/90"
-                  >
-                    <X className="h-4 w-4" />
-                  </button>
-                </div>
-              ) : (
-                <label className="flex flex-col items-center justify-center w-full h-48 border-2 border-dashed border-border rounded-xl cursor-pointer hover:bg-muted/50 transition-all">
-                  <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                    <Video className="h-12 w-12 text-muted-foreground mb-3" />
-                    <p className="mb-2 text-sm text-muted-foreground">
-                      <span className="font-semibold">Click to upload</span> or drag and drop
-                    </p>
-                    <p className="text-xs text-muted-foreground">MP4, MOV up to 50MB</p>
-                  </div>
-                  <input 
-                    type="file" 
-                    className="hidden" 
-                    accept="video/*"
-                    onChange={handleVideoUpload}
-                  />
-                </label>
-              )}
-            </div>
-          )}
 
           {/* Location Section - Required for Local Service Providers */}
           {serviceType === 'local' && (
