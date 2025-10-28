@@ -148,31 +148,44 @@ export const useSearch = () => {
         );
       }
 
-      // Filter by service type (remote/local)
-      if (searchFilters.serviceType && (searchFilters.serviceType === 'remote' || searchFilters.serviceType === 'local')) {
-        query = query.eq('service_type', searchFilters.serviceType as 'remote' | 'local');
-      }
-
-      // Filter by service categories (for local providers)
-      if (searchFilters.serviceCategories && searchFilters.serviceCategories.length > 0) {
-        query = query.overlaps('service_categories', searchFilters.serviceCategories);
-      }
-
       // Filter by skills
       if (searchFilters.skills && searchFilters.skills.length > 0) {
         query = query.overlaps('skills', searchFilters.skills);
       }
 
-      // Filter by location if specified
-      if (searchFilters.location) {
-        query = query.ilike('location_city', `%${searchFilters.location}%`);
+      // Try to apply advanced filters (may fail if columns don't exist)
+      try {
+        // Filter by service type (remote/local)
+        if (searchFilters.serviceType && (searchFilters.serviceType === 'remote' || searchFilters.serviceType === 'local')) {
+          query = query.eq('service_type', searchFilters.serviceType as 'remote' | 'local');
+        }
+
+        // Filter by service categories (for local providers)
+        if (searchFilters.serviceCategories && searchFilters.serviceCategories.length > 0) {
+          query = query.overlaps('service_categories', searchFilters.serviceCategories);
+        }
+
+        // Filter by location if specified
+        if (searchFilters.location) {
+          query = query.ilike('location_city', `%${searchFilters.location}%`);
+        }
+      } catch (filterError) {
+        // Ignore filter errors - columns may not exist yet
+        console.warn('Advanced filters not available:', filterError);
       }
 
       const { data, error } = await query
         .order('created_at', { ascending: false })
         .limit(50);
 
-      if (error) throw error;
+      if (error) {
+        // If error is about unknown columns, show helpful message
+        if (error.message?.includes('column') || error.code === '42703') {
+          console.error('Database migration required. Please run: supabase db push');
+          throw new Error('Please run database migrations to enable local services search');
+        }
+        throw error;
+      }
 
       // Limit videos to 3 per freelancer on client side
       const freelancersWithLimitedVideos = (data || []).map(profile => ({
