@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Slider } from '@/components/ui/slider';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { SearchFilters as SearchFiltersType } from '@/hooks/useSearch';
+import { LOCAL_SERVICE_CATEGORIES } from '@/lib/localServiceCategories';
 
 interface SearchFiltersProps {
   filters: SearchFiltersType;
@@ -66,10 +67,12 @@ export const SearchFilters = ({
   const hasActiveFilters = 
     filters.category || 
     filters.jobType || 
+    filters.serviceType ||
     filters.location || 
     filters.budgetMin || 
     filters.budgetMax ||
-    (filters.skills && filters.skills.length > 0);
+    (filters.skills && filters.skills.length > 0) ||
+    (filters.serviceCategories && filters.serviceCategories.length > 0);
 
   return (
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
@@ -156,6 +159,30 @@ export const SearchFilters = ({
             </div>
           )}
 
+          {/* Freelancer Type Filter (Freelancers only) */}
+          {searchType === 'freelancers' && (
+            <div>
+              <label className="text-sm font-medium text-foreground mb-2 block">
+                Service Type
+              </label>
+              <Select 
+                value={filters.serviceType || 'all'} 
+                onValueChange={(value) => onFiltersChange({ 
+                  serviceType: value === 'all' ? undefined : value 
+                })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select service type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Freelancers</SelectItem>
+                  <SelectItem value="remote">Remote Only</SelectItem>
+                  <SelectItem value="local">Local Services</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
           {/* Location Filter */}
           <div>
             <label className="text-sm font-medium text-foreground mb-2 block">
@@ -168,6 +195,40 @@ export const SearchFilters = ({
               onChange={(e) => onFiltersChange({ location: e.target.value || undefined })}
             />
           </div>
+
+          {/* Local Service Categories (Freelancers with local service type) */}
+          {searchType === 'freelancers' && filters.serviceType === 'local' && (
+            <div>
+              <label className="text-sm font-medium text-foreground mb-2 block">
+                Local Services
+              </label>
+              <div className="flex flex-wrap gap-2 max-h-48 overflow-y-auto">
+                {LOCAL_SERVICE_CATEGORIES.map((category) => {
+                  const isSelected = filters.serviceCategories?.includes(category.id) || false;
+                  return (
+                    <button
+                      key={category.id}
+                      onClick={() => {
+                        const current = filters.serviceCategories || [];
+                        const updated = isSelected
+                          ? current.filter(c => c !== category.id)
+                          : [...current, category.id];
+                        onFiltersChange({ serviceCategories: updated });
+                      }}
+                      className={`px-3 py-1 rounded-full text-xs font-medium transition-colors flex items-center gap-1 ${
+                        isSelected
+                          ? 'bg-primary text-white'
+                          : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
+                      }`}
+                    >
+                      <category.icon className="w-3 h-3" />
+                      {category.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
           {/* Budget Range (Jobs only) */}
           {searchType === 'jobs' && (

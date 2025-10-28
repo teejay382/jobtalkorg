@@ -1,7 +1,7 @@
 
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { X, Home, Search, Plus, MessageCircle, User, Settings, LogOut, MapPin } from 'lucide-react';
+import { X, Settings, LogOut } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 
 interface MobileMenuProps {
@@ -41,56 +41,6 @@ const MobileMenu = ({ isOpen, onClose }: MobileMenuProps) => {
           </div>
 
           <nav className="space-y-2">
-            <button
-              onClick={() => handleNavigation('/')}
-              className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-secondary transition-colors"
-            >
-              <Home className="w-5 h-5" />
-              <span>Home</span>
-            </button>
-
-            <button
-              onClick={() => handleNavigation('/search')}
-              className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-secondary transition-colors"
-            >
-              <Search className="w-5 h-5" />
-              <span>Search</span>
-            </button>
-
-            <button
-              onClick={() => handleNavigation('/local-jobs')}
-              className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-secondary transition-colors"
-            >
-              <MapPin className="w-5 h-5" />
-              <span>Local Services</span>
-            </button>
-
-            <button
-              onClick={() => handleNavigation('/upload')}
-              className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-secondary transition-colors"
-            >
-              <Plus className="w-5 h-5" />
-              <span>Upload Video</span>
-            </button>
-
-            <button
-              onClick={() => handleNavigation('/chat')}
-              className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-secondary transition-colors"
-            >
-              <MessageCircle className="w-5 h-5" />
-              <span>Messages</span>
-            </button>
-
-            <button
-              onClick={() => handleNavigation('/profile')}
-              className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-secondary transition-colors"
-            >
-              <User className="w-5 h-5" />
-              <span>Profile</span>
-            </button>
-
-            <div className="border-t border-border my-4"></div>
-
             <button
               onClick={() => handleNavigation('/settings')}
               className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-secondary transition-colors"

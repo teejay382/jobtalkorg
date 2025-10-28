@@ -33,6 +33,11 @@ export interface FreelancerProfile {
   avatar_url?: string;
   account_type: string;
   company_name?: string;
+  service_type?: 'remote' | 'local' | null;
+  service_categories?: string[];
+  location_city?: string;
+  latitude?: number;
+  longitude?: number;
   videos?: Array<{
     id: string;
     title: string;
@@ -45,10 +50,12 @@ export interface SearchFilters {
   query: string;
   category?: string;
   jobType?: string;
+  serviceType?: string;
   budgetMin?: number;
   budgetMax?: number;
   location?: string;
   skills?: string[];
+  serviceCategories?: string[];
 }
 
 export const useSearch = () => {
@@ -141,9 +148,24 @@ export const useSearch = () => {
         );
       }
 
+      // Filter by service type (remote/local)
+      if (searchFilters.serviceType && (searchFilters.serviceType === 'remote' || searchFilters.serviceType === 'local')) {
+        query = query.eq('service_type', searchFilters.serviceType as 'remote' | 'local');
+      }
+
+      // Filter by service categories (for local providers)
+      if (searchFilters.serviceCategories && searchFilters.serviceCategories.length > 0) {
+        query = query.overlaps('service_categories', searchFilters.serviceCategories);
+      }
+
       // Filter by skills
       if (searchFilters.skills && searchFilters.skills.length > 0) {
         query = query.overlaps('skills', searchFilters.skills);
+      }
+
+      // Filter by location if specified
+      if (searchFilters.location) {
+        query = query.ilike('location_city', `%${searchFilters.location}%`);
       }
 
       const { data, error } = await query
