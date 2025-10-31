@@ -504,7 +504,7 @@ const OptimizedVideoCard = memo(({ video, isActive, onRefresh, isVisible, isMobi
       )}
       
       {/* Right side interactions with neon effects - Medium-small balanced size */}
-      <div className="absolute right-3 bottom-20 md:bottom-24 flex flex-col gap-2.5 md:gap-3 z-20">
+      <div className="absolute right-3 bottom-44 md:bottom-48 flex flex-col gap-2.5 md:gap-3 z-20">
         <div className="flex flex-col items-center gap-1 animate-fade-in">
           <button 
             onClick={handleLike}
@@ -540,7 +540,7 @@ const OptimizedVideoCard = memo(({ video, isActive, onRefresh, isVisible, isMobi
       </div>
       
       {/* Bottom content - Compact username card */}
-      <div className="absolute bottom-0 left-0 right-14 md:right-16 p-2.5 md:p-3 pb-16 md:pb-20 text-white z-10">
+      <div className="absolute bottom-0 left-0 right-14 md:right-16 p-2.5 md:p-3 pb-40 md:pb-44 text-white z-10">
         {/* User info with subtle glassmorphism - more compact and semi-transparent */}
         <div className="inline-flex items-center gap-2 mb-2.5 px-2.5 py-1.5 rounded-lg bg-black/25 backdrop-blur-sm border border-white/5 animate-fade-in max-w-[240px]">
           <Avatar className="w-7 h-7 md:w-8 md:h-8 ring-1 ring-primary/30">

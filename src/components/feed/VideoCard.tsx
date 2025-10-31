@@ -299,7 +299,7 @@ const VideoCard = ({ video, isActive, onRefresh }: VideoCardProps) => {
       </button>
       
       {/* Right side interactions */}
-      <div className="absolute right-4 bottom-32 flex flex-col gap-4 z-10">
+      <div className="absolute right-4 bottom-40 flex flex-col gap-4 z-10">
         <div className="flex flex-col items-center gap-2">
           <button 
             onClick={handleLike}
@@ -342,7 +342,7 @@ const VideoCard = ({ video, isActive, onRefresh }: VideoCardProps) => {
       </div>
       
       {/* Bottom content - positioned higher to be visible above transparent nav */}
-      <div className="absolute bottom-0 left-0 right-20 p-4 pb-28 z-10">
+      <div className="absolute bottom-0 left-0 right-20 p-4 pb-36 z-10">
         {/* User info */}
         <div className="flex items-center gap-3 mb-4">
           <Avatar className="w-12 h-12 border-2 border-white/30">
