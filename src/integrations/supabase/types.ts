@@ -75,9 +75,10 @@ export type Database = {
           description: string
           employer_id: string
           id: string
-          job_type: string | null
+          job_type: string
           location: string | null
           requirements: string[] | null
+          status: string | null
           title: string
           updated_at: string
           video_url: string | null
@@ -91,9 +92,10 @@ export type Database = {
           description: string
           employer_id: string
           id?: string
-          job_type?: string | null
+          job_type?: string
           location?: string | null
           requirements?: string[] | null
+          status?: string | null
           title: string
           updated_at?: string
           video_url?: string | null
@@ -107,9 +109,10 @@ export type Database = {
           description?: string
           employer_id?: string
           id?: string
-          job_type?: string | null
+          job_type?: string
           location?: string | null
           requirements?: string[] | null
+          status?: string | null
           title?: string
           updated_at?: string
           video_url?: string | null
@@ -151,10 +154,47 @@ export type Database = {
           },
         ]
       }
+      notifications: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_read: boolean | null
+          link: string | null
+          message: string | null
+          type: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_read?: boolean | null
+          link?: string | null
+          message?: string | null
+          type?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_read?: boolean | null
+          link?: string | null
+          message?: string | null
+          type?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           account_type: Database["public"]["Enums"]["account_type"] | null
-          role: string | null
           avatar_url: string | null
           bio: string | null
           company_name: string | null
@@ -162,20 +202,20 @@ export type Database = {
           email: string
           full_name: string | null
           id: string
+          latitude: number | null
+          location_city: string | null
+          longitude: number | null
           onboarding_completed: boolean | null
+          role: string | null
+          service_categories: string[] | null
+          service_type: string | null
           skills: string[] | null
           updated_at: string
           user_id: string
           username: string | null
-          service_type: 'remote' | 'local' | null
-          location_city: string | null
-          latitude: number | null
-          longitude: number | null
-          service_categories: string[] | null
         }
         Insert: {
           account_type?: Database["public"]["Enums"]["account_type"] | null
-          role?: string | null
           avatar_url?: string | null
           bio?: string | null
           company_name?: string | null
@@ -183,20 +223,20 @@ export type Database = {
           email: string
           full_name?: string | null
           id?: string
+          latitude?: number | null
+          location_city?: string | null
+          longitude?: number | null
           onboarding_completed?: boolean | null
+          role?: string | null
+          service_categories?: string[] | null
+          service_type?: string | null
           skills?: string[] | null
           updated_at?: string
           user_id: string
           username?: string | null
-          service_type?: 'remote' | 'local' | null
-          location_city?: string | null
-          latitude?: number | null
-          longitude?: number | null
-          service_categories?: string[] | null
         }
         Update: {
           account_type?: Database["public"]["Enums"]["account_type"] | null
-          role?: string | null
           avatar_url?: string | null
           bio?: string | null
           company_name?: string | null
@@ -204,247 +244,17 @@ export type Database = {
           email?: string
           full_name?: string | null
           id?: string
+          latitude?: number | null
+          location_city?: string | null
+          longitude?: number | null
           onboarding_completed?: boolean | null
+          role?: string | null
+          service_categories?: string[] | null
+          service_type?: string | null
           skills?: string[] | null
           updated_at?: string
           user_id?: string
           username?: string | null
-          service_type?: 'remote' | 'local' | null
-          location_city?: string | null
-          latitude?: number | null
-          longitude?: number | null
-          service_categories?: string[] | null
-        }
-        Relationships: []
-      }
-      jobs: {
-        Row: {
-          id: string
-          employer_id: string
-          title: string
-          description: string
-          job_type: 'remote' | 'local' | 'hybrid'
-          required_skills: string[]
-          optional_skills: string[] | null
-          experience_level: 'entry' | 'intermediate' | 'expert' | 'any' | null
-          location_city: string | null
-          latitude: number | null
-          longitude: number | null
-          max_distance_km: number | null
-          pay_rate_min: number | null
-          pay_rate_max: number | null
-          pay_rate_currency: string
-          pay_rate_type: 'hourly' | 'daily' | 'weekly' | 'monthly' | 'fixed' | 'negotiable' | null
-          duration_type: 'one-time' | 'short-term' | 'long-term' | 'permanent' | null
-          urgency_level: 'low' | 'medium' | 'high' | 'urgent' | null
-          service_categories: string[] | null
-          status: 'draft' | 'open' | 'in_progress' | 'filled' | 'closed' | 'cancelled'
-          applications_count: number
-          views_count: number
-          created_at: string
-          updated_at: string
-          expires_at: string | null
-          filled_at: string | null
-        }
-        Insert: {
-          id?: string
-          employer_id: string
-          title: string
-          description: string
-          job_type: 'remote' | 'local' | 'hybrid'
-          required_skills: string[]
-          optional_skills?: string[] | null
-          experience_level?: 'entry' | 'intermediate' | 'expert' | 'any' | null
-          location_city?: string | null
-          latitude?: number | null
-          longitude?: number | null
-          max_distance_km?: number | null
-          pay_rate_min?: number | null
-          pay_rate_max?: number | null
-          pay_rate_currency?: string
-          pay_rate_type?: 'hourly' | 'daily' | 'weekly' | 'monthly' | 'fixed' | 'negotiable' | null
-          duration_type?: 'one-time' | 'short-term' | 'long-term' | 'permanent' | null
-          urgency_level?: 'low' | 'medium' | 'high' | 'urgent' | null
-          service_categories?: string[] | null
-          status?: 'draft' | 'open' | 'in_progress' | 'filled' | 'closed' | 'cancelled'
-          applications_count?: number
-          views_count?: number
-          created_at?: string
-          updated_at?: string
-          expires_at?: string | null
-          filled_at?: string | null
-        }
-        Update: {
-          id?: string
-          employer_id?: string
-          title?: string
-          description?: string
-          job_type?: 'remote' | 'local' | 'hybrid'
-          required_skills?: string[]
-          optional_skills?: string[] | null
-          experience_level?: 'entry' | 'intermediate' | 'expert' | 'any' | null
-          location_city?: string | null
-          latitude?: number | null
-          longitude?: number | null
-          max_distance_km?: number | null
-          pay_rate_min?: number | null
-          pay_rate_max?: number | null
-          pay_rate_currency?: string
-          pay_rate_type?: 'hourly' | 'daily' | 'weekly' | 'monthly' | 'fixed' | 'negotiable' | null
-          duration_type?: 'one-time' | 'short-term' | 'long-term' | 'permanent' | null
-          urgency_level?: 'low' | 'medium' | 'high' | 'urgent' | null
-          service_categories?: string[] | null
-          status?: 'draft' | 'open' | 'in_progress' | 'filled' | 'closed' | 'cancelled'
-          applications_count?: number
-          views_count?: number
-          created_at?: string
-          updated_at?: string
-          expires_at?: string | null
-          filled_at?: string | null
-        }
-        Relationships: []
-      }
-      job_applications: {
-        Row: {
-          id: string
-          job_id: string
-          applicant_id: string
-          cover_letter: string | null
-          proposed_rate: number | null
-          status: 'pending' | 'reviewed' | 'shortlisted' | 'accepted' | 'rejected' | 'withdrawn'
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          job_id: string
-          applicant_id: string
-          cover_letter?: string | null
-          proposed_rate?: number | null
-          status?: 'pending' | 'reviewed' | 'shortlisted' | 'accepted' | 'rejected' | 'withdrawn'
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          job_id?: string
-          applicant_id?: string
-          cover_letter?: string | null
-          proposed_rate?: number | null
-          status?: 'pending' | 'reviewed' | 'shortlisted' | 'accepted' | 'rejected' | 'withdrawn'
-          created_at?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      user_interactions: {
-        Row: {
-          id: string
-          user_id: string
-          target_type: 'job' | 'profile' | 'video'
-          target_id: string
-          interaction_type: 'view' | 'click' | 'apply' | 'save' | 'contact' | 'hire' | 'accept'
-          source: string | null
-          metadata: Record<string, any> | null
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          user_id: string
-          target_type: 'job' | 'profile' | 'video'
-          target_id: string
-          interaction_type: 'view' | 'click' | 'apply' | 'save' | 'contact' | 'hire' | 'accept'
-          source?: string | null
-          metadata?: Record<string, any> | null
-          created_at?: string
-        }
-        Update: {
-          id?: string
-          user_id?: string
-          target_type?: 'job' | 'profile' | 'video'
-          target_id?: string
-          interaction_type?: 'view' | 'click' | 'apply' | 'save' | 'contact' | 'hire' | 'accept'
-          source?: string | null
-          metadata?: Record<string, any> | null
-          created_at?: string
-        }
-        Relationships: []
-      }
-      ratings: {
-        Row: {
-          id: string
-          job_id: string | null
-          rated_user_id: string
-          rater_user_id: string
-          rating: number
-          review_text: string | null
-          communication_rating: number | null
-          quality_rating: number | null
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          job_id?: string | null
-          rated_user_id: string
-          rater_user_id: string
-          rating: number
-          review_text?: string | null
-          communication_rating?: number | null
-          quality_rating?: number | null
-          created_at?: string
-        }
-        Update: {
-          id?: string
-          job_id?: string | null
-          rated_user_id?: string
-          rater_user_id?: string
-          rating?: number
-          review_text?: string | null
-          communication_rating?: number | null
-          quality_rating?: number | null
-          created_at?: string
-        }
-        Relationships: []
-      }
-      user_statistics: {
-        Row: {
-          user_id: string
-          profile_completeness_score: number
-          total_jobs_completed: number
-          total_applications_sent: number
-          response_rate: number
-          avg_rating: number
-          total_ratings: number
-          trust_score: number
-          last_active_at: string | null
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          user_id: string
-          profile_completeness_score?: number
-          total_jobs_completed?: number
-          total_applications_sent?: number
-          response_rate?: number
-          avg_rating?: number
-          total_ratings?: number
-          trust_score?: number
-          last_active_at?: string | null
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          user_id?: string
-          profile_completeness_score?: number
-          total_jobs_completed?: number
-          total_applications_sent?: number
-          response_rate?: number
-          avg_rating?: number
-          total_ratings?: number
-          trust_score?: number
-          last_active_at?: string | null
-          created_at?: string
-          updated_at?: string
         }
         Relationships: []
       }
@@ -522,117 +332,37 @@ export type Database = {
         }
         Relationships: []
       }
-      hires: {
-        Row: {
-          id: string
-          employer_id: string
-          freelancer_id: string
-          status: string
-          created_at: string
-          updated_at: string | null
-        }
-        Insert: {
-          id?: string
-          employer_id: string
-          freelancer_id: string
-          status?: string
-          created_at?: string
-          updated_at?: string | null
-        }
-        Update: {
-          id?: string
-          employer_id?: string
-          freelancer_id?: string
-          status?: string
-          created_at?: string
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "hires_employer_id_fkey"
-            columns: ["employer_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["user_id"]
-          },
-          {
-            foreignKeyName: "hires_freelancer_id_fkey"
-            columns: ["freelancer_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["user_id"]
-          },
-        ]
-      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      calculate_distance: {
+        Args: { lat1: number; lat2: number; lon1: number; lon2: number }
+        Returns: number
+      }
       can_access_sensitive_profile_data: {
         Args: { target_user_id: string }
         Returns: boolean
       }
       find_nearby_providers: {
         Args: {
+          max_distance?: number
+          service_category?: string
           user_lat: number
           user_lon: number
-          max_distance?: number
-          service_category?: string | null
         }
         Returns: {
-          user_id: string
-          username: string | null
-          full_name: string | null
-          avatar_url: string | null
-          bio: string | null
-          service_categories: string[] | null
-          location_city: string | null
-          latitude: number
-          longitude: number
+          avatar_url: string
+          bio: string
           distance: number
-        }[]
-      }
-      find_matches_for_job: {
-        Args: {
-          p_job_id: string
-          p_limit?: number
-        }
-        Returns: {
+          full_name: string
+          latitude: number
+          location_city: string
+          longitude: number
+          service_categories: string[]
           user_id: string
-          username: string | null
-          full_name: string | null
-          avatar_url: string | null
-          bio: string | null
-          skills: string[] | null
-          location_city: string | null
-          avg_rating: number
-          skill_score: number
-          location_score: number
-          reputation_score: number
-          total_score: number
-        }[]
-      }
-      find_matches_for_user: {
-        Args: {
-          p_user_id: string
-          p_limit?: number
-        }
-        Returns: {
-          job_id: string
-          title: string
-          description: string
-          job_type: string
-          required_skills: string[]
-          location_city: string | null
-          pay_rate_min: number | null
-          pay_rate_max: number | null
-          urgency_level: string | null
-          employer_name: string | null
-          created_at: string
-          skill_score: number
-          location_score: number
-          total_score: number
+          username: string
         }[]
       }
     }
