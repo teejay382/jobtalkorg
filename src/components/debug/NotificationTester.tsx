@@ -35,12 +35,15 @@ export const NotificationTester = () => {
           link: '/',
           is_read: false
         })
-        .select()
-        .single();
+        .select();
 
       if (error) throw error;
       
-      setStatus(`✅ Notification created! ID: ${data.id}`);
+      if (data && data.length > 0 && 'id' in data[0]) {
+        setStatus(`✅ Notification created! ID: ${(data[0] as any).id}`);
+      } else {
+        setStatus('✅ Notification created!');
+      }
       setTimeout(() => refetch(), 500);
     } catch (error: any) {
       setStatus(`❌ Error: ${error.message}`);

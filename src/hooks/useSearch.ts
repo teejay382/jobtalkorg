@@ -73,7 +73,7 @@ export const useSearch = () => {
         .from('jobs')
         .select(`
           *,
-          employer:profiles!jobs_employer_id_fkey(
+          employer:profiles!employer_id(
             username,
             company_name,
             avatar_url
@@ -114,7 +114,15 @@ export const useSearch = () => {
 
       if (error) throw error;
 
-      setJobs((data || []) as Job[]);
+      // Transform data to match Job interface, handling employer relation
+      const transformedJobs = (data || []).map(job => ({
+        ...job,
+        employer: job.employer && typeof job.employer === 'object' && !Array.isArray(job.employer) && 'username' in job.employer
+          ? job.employer
+          : undefined
+      }));
+
+      setJobs(transformedJobs as Job[]);
     } catch (error) {
       console.error('Error searching jobs:', error);
       setJobs([]);

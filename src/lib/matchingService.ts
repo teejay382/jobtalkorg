@@ -131,13 +131,6 @@ export async function applyToJob(
     // Track the interaction
     await trackInteraction(applicantId, 'job', jobId, 'apply', 'job_matches');
 
-    // Increment application count
-    await supabase.rpc('increment', {
-      table_name: 'jobs',
-      row_id: jobId,
-      column_name: 'applications_count'
-    });
-
     return { data, error: null };
   } catch (error) {
     console.error('Error applying to job:', error);
@@ -264,49 +257,59 @@ export async function searchJobs(filters: {
   location?: string;
 }) {
   try {
-    let query = supabase
-      .from('jobs')
-      .select(`
-        *,
-        employer:profiles!employer_id(full_name, avatar_url, username)
-      `)
-      .eq('status', 'open')
-      .gt('expires_at', new Date().toISOString());
+    // Build query parameters
+    const filters_list: any[] = [];
+    
+    // Base filters
+    filters_list.push({ column: 'status', operator: 'eq', value: 'open' });
+    filters_list.push({ column: 'expires_at', operator: 'gt', value: new Date().toISOString() });
 
-    // Apply filters
+    // Start with base query
+    const baseQuery = supabase
+      .from('jobs')
+      .select('*');
+
+    // Apply all filters at once
+    let finalQuery = baseQuery;
+    
+    // Status filter
+    finalQuery = finalQuery.eq('status', 'open');
+    finalQuery = finalQuery.gt('expires_at', new Date().toISOString());
+    
+    // Optional filters
     if (filters.jobType) {
-      query = query.eq('job_type', filters.jobType);
+      finalQuery = finalQuery.eq('job_type', filters.jobType);
     }
 
     if (filters.skills && filters.skills.length > 0) {
-      query = query.overlaps('required_skills', filters.skills);
+      finalQuery = finalQuery.overlaps('required_skills' as any, filters.skills);
     }
 
     if (filters.minPay) {
-      query = query.gte('pay_rate_min', filters.minPay);
+      finalQuery = finalQuery.gte('pay_rate_min' as any, filters.minPay);
     }
 
     if (filters.maxPay) {
-      query = query.lte('pay_rate_max', filters.maxPay);
+      finalQuery = finalQuery.lte('pay_rate_max' as any, filters.maxPay);
     }
 
     if (filters.urgencyLevel) {
-      query = query.eq('urgency_level', filters.urgencyLevel);
+      finalQuery = finalQuery.eq('urgency_level' as any, filters.urgencyLevel);
     }
 
     if (filters.location) {
-      query = query.ilike('location_city', `%${filters.location}%`);
+      finalQuery = finalQuery.ilike('location_city' as any, `%${filters.location}%`);
     }
 
-    // Text search on title and description
+    // Text search
     if (filters.query) {
-      query = query.or(`title.ilike.%${filters.query}%,description.ilike.%${filters.query}%`);
+      finalQuery = finalQuery.or(`title.ilike.%${filters.query}%,description.ilike.%${filters.query}%`);
     }
 
-    const { data, error } = await query.order('created_at', { ascending: false });
+    const { data, error } = await finalQuery.order('created_at', { ascending: false });
 
     if (error) throw error;
-    return { data, error: null };
+    return { data: data as any, error: null };
   } catch (error) {
     console.error('Error searching jobs:', error);
     return { data: null, error };
@@ -318,24 +321,28 @@ export async function searchJobs(filters: {
  */
 export async function getJobDetails(jobId: string) {
   try {
-    const { data, error } = await supabase
+    const { data: jobData, error: jobError } = await supabase
       .from('jobs')
-      .select(`
-        *,
-        employer:profiles!employer_id(
-          user_id,
-          full_name,
-          avatar_url,
-          username,
-          bio
-        ),
-        applications:job_applications(count)
-      `)
+      .select('*')
       .eq('id', jobId)
       .single();
 
-    if (error) throw error;
-    return { data, error: null };
+    if (jobError) throw jobError;
+
+    // Fetch employer separately to avoid type issues
+    const { data: employerData } = await supabase
+      .from('profiles')
+      .select('user_id, full_name, avatar_url, username, bio')
+      .eq('user_id', jobData.employer_id)
+      .single();
+
+    return { 
+      data: {
+        ...jobData,
+        employer: employerData
+      }, 
+      error: null 
+    };
   } catch (error) {
     console.error('Error getting job details:', error);
     return { data: null, error };
@@ -349,24 +356,29 @@ export async function getUserApplications(userId: string) {
   try {
     const { data, error } = await supabase
       .from('job_applications')
-      .select(`
-        *,
-        job:jobs(
-          id,
-          title,
-          description,
-          job_type,
-          pay_rate_min,
-          pay_rate_max,
-          status,
-          employer:profiles!employer_id(full_name, avatar_url)
-        )
-      `)
+      .select('*')
       .eq('applicant_id', userId)
       .order('created_at', { ascending: false });
 
     if (error) throw error;
-    return { data, error: null };
+
+    // Fetch job details separately for each application
+    const applicationsWithJobs = await Promise.all(
+      (data || []).map(async (app) => {
+        const { data: jobData } = await supabase
+          .from('jobs')
+          .select('id, title, description, job_type')
+          .eq('id', app.job_id)
+          .single();
+
+        return {
+          ...app,
+          job: jobData
+        };
+      })
+    );
+
+    return { data: applicationsWithJobs, error: null };
   } catch (error) {
     console.error('Error getting applications:', error);
     return { data: null, error };

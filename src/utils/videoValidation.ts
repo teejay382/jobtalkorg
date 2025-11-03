@@ -65,7 +65,7 @@ export const checkVideoCodec = async (file: File): Promise<{isCompatible: boolea
 
       resolve({
         isCompatible: canPlay,
-        codec: video.videoCodec || 'unknown'
+        codec: 'unknown'
       });
     };
 
