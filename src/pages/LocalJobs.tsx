@@ -190,18 +190,28 @@ const LocalJobs = () => {
     }
 
     try {
-      const { error } = await supabase.from('hires').insert({
-        employer_id: user.id,
-        freelancer_id: providerId,
-        status: 'initiated'
-      });
+      // Create or get conversation with provider
+      const { data: existingConvo } = await supabase
+        .from('conversations')
+        .select('id')
+        .or(`and(participant_1.eq.${user.id},participant_2.eq.${providerId})`)
+        .or(`and(participant_1.eq.${providerId},participant_2.eq.${user.id})`)
+        .maybeSingle();
 
-      if (error) throw error;
+      if (!existingConvo) {
+        await supabase.from('conversations').insert({
+          participant_1: user.id,
+          participant_2: providerId
+        });
+      }
 
       toast({
-        title: 'Hire request sent!',
-        description: 'The service provider has been notified'
+        title: 'Contact initiated',
+        description: 'You can now message this provider in the Chat tab.'
       });
+      
+      // Navigate to chat
+      navigate('/chat');
     } catch (error) {
       console.error('Error creating hire:', error);
       toast({

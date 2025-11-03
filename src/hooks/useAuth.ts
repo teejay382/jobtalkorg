@@ -219,7 +219,7 @@ export const useAuth = () => {
       }
     }
 
-  setProfile(data);
+  setProfile(data as any);
   setLoading(false);
 
       // Enrich missing display fields from auth metadata if needed

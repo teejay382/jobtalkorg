@@ -121,32 +121,6 @@ export const ChatRoom = ({ conversationId, otherUser, onBack }: ChatRoomProps) =
             </div>
           </div>
           <div className="flex items-center gap-2">
-            {profile?.role === 'employer' && (
-              <button
-                onClick={async () => {
-                    try {
-                      // Insert a hire record for this employer -> otherUser
-                      const { error } = await supabase.from('hires').insert({
-                        employer_id: user?.id,
-                        freelancer_id: otherUser.id,
-                        status: 'initiated',
-                        created_at: new Date().toISOString()
-                      } as any);
-
-                      if (error) throw error;
-
-                      toast({ title: 'Hire sent', description: 'A hire request was created.' });
-                    } catch (err) {
-                      console.error('Error creating hire:', err);
-                      toast({ title: 'Error', description: 'Failed to create hire.' });
-                    }
-                }}
-                className="px-3 py-1 rounded-md bg-primary text-primary-foreground text-sm"
-              >
-                Hire
-              </button>
-            )}
-
             <button className="w-8 h-8 flex items-center justify-center text-muted-foreground">
               <MoreVertical className="w-5 h-5" />
             </button>
