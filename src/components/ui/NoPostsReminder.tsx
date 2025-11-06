@@ -69,7 +69,7 @@ export const NoPostsReminder = () => {
 
   return (
     <div className="fixed top-20 left-0 right-0 z-40 px-4 animate-slide-down">
-      <div className="max-w-2xl mx-auto glass-card-premium rounded-2xl p-5 border-2 border-primary/20 shadow-glass-strong bg-gradient-to-br from-primary/10 via-accent/5 to-background backdrop-blur-xl">
+      <div className="max-w-2xl mx-auto glass-card-premium rounded-2xl p-6 border-2 border-primary/30 shadow-glass-strong bg-gradient-to-br from-background/95 via-background/90 to-background/95 backdrop-blur-xl">
         <div className="flex items-start gap-4">
           <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center shrink-0 shadow-glow">
             <Sparkles className="w-6 h-6 text-white" />
@@ -77,10 +77,10 @@ export const NoPostsReminder = () => {
           
           <div className="flex-1 space-y-3">
             <div>
-              <h3 className="font-bold text-lg text-foreground mb-1">
+              <h3 className="font-extrabold text-xl md:text-2xl text-foreground mb-2 leading-tight">
                 Clients can't find you yet 👀
               </h3>
-              <p className="text-sm text-muted-foreground leading-relaxed">
+              <p className="text-base md:text-lg text-foreground/90 leading-relaxed font-medium">
                 Your profile is invisible in search until you upload your first work. 
                 Show what you can do to start getting hired!
               </p>
