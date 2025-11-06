@@ -243,11 +243,29 @@ const Onboarding = () => {
               {!serviceType && role === 'freelancer'
                 ? 'Do you work remotely or provide local services?'
                 : role === 'freelancer' 
-                  ? 'Let people see what you can do'
+                  ? 'Let clients see what you can do'
                   : 'Tell us about your company and what you need'
               }
             </CardDescription>
           </div>
+          
+          {/* Portfolio Helper - Show after service type is selected */}
+          {serviceType && role === 'freelancer' && (
+            <div className="glass-card-premium rounded-2xl p-4 border-2 border-primary/20 bg-gradient-to-br from-primary/5 to-accent/5 animate-fade-in">
+              <div className="flex items-start gap-3">
+                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                  <span className="text-xl">💡</span>
+                </div>
+                <div className="space-y-2 text-sm">
+                  <p className="font-semibold text-foreground">Think of your first post as your portfolio, not a video.</p>
+                  <p className="text-muted-foreground leading-relaxed">
+                    Upload a short clip or photo that proves your skill — like your best haircut, your logo design, or a project you built.
+                  </p>
+                  <p className="text-primary text-xs font-medium">💪 Clients hire based on what they see, not what you say.</p>
+                </div>
+              </div>
+            </div>
+          )}
           
           {/* Progress Bar */}
           <div className="space-y-2">
@@ -554,7 +572,7 @@ const Onboarding = () => {
             disabled={!canProceed() || loading}
             className="w-full h-12 rounded-xl text-base font-semibold shadow-medium"
           >
-            {loading ? 'Setting up...' : "Done — Let's find work"}
+            {loading ? 'Setting up...' : role === 'freelancer' ? "Done — Show your work" : "Done — Let's find talent"}
           </Button>
           </>
           )}

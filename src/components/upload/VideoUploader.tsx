@@ -33,10 +33,34 @@ export const VideoUploader = ({ onSuccess }: VideoUploaderProps) => {
   const [uploadComplete, setUploadComplete] = useState(false);
   const [uploadAborted, setUploadAborted] = useState(false);
   const [currentXHR, setCurrentXHR] = useState<XMLHttpRequest | null>(null);
+  const [isFirstPost, setIsFirstPost] = useState(false);
+  const [templateApplied, setTemplateApplied] = useState(false);
 
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const { toast } = useToast();
   const { addUpload, updateUpload, removeUpload } = useUploadContext();
+
+  // Check if this is user's first post
+  useEffect(() => {
+    const checkFirstPost = async () => {
+      if (!user) return;
+      
+      try {
+        const { data, error } = await supabase
+          .from('videos')
+          .select('id')
+          .eq('user_id', user.id)
+          .limit(1);
+        
+        if (error) throw error;
+        setIsFirstPost(!data || data.length === 0);
+      } catch (error) {
+        console.error('Error checking first post:', error);
+      }
+    };
+    
+    checkFirstPost();
+  }, [user]);
 
   // Cleanup blob URL on unmount to prevent memory leak
   useEffect(() => {
@@ -77,6 +101,15 @@ export const VideoUploader = ({ onSuccess }: VideoUploaderProps) => {
 
     setVideoFile(file);
     setVideoPreviewUrl(URL.createObjectURL(file));
+    
+    // Apply template for first post
+    if (isFirstPost && !templateApplied && profile) {
+      const userSkill = profile.skills?.[0] || profile.service_categories?.[0] || 'my skill';
+      const templateDescription = `Hi, I'm a ${userSkill}. I help people with ${userSkill.toLowerCase()} services.`;
+      setDescription(templateDescription);
+      setTemplateApplied(true);
+    }
+    
     setStep(2);
 
     // Generate thumbnail
@@ -425,9 +458,31 @@ export const VideoUploader = ({ onSuccess }: VideoUploaderProps) => {
     return (
       <div className="space-y-6">
         <div className="text-center mb-8">
-          <h1 className="text-2xl font-bold text-foreground mb-2">Share Your Story</h1>
-          <p className="text-muted-foreground">Upload a video to showcase your skills or job opening</p>
+          <h1 className="text-2xl font-bold text-foreground mb-2">{isFirstPost ? 'Show What You Can Do' : 'Upload Your Work'}</h1>
+          <p className="text-muted-foreground">
+            {isFirstPost 
+              ? 'Upload a clip or photo that proves your skill — this is your portfolio'
+              : 'Share your latest work to attract more clients'
+            }
+          </p>
         </div>
+
+        {/* First Post Helper */}
+        {isFirstPost && (
+          <div className="glass-card-premium rounded-2xl p-4 border-2 border-primary/20 bg-gradient-to-br from-primary/5 to-accent/5">
+            <div className="flex items-start gap-3">
+              <span className="text-2xl">💪</span>
+              <div className="space-y-1.5 text-sm">
+                <p className="font-semibold text-foreground">Your first upload is your portfolio</p>
+                <ul className="text-muted-foreground space-y-1 text-xs leading-relaxed">
+                  <li>• Show your best work, not just any video</li>
+                  <li>• Clients hire based on what they see</li>
+                  <li>• Keep it short and focused (30-60 seconds)</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Upload area */}
         <div className="upload-area">
@@ -478,12 +533,23 @@ export const VideoUploader = ({ onSuccess }: VideoUploaderProps) => {
 
         {/* Tips */}
         <div className="bg-card rounded-xl p-4 border border-border">
-          <h4 className="font-semibold text-foreground mb-2">Tips for great videos:</h4>
+          <h4 className="font-semibold text-foreground mb-2">{isFirstPost ? 'First post tips:' : 'Tips for great content:'}</h4>
           <ul className="text-sm text-muted-foreground space-y-1">
-            <li>• Keep it under 60 seconds</li>
-            <li>• Show your work or explain your skills</li>
-            <li>• Use good lighting and clear audio</li>
-            <li>• Be authentic and engaging</li>
+            {isFirstPost ? (
+              <>
+                <li>• Show a finished project or your best work</li>
+                <li>• Use your top skill as the focus</li>
+                <li>• Keep it clear and professional</li>
+                <li>• Add good lighting if filming</li>
+              </>
+            ) : (
+              <>
+                <li>• Keep it under 60 seconds</li>
+                <li>• Show your work or explain your skills</li>
+                <li>• Use good lighting and clear audio</li>
+                <li>• Be authentic and engaging</li>
+              </>
+            )}
           </ul>
         </div>
       </div>
@@ -625,14 +691,40 @@ export const VideoUploader = ({ onSuccess }: VideoUploaderProps) => {
         </div>
 
         <div>
-          <Label htmlFor="description">Description</Label>
+          <div className="flex items-center justify-between mb-2">
+            <Label htmlFor="description">Description</Label>
+            {isFirstPost && !templateApplied && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  const userSkill = profile?.skills?.[0] || profile?.service_categories?.[0] || 'my skill';
+                  const templateDescription = `Hi, I'm a ${userSkill}. I help people with ${userSkill.toLowerCase()} services.`;
+                  setDescription(templateDescription);
+                  setTemplateApplied(true);
+                }}
+                className="text-xs text-primary hover:text-primary/80"
+              >
+                Use template
+              </Button>
+            )}
+          </div>
           <Textarea
             id="description"
-            placeholder="Describe your skills, experience, or job requirements..."
+            placeholder={isFirstPost 
+              ? "e.g., Hi, I'm a graphic designer. I help people with logo and branding design."
+              : "Describe your skills, experience, or job requirements..."
+            }
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             rows={4}
           />
+          {isFirstPost && (
+            <p className="text-xs text-muted-foreground mt-1">
+              💡 Keep it simple and focused on what you do
+            </p>
+          )}
         </div>
 
         <div>

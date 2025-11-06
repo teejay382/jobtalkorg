@@ -235,7 +235,7 @@ const Auth = () => {
                     <div className="flex-1">
                       <h3 className="font-bold text-lg mb-1">👷 I'm a Freelancer</h3>
                       <p className="text-sm text-muted-foreground">
-                        Post videos showcasing my skills and get hired by employers
+                        Show what I can do and get hired by employers
                       </p>
                     </div>
                   </div>

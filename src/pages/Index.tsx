@@ -7,6 +7,7 @@ import VideoFeed from '@/components/feed/VideoFeed';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { NoPostsReminder } from '@/components/ui/NoPostsReminder';
 import logoImage from '@/assets/logo.png';
 
 const Index = () => {
@@ -66,7 +67,7 @@ const Index = () => {
                 </h2>
                 <p className="text-muted-foreground">
                   You're all set. {profile?.role === 'freelancer' 
-                    ? 'Post your first skill or start browsing jobs near you.' 
+                    ? 'Show what you can do or find jobs near you.' 
                     : 'Start finding talented people for your projects.'}
                 </p>
                 <div className="flex flex-wrap gap-3 pt-2">
@@ -85,7 +86,7 @@ const Index = () => {
                         size="sm"
                         className="rounded-xl"
                       >
-                        Post My Skill
+                        Upload Your Work
                       </Button>
                     </>
                   ) : (
@@ -103,7 +104,7 @@ const Index = () => {
                         size="sm"
                         className="rounded-xl"
                       >
-                        Post a Job
+                        Share a Job
                       </Button>
                     </>
                   )}
@@ -124,6 +125,9 @@ const Index = () => {
       <div className="hidden md:block absolute top-0 left-0 right-0 z-40">
         <Header />
       </div>
+
+      {/* No Posts Reminder - only for freelancers without content */}
+      <NoPostsReminder />
 
       {/* Main content - full screen feed */}
       <main className="w-full h-full">
