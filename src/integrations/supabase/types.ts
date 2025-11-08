@@ -65,8 +65,40 @@ export type Database = {
         }
         Relationships: []
       }
+      engagements: {
+        Row: {
+          action_type: string
+          created_at: string | null
+          duration_seconds: number | null
+          id: string
+          target_id: string
+          target_type: string
+          user_id: string
+        }
+        Insert: {
+          action_type: string
+          created_at?: string | null
+          duration_seconds?: number | null
+          id?: string
+          target_id: string
+          target_type: string
+          user_id: string
+        }
+        Update: {
+          action_type?: string
+          created_at?: string | null
+          duration_seconds?: number | null
+          id?: string
+          target_id?: string
+          target_type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       jobs: {
         Row: {
+          applicant_count: number | null
+          boost_until: string | null
           budget_max: number | null
           budget_min: number | null
           category: string | null
@@ -74,16 +106,22 @@ export type Database = {
           deadline: string | null
           description: string
           employer_id: string
+          filled_at: string | null
           id: string
           job_type: string
           location: string | null
           requirements: string[] | null
+          skill_embedding: string | null
           status: string | null
           title: string
           updated_at: string
+          urgency_level: string | null
           video_url: string | null
+          views_count: number | null
         }
         Insert: {
+          applicant_count?: number | null
+          boost_until?: string | null
           budget_max?: number | null
           budget_min?: number | null
           category?: string | null
@@ -91,16 +129,22 @@ export type Database = {
           deadline?: string | null
           description: string
           employer_id: string
+          filled_at?: string | null
           id?: string
           job_type?: string
           location?: string | null
           requirements?: string[] | null
+          skill_embedding?: string | null
           status?: string | null
           title: string
           updated_at?: string
+          urgency_level?: string | null
           video_url?: string | null
+          views_count?: number | null
         }
         Update: {
+          applicant_count?: number | null
+          boost_until?: string | null
           budget_max?: number | null
           budget_min?: number | null
           category?: string | null
@@ -108,16 +152,73 @@ export type Database = {
           deadline?: string | null
           description?: string
           employer_id?: string
+          filled_at?: string | null
           id?: string
           job_type?: string
           location?: string | null
           requirements?: string[] | null
+          skill_embedding?: string | null
           status?: string | null
           title?: string
           updated_at?: string
+          urgency_level?: string | null
           video_url?: string | null
+          views_count?: number | null
         }
         Relationships: []
+      }
+      matches: {
+        Row: {
+          created_at: string | null
+          credibility_score: number | null
+          engagement_score: number | null
+          explanation: Json | null
+          freelancer_id: string
+          id: string
+          job_id: string
+          match_score: number
+          recency_boost: number | null
+          skill_match_score: number | null
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          credibility_score?: number | null
+          engagement_score?: number | null
+          explanation?: Json | null
+          freelancer_id: string
+          id?: string
+          job_id: string
+          match_score: number
+          recency_boost?: number | null
+          skill_match_score?: number | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          credibility_score?: number | null
+          engagement_score?: number | null
+          explanation?: Json | null
+          freelancer_id?: string
+          id?: string
+          job_id?: string
+          match_score?: number
+          recency_boost?: number | null
+          skill_match_score?: number | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "matches_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       messages: {
         Row: {
@@ -198,63 +299,123 @@ export type Database = {
           avatar_url: string | null
           bio: string | null
           company_name: string | null
+          completion_rate: number | null
           created_at: string
+          credibility_score: number | null
           email: string
+          engagement_score: number | null
           full_name: string | null
           id: string
+          jts_score: number | null
+          last_active_at: string | null
           latitude: number | null
           location_city: string | null
           longitude: number | null
           onboarding_completed: boolean | null
+          response_time_avg: number | null
           role: string | null
           service_categories: string[] | null
           service_type: string | null
+          skill_embedding: string | null
           skills: string[] | null
+          total_engagements: number | null
+          total_views: number | null
           updated_at: string
           user_id: string
           username: string | null
+          verified_at: string | null
         }
         Insert: {
           account_type?: Database["public"]["Enums"]["account_type"] | null
           avatar_url?: string | null
           bio?: string | null
           company_name?: string | null
+          completion_rate?: number | null
           created_at?: string
+          credibility_score?: number | null
           email: string
+          engagement_score?: number | null
           full_name?: string | null
           id?: string
+          jts_score?: number | null
+          last_active_at?: string | null
           latitude?: number | null
           location_city?: string | null
           longitude?: number | null
           onboarding_completed?: boolean | null
+          response_time_avg?: number | null
           role?: string | null
           service_categories?: string[] | null
           service_type?: string | null
+          skill_embedding?: string | null
           skills?: string[] | null
+          total_engagements?: number | null
+          total_views?: number | null
           updated_at?: string
           user_id: string
           username?: string | null
+          verified_at?: string | null
         }
         Update: {
           account_type?: Database["public"]["Enums"]["account_type"] | null
           avatar_url?: string | null
           bio?: string | null
           company_name?: string | null
+          completion_rate?: number | null
           created_at?: string
+          credibility_score?: number | null
           email?: string
+          engagement_score?: number | null
           full_name?: string | null
           id?: string
+          jts_score?: number | null
+          last_active_at?: string | null
           latitude?: number | null
           location_city?: string | null
           longitude?: number | null
           onboarding_completed?: boolean | null
+          response_time_avg?: number | null
           role?: string | null
           service_categories?: string[] | null
           service_type?: string | null
+          skill_embedding?: string | null
           skills?: string[] | null
+          total_engagements?: number | null
+          total_views?: number | null
           updated_at?: string
           user_id?: string
           username?: string | null
+          verified_at?: string | null
+        }
+        Relationships: []
+      }
+      skill_taxonomy: {
+        Row: {
+          category: string
+          created_at: string | null
+          id: string
+          parent_skill: string | null
+          skill_embedding: string | null
+          skill_name: string
+          synonyms: string[] | null
+        }
+        Insert: {
+          category: string
+          created_at?: string | null
+          id?: string
+          parent_skill?: string | null
+          skill_embedding?: string | null
+          skill_name: string
+          synonyms?: string[] | null
+        }
+        Update: {
+          category?: string
+          created_at?: string | null
+          id?: string
+          parent_skill?: string | null
+          skill_embedding?: string | null
+          skill_name?: string
+          synonyms?: string[] | null
         }
         Relationships: []
       }
@@ -341,6 +502,15 @@ export type Database = {
         Args: { lat1: number; lat2: number; lon1: number; lon2: number }
         Returns: number
       }
+      calculate_skill_match_simple: {
+        Args: {
+          freelancer_categories: string[]
+          freelancer_skills: string[]
+          job_category: string
+          job_requirements: string[]
+        }
+        Returns: number
+      }
       can_access_sensitive_profile_data: {
         Args: { target_user_id: string }
         Returns: boolean
@@ -365,6 +535,25 @@ export type Database = {
           username: string
         }[]
       }
+      track_engagement: {
+        Args: {
+          p_action_type: string
+          p_duration_seconds?: number
+          p_target_id: string
+          p_target_type: string
+          p_user_id: string
+        }
+        Returns: string
+      }
+      update_credibility_score: {
+        Args: { target_user_id: string }
+        Returns: undefined
+      }
+      update_engagement_score: {
+        Args: { target_user_id: string }
+        Returns: undefined
+      }
+      update_jts_score: { Args: { target_user_id: string }; Returns: undefined }
     }
     Enums: {
       account_type: "freelancer" | "employer"
