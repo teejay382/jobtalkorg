@@ -63,7 +63,7 @@ const Search = () => {
       <main className="pt-20 pb-20 px-4 max-w-4xl mx-auto animate-fade-in">
         {/* Search Header */}
         <div className="mb-6">
-          <h1 className="text-2xl font-bold bg-gradient-to-r from-foreground via-primary to-accent bg-clip-text text-transparent mb-4">
+          <h1 className="text-2xl font-bold bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent mb-4">
             Find Your Perfect {activeTab === 'jobs' ? 'Job' : 'Freelancer'}
           </h1>
           
@@ -120,15 +120,15 @@ const Search = () => {
           )}
 
           {!loading && !hasSearched && (
-            <div className="text-center py-12">
-              <SearchIcon className="w-16 h-16 text-muted-foreground mx-auto mb-4 opacity-50" />
-              <h3 className="text-lg font-semibold text-foreground mb-2">
-                Start Your Search
-              </h3>
-              <p className="text-muted-foreground">
-                Enter keywords to find {activeTab === 'jobs' ? 'job opportunities' : 'talented freelancers'}
-              </p>
-            </div>
+          <div className="text-center py-12">
+            <SearchIcon className="w-16 h-16 text-muted-foreground mx-auto mb-4 opacity-50" />
+            <h3 className="text-lg font-semibold text-foreground mb-2">
+              Start Your Search
+            </h3>
+            <p className="text-muted-foreground">
+              Enter keywords to find {activeTab === 'jobs' ? 'amazing opportunities' : 'talented freelancers'}
+            </p>
+          </div>
           )}
 
           {!loading && hasSearched && !hasResults && (
@@ -140,11 +140,11 @@ const Search = () => {
                 No Results Found
               </h3>
               <p className="text-muted-foreground mb-4">
-                Try adjusting your search terms or filters
+                Try different keywords or adjust your filters
               </p>
               <button
                 onClick={clearFilters}
-                className="text-primary hover:text-primary/80 font-medium"
+                className="text-primary hover:text-primary/80 font-medium transition-colors"
               >
                 Clear all filters
               </button>

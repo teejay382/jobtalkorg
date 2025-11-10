@@ -49,7 +49,10 @@ const Index = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+        <div className="relative">
+          <div className="animate-spin rounded-full h-16 w-16 border-4 border-primary/30 border-t-primary" style={{ boxShadow: "0 0 30px hsl(var(--primary) / 0.5)" }} />
+          <div className="absolute inset-0 rounded-full bg-gradient-to-r from-primary/20 to-accent/20 animate-pulse" style={{ filter: "blur(12px)" }} />
+        </div>
       </div>
     );
   }
@@ -66,10 +69,10 @@ const Index = () => {
                   Welcome, {profile?.full_name || profile?.username}! 🚀
                 </h2>
                 <p className="text-muted-foreground">
-                  You're all set. {profile?.role === 'freelancer' 
-                    ? 'Show what you can do or find jobs near you.' 
-                    : 'Start finding talented people for your projects.'}
-                </p>
+                   You're all set! {profile?.role === 'freelancer' 
+                     ? 'Showcase your skills or find jobs near you.' 
+                     : 'Start finding talented people for your projects.'}
+                 </p>
                 <div className="flex flex-wrap gap-3 pt-2">
                   {profile?.role === 'freelancer' ? (
                     <>

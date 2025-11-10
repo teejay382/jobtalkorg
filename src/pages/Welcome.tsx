@@ -30,7 +30,7 @@ const Welcome = () => {
           <div className="flex items-center justify-center gap-2">
             <Sparkles className="w-5 h-5 text-accent animate-pulse" />
             <p className="text-xl md:text-2xl text-muted-foreground font-medium">
-              Find work. Show your skill.
+              Find work. Show your skills.
             </p>
             <Sparkles className="w-5 h-5 text-primary animate-pulse" />
           </div>

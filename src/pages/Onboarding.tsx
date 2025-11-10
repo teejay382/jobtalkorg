@@ -237,7 +237,7 @@ const Onboarding = () => {
           </div>
           <div className="space-y-2">
             <CardTitle className="text-3xl font-bold">
-              {!serviceType && role === 'freelancer' ? 'Choose your work style 🚀' : 'Show who you are 💪'}
+              {!serviceType && role === 'freelancer' ? 'Choose Your Work Style 🚀' : 'Show Who You Are 💪'}
             </CardTitle>
             <CardDescription className="text-base">
               {!serviceType && role === 'freelancer'
@@ -256,13 +256,13 @@ const Onboarding = () => {
                 <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
                   <span className="text-xl">💡</span>
                 </div>
-                <div className="space-y-2 text-sm">
-                  <p className="font-semibold text-foreground">Think of your first post as your portfolio, not a video.</p>
-                  <p className="text-muted-foreground leading-relaxed">
-                    Upload a short clip or photo that proves your skill — like your best haircut, your logo design, or a project you built.
-                  </p>
-                  <p className="text-primary text-xs font-medium">💪 Clients hire based on what they see, not what you say.</p>
-                </div>
+                 <div className="space-y-2 text-sm">
+                   <p className="font-semibold text-foreground">Think of your first post as your portfolio, not a video.</p>
+                   <p className="text-muted-foreground leading-relaxed">
+                     Upload a short clip or photo that proves your skills — like your best haircut, your logo design, or a project you built.
+                   </p>
+                   <p className="text-primary text-xs font-medium">💪 Clients hire based on what they see, not what you say.</p>
+                 </div>
               </div>
             </div>
           )}
@@ -572,7 +572,7 @@ const Onboarding = () => {
             disabled={!canProceed() || loading}
             className="w-full h-12 rounded-xl text-base font-semibold shadow-medium"
           >
-            {loading ? 'Setting up...' : role === 'freelancer' ? "Done — Show your work" : "Done — Let's find talent"}
+            {loading ? 'Completing Profile...' : role === 'freelancer' ? "Complete — Start Showcasing" : "Complete — Start Hiring"}
           </Button>
           </>
           )}

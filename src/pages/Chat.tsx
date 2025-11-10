@@ -132,8 +132,8 @@ const Chat = () => {
       <Header />
       
       <main className="pt-20 pb-20 px-4 max-w-md mx-auto animate-fade-in">
-        <div className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl font-bold bg-gradient-to-r from-foreground to-primary bg-clip-text text-transparent">Messages</h1>
+         <div className="flex items-center justify-between mb-6">
+           <h1 className="text-2xl font-bold bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent">Messages</h1>
           <button className="w-10 h-10 rounded-full glass-card-premium border border-primary/20 flex items-center justify-center hover:shadow-soft transition-all duration-300 hover:scale-105 active:scale-95 group">
             <Search className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors" />
           </button>
@@ -150,10 +150,10 @@ const Chat = () => {
               <p className="text-sm font-medium text-muted-foreground animate-pulse">Loading conversations...</p>
             </div>
           ) : conversations.length === 0 ? (
-            <div className="text-center py-8">
-              <p className="text-muted-foreground">No conversations yet</p>
-              <p className="text-sm text-muted-foreground mt-1">Start chatting by messaging someone!</p>
-            </div>
+          <div className="text-center py-8">
+            <p className="text-muted-foreground">No conversations yet</p>
+            <p className="text-sm text-muted-foreground mt-1">Start chatting with someone to begin!</p>
+          </div>
           ) : (
             conversations.map((conv) => (
               <button

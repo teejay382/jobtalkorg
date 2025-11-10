@@ -233,10 +233,10 @@ const Auth = () => {
                       <User className="h-6 w-6 text-primary" />
                     </div>
                     <div className="flex-1">
-                      <h3 className="font-bold text-lg mb-1">👷 I'm a Freelancer</h3>
-                      <p className="text-sm text-muted-foreground">
-                        Show what I can do and get hired by employers
-                      </p>
+                       <h3 className="font-bold text-lg mb-1">👷 I'm a Freelancer</h3>
+                       <p className="text-sm text-muted-foreground">
+                         Showcase your skills and get hired by employers
+                       </p>
                     </div>
                   </div>
                 </button>
@@ -255,10 +255,10 @@ const Auth = () => {
                       <Building2 className="h-6 w-6 text-primary" />
                     </div>
                     <div className="flex-1">
-                      <h3 className="font-bold text-lg mb-1">💼 I'm an Employer</h3>
-                      <p className="text-sm text-muted-foreground">
-                        Discover talented freelancers through their work videos and hire them
-                      </p>
+                       <h3 className="font-bold text-lg mb-1">💼 I'm an Employer</h3>
+                       <p className="text-sm text-muted-foreground">
+                         Discover talented freelancers and hire the right fit
+                       </p>
                     </div>
                   </div>
                 </button>
@@ -364,7 +364,7 @@ const Auth = () => {
                 )}
 
                 <Button type="submit" className="w-full h-12 rounded-xl text-base font-semibold shadow-medium" disabled={loading}>
-                  {loading ? 'Loading...' : (isSignUp ? 'Continue' : 'Sign In')}
+                  {loading ? 'Loading...' : (isSignUp ? 'Create Account' : 'Sign In')}
                 </Button>
               </form>
 

@@ -27,7 +27,7 @@ const Settings: React.FC = () => {
         <div className="space-y-6">
           <h1 className="text-2xl font-bold">Settings</h1>
 
-          <section className="bg-card rounded-xl p-6 border border-border">
+          <section className="bg-card rounded-xl p-6 border border-border shadow-soft">
             <div className="flex items-center justify-between">
               <div>
                 <Label htmlFor="dark-mode" className="text-base font-medium">Dark Mode</Label>
@@ -42,9 +42,9 @@ const Settings: React.FC = () => {
           </section>
 
           {/* Placeholder for future settings */}
-          <section className="bg-card rounded-xl p-6 border border-border">
+          <section className="bg-card rounded-xl p-6 border border-border shadow-soft">
             <h2 className="text-lg font-semibold mb-4">More Settings Coming Soon</h2>
-            <p className="text-muted-foreground">Additional settings will be added here in future updates.</p>
+            <p className="text-muted-foreground">Additional settings options will be added in future updates.</p>
           </section>
         </div>
       </main>

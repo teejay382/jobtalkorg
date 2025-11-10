@@ -20,11 +20,11 @@ const Upload = () => {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-4">
-        <div className="text-center">
-          <h2 className="text-xl font-semibold mb-4">Sign in Required</h2>
-          <p className="text-muted-foreground mb-4">You need to sign in to upload videos.</p>
-          <Button onClick={() => navigate('/auth')}>Sign In</Button>
+      <div className="min-h-screen bg-gradient-to-br from-background via-primary/5 to-accent/5 flex items-center justify-center p-4">
+        <div className="text-center space-y-6 glass-card-premium rounded-3xl p-8 border-2 border-primary/20 shadow-glass max-w-md">
+          <h2 className="text-2xl font-bold text-foreground">Sign In Required</h2>
+          <p className="text-muted-foreground">You need to sign in to upload content and showcase your work.</p>
+          <Button onClick={() => navigate('/auth')} size="lg" className="w-full">Sign In</Button>
         </div>
       </div>
     );

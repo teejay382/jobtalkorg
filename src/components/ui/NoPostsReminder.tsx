@@ -78,11 +78,11 @@ export const NoPostsReminder = () => {
           <div className="flex-1 space-y-3">
             <div>
               <h3 className="font-extrabold text-xl md:text-2xl text-foreground mb-2 leading-tight">
-                Clients can't find you yet 👀
+                Clients Can't Find You Yet 👀
               </h3>
               <p className="text-base md:text-lg text-foreground/90 leading-relaxed font-medium">
                 Your profile is invisible in search until you upload your first work. 
-                Show what you can do to start getting hired!
+                Showcase your skills to start getting hired!
               </p>
             </div>
 
