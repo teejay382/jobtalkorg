@@ -257,29 +257,44 @@ export type Database = {
       }
       notifications: {
         Row: {
+          content: string | null
           created_at: string | null
           id: string
           is_read: boolean | null
           link: string | null
           message: string | null
+          read_at: string | null
+          reference_id: string | null
+          sender_id: string | null
+          title: string
           type: string | null
           user_id: string | null
         }
         Insert: {
+          content?: string | null
           created_at?: string | null
           id?: string
           is_read?: boolean | null
           link?: string | null
           message?: string | null
+          read_at?: string | null
+          reference_id?: string | null
+          sender_id?: string | null
+          title?: string
           type?: string | null
           user_id?: string | null
         }
         Update: {
+          content?: string | null
           created_at?: string | null
           id?: string
           is_read?: boolean | null
           link?: string | null
           message?: string | null
+          read_at?: string | null
+          reference_id?: string | null
+          sender_id?: string | null
+          title?: string
           type?: string | null
           user_id?: string | null
         }
@@ -534,6 +549,11 @@ export type Database = {
           user_id: string
           username: string
         }[]
+      }
+      mark_all_notifications_read: { Args: never; Returns: undefined }
+      mark_notification_read: {
+        Args: { notification_id: string }
+        Returns: undefined
       }
       track_engagement: {
         Args: {
