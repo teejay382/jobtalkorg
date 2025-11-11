@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 import { toast } from '@/hooks/use-toast';
 import type { Database } from '@/integrations/supabase/types';
+import { notificationSound } from '@/utils/notificationSound';
 
 export type Notification = {
   id: string;
@@ -22,6 +23,27 @@ export const useNotifications = () => {
   const { user } = useAuth();
   const [unreadCount, setUnreadCount] = useState(0);
   const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [permissionGranted, setPermissionGranted] = useState(false);
+
+  // Request notification permission on mount
+  useEffect(() => {
+    const requestPermission = async () => {
+      if (typeof Notification === 'undefined') return;
+      
+      if (Notification.permission === 'granted') {
+        setPermissionGranted(true);
+      } else if (Notification.permission !== 'denied') {
+        try {
+          const permission = await Notification.requestPermission();
+          setPermissionGranted(permission === 'granted');
+        } catch (error) {
+          console.error('Error requesting notification permission:', error);
+        }
+      }
+    };
+
+    requestPermission();
+  }, []);
 
   // Fetch notifications from database
   const fetchNotifications = useCallback(async () => {
@@ -73,17 +95,47 @@ export const useNotifications = () => {
             setNotifications(prev => [notification, ...prev].slice(0, 50));
             setUnreadCount(prev => Math.min(prev + 1, 99));
             
-            // Show toast
+            // Play notification sound
+            notificationSound.playNotificationSound(notification.type as any);
+            
+            // Show toast with icon based on type
+            const getToastIcon = () => {
+              switch (notification.type) {
+                case 'message': return '💬';
+                case 'like': return '❤️';
+                case 'comment': return '💭';
+                default: return '🔔';
+              }
+            };
+
             toast({ 
-              title: notification.title, 
-              description: notification.content 
+              title: `${getToastIcon()} ${notification.title}`, 
+              description: notification.content,
+              duration: 4000,
             });
             
             // Show browser notification
             if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
-              new Notification(notification.title, { 
-                body: notification.content 
+              const browserNotif = new Notification(notification.title, { 
+                body: notification.content,
+                icon: '/favicon.ico',
+                badge: '/favicon.ico',
+                tag: notification.type,
+                requireInteraction: false,
+                silent: false, // Allow sound from browser
               });
+
+              // Close notification after 5 seconds
+              setTimeout(() => browserNotif.close(), 5000);
+
+              // Handle notification click
+              browserNotif.onclick = () => {
+                window.focus();
+                if (notification.link) {
+                  window.location.href = notification.link;
+                }
+                browserNotif.close();
+              };
             }
           } catch (e) {
             console.error('Error handling notification:', e);
@@ -172,6 +224,9 @@ export const useNotifications = () => {
     markAsRead, 
     markAllAsRead,
     deleteNotification,
-    refetch: fetchNotifications
+    refetch: fetchNotifications,
+    permissionGranted,
+    soundEnabled: notificationSound.isEnabled(),
+    setSoundEnabled: (enabled: boolean) => notificationSound.setEnabled(enabled),
   };
 };
