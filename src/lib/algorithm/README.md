@@ -1,14 +1,51 @@
-# Jobtolk Algorithm System
+# JobTolk Algorithm System
 
 Complete algorithm infrastructure for intelligent job matching, user scoring, and discovery feed ranking.
 
+## Table of Contents
+- [Overview](#overview)
+- [Quick Start](#quick-start)
+- [Setup Required](#setup-required)
+- [File Structure](#file-structure)
+- [Usage](#usage)
+- [JTS Score Components](#jts-score-components)
+- [Database Tables](#database-tables)
+- [Configuration](#configuration)
+- [Integration with Search](#integration-with-search)
+- [Next Steps](#next-steps)
+- [Production Considerations](#production-considerations)
+- [API Reference](#api-reference)
+- [Troubleshooting](#troubleshooting)
+- [Implementation Checklist](#implementation-checklist)
+- [Dependencies](#dependencies)
+- [Support](#support)
+
 ## Overview
 
-The Jobtolk Algorithm System provides:
-- **JTS (Jobtolk Score)**: Comprehensive user and job-match scoring
+The JobTolk Algorithm System provides:
+- **JTS (JobTolk Score)**: Comprehensive user and job-match scoring
 - **Embeddings**: Vector representations for semantic matching
 - **Discovery Feed**: Personalized content ranking
 - **Explainable AI**: Transparent ranking with explanations
+
+## Quick Start
+
+**Current Status**: 📋 Planning & Design Phase
+
+1. ✅ Database schema ready - Run migrations
+2. ⚠️ Service files need implementation
+3. ⏳ Integration pending service completion
+
+**To get started**:
+```bash
+# Step 1: Apply database migrations
+supabase db push
+
+# Step 2: Regenerate types
+npm run generate-types
+
+# Step 3: Implement service files (see Implementation Checklist)
+```
 
 ## Setup Required
 
@@ -34,7 +71,18 @@ npm run generate-types
 npx supabase gen types typescript --local > src/integrations/supabase/types.ts
 ```
 
-### 3. TypeScript Errors (Expected)
+### 3. Implementation Status
+
+⚠️ **IMPORTANT**: The algorithm service implementation is **in progress**. Currently:
+- ✅ Database schema is complete (migration file ready)
+- ✅ Documentation is complete
+- ⚠️ Service implementation files need to be created:
+  - `embeddingsService.ts`
+  - `jtsService.ts`
+  - `index.ts`
+  - Complete `api.ts`
+
+### 4. TypeScript Errors (Expected)
 
 The current TypeScript errors you're seeing are **EXPECTED** and will resolve after:
 1. Running the database migrations
@@ -44,16 +92,26 @@ The errors indicate that the new tables (`profile_embeddings`, `job_embeddings`,
 
 ## File Structure
 
+### Current State
 ```
 src/lib/algorithm/
-├── api.ts                   # Main API interface (use this!)
-├── embeddingsService.ts     # Vector embeddings generation
-├── jtsService.ts           # JTS score calculation
-├── index.ts                # Package exports
+├── api.ts                   # Main API interface (empty - needs implementation)
+└── README.md               # This file
+```
+
+### Planned Structure
+```
+src/lib/algorithm/
+├── api.ts                   # Main API interface
+├── embeddingsService.ts     # Vector embeddings generation (TODO)
+├── jtsService.ts           # JTS score calculation (TODO)
+├── index.ts                # Package exports (TODO)
 └── README.md               # This file
 ```
 
 ## Usage
+
+⚠️ **Note**: The following examples show the intended API. Implementation is pending.
 
 ### Initialize User Embeddings
 
@@ -174,64 +232,139 @@ WHERE config_name = 'jts_weights_v1';
 
 ## Integration with Search
 
-The enhanced search functionality in `useSearch.ts` already includes:
-- Fuzzy skill matching
-- Service category matching
-- Client-side relevance scoring
+### Current Search Capabilities
+The existing search in `useSearch.ts` provides:
+- ✅ Fuzzy skill matching
+- ✅ Service category matching
+- ✅ Client-side relevance scoring
 
-The algorithm system adds:
-- Semantic similarity via embeddings
-- User credibility scoring
-- Engagement-based ranking
+### Algorithm System Enhancements
+Once implemented, the algorithm system will add:
+- 🔄 **Semantic similarity** via embeddings (understands intent, not just keywords)
+- 🔄 **User credibility scoring** (prioritizes verified/highly-rated users)
+- 🔄 **Engagement-based ranking** (surfaces popular and trending content)
+- 🔄 **Personalized recommendations** (matches based on user preferences)
+
+### Integration Points
+1. **Search Results**: Sort by JTS score
+2. **Job Recommendations**: Use `job_match_jts` table
+3. **Discovery Feed**: Use `feed_rankings` table
+4. **User Profiles**: Display overall JTS score
 
 ## Next Steps
 
+### Phase 1: Setup (Ready)
 1. **Run Migrations**: Apply the algorithm system migration
+   ```bash
+   supabase db push
+   ```
 2. **Regenerate Types**: Update Supabase TypeScript types
-3. **Integration**: Add algorithm calls to your app:
+   ```bash
+   npm run generate-types
+   ```
+
+### Phase 2: Implementation (TODO)
+1. **Create Service Files**:
+   - `embeddingsService.ts` - Vector embedding generation
+   - `jtsService.ts` - JTS score calculations
+   - `index.ts` - Public API exports
+   - Complete `api.ts` - Main interface implementation
+
+2. **Implement Core Functions**:
+   - `initializeUserEmbeddings()`
+   - `initializeJobEmbeddings()`
+   - `scoreJobMatch()`
+   - `getJobMatchScore()`
+   - `refreshUserScore()`
+   - `initializeContentEmbeddings()`
+
+### Phase 3: Integration
+1. **Add Algorithm Calls**:
    - Profile update hooks → `initializeUserEmbeddings`
    - Job creation → `initializeJobEmbeddings`
    - Job matching page → `scoreJobMatch`
    - Discovery feed → Use `feed_rankings` table
-4. **Testing**: Verify scores make sense for your data
+
+2. **Testing**: Verify scores make sense for your data
 
 ## Production Considerations
 
 ### Embeddings
-The current implementation uses **mock embeddings**. For production:
+When implementing `embeddingsService.ts`, you'll need to choose an embedding provider:
 
-1. **Use OpenAI API**:
+#### Option 1: OpenAI API (Recommended)
+```bash
+# Install dependency
+npm install openai
+```
+
 ```typescript
-// In embeddingsService.ts, replace generateMockEmbedding with:
+// In embeddingsService.ts
 import OpenAI from 'openai';
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+const openai = new OpenAI({ 
+  apiKey: process.env.VITE_OPENAI_API_KEY 
+});
 
 async function generateEmbedding(text: string): Promise<number[]> {
   const response = await openai.embeddings.create({
-    model: 'text-embedding-ada-002',
+    model: 'text-embedding-3-small', // or 'text-embedding-ada-002'
     input: text,
   });
   return response.data[0].embedding;
 }
 ```
 
-2. **Or use alternative embedding services**:
-   - Cohere
-   - Hugging Face
-   - Sentence Transformers (self-hosted)
+#### Option 2: Alternative Embedding Services
+- **Cohere** - Good performance, competitive pricing
+- **Hugging Face** - Open source models
+- **Sentence Transformers** - Self-hosted option
+- **Voyage AI** - Optimized for retrieval
 
-### Performance
-- Embeddings generation can be async (background jobs)
-- Cache JTS scores (already implemented)
-- Use batch operations for bulk updates
-- Index properly for fast queries
+#### Option 3: Mock Embeddings (Development Only)
+For testing without API costs:
+```typescript
+function generateMockEmbedding(text: string, dimensions = 1536): number[] {
+  // Deterministic mock based on text hash
+  const hash = text.split('').reduce((a, b) => {
+    a = ((a << 5) - a) + b.charCodeAt(0);
+    return a & a;
+  }, 0);
+  
+  const rng = () => {
+    const x = Math.sin(hash++) * 10000;
+    return x - Math.floor(x);
+  };
+  
+  return Array.from({ length: dimensions }, () => rng() * 2 - 1);
+}
+```
 
-### Monitoring
-- Track JTS score distribution
-- Monitor embedding generation failures
-- Log ranking explanations for debugging
-- A/B test algorithm weights
+### Performance Optimization
+1. **Async Processing**: Generate embeddings in background jobs
+2. **Caching**: Use `getJobMatchScore()` for cached results
+3. **Batch Operations**: Bulk update scores for multiple users/jobs
+4. **Database Indexes**: Already configured in migration (ivfflat for vector search)
+5. **Rate Limiting**: Implement API rate limits for embedding providers
+
+### Monitoring & Analytics
+1. **Score Distribution**: Track JTS score ranges across users
+2. **Embedding Quality**: Monitor generation success/failure rates
+3. **Ranking Explanations**: Use `ranking_logs` table for debugging
+4. **A/B Testing**: Experiment with different algorithm weights
+5. **Performance Metrics**: Track query response times
+
+### Security & Environment Variables
+Add to your `.env` file:
+```bash
+# Embedding Provider (choose one)
+VITE_OPENAI_API_KEY=sk-...
+VITE_COHERE_API_KEY=...
+
+# Feature Flags
+VITE_ENABLE_EMBEDDINGS=true
+VITE_ENABLE_JTS_SCORING=true
+```
 
 ## API Reference
 
@@ -277,27 +410,125 @@ interface JTSWeights {
 ## Troubleshooting
 
 ### TypeScript Errors
-✅ **Solution**: Run migrations and regenerate types (see Setup section)
+**Problem**: Type errors for `profile_embeddings`, `job_embeddings`, etc.
+
+**Solution**: Run migrations and regenerate types:
+```bash
+supabase db push
+npm run generate-types
+```
 
 ### "Table does not exist" errors
-✅ **Solution**: Run `supabase db push` to create tables
+**Problem**: Database queries fail with table not found.
 
-### Embeddings not working
-✅ **Solution**: Currently using mock embeddings. For production, integrate OpenAI API or similar
+**Solution**: Apply the migration:
+```bash
+supabase db push
+```
 
-### JTS scores seem off
-✅ **Solution**: Adjust weights in `algorithm_config` table
+### Implementation Files Missing
+**Problem**: Cannot import functions from `@/lib/algorithm`.
 
-### Performance issues
-✅ **Solution**: 
-- Enable proper indexes (already in migration)
-- Use cached scores (`getJobMatchScore` instead of `scoreJobMatch`)
-- Batch operations for bulk updates
+**Solution**: This is expected. Service files need to be created (see Implementation Checklist).
+
+### Embeddings API Errors
+**Problem**: Rate limits or API key errors.
+
+**Solution**:
+- Verify API key is set in `.env`
+- Implement rate limiting and retry logic
+- Consider using batch embedding endpoints
+- For development, use mock embeddings
+
+### JTS Scores Seem Incorrect
+**Problem**: Scores don't reflect actual user quality.
+
+**Solution**:
+1. Check if all score components are calculated
+2. Adjust weights in `algorithm_config` table
+3. Verify engagement data is being tracked
+4. Review the scoring logic in `jtsService.ts`
+
+### Performance Issues
+**Problem**: Slow query responses or timeouts.
+
+**Solution**:
+- Verify indexes exist: `\d+ profile_embeddings` in psql
+- Use cached scores (`getJobMatchScore` vs `scoreJobMatch`)
+- Implement background jobs for embedding generation
+- Consider pagination for large result sets
+
+## Implementation Checklist
+
+### Phase 1: Foundation (Completed)
+- [x] Database schema design
+- [x] Migration file created (`20251108000000_jobtolk_algorithm_system.sql`)
+- [x] Documentation written
+- [x] Algorithm folder structure
+
+### Phase 2: Core Services (TODO)
+- [ ] Create `embeddingsService.ts`
+  - [ ] Implement embedding generation (OpenAI/Cohere/Mock)
+  - [ ] Add error handling and retries
+  - [ ] Implement batch processing
+- [ ] Create `jtsService.ts`
+  - [ ] Implement skill matching algorithm
+  - [ ] Calculate engagement scores
+  - [ ] Calculate credibility scores
+  - [ ] Calculate recency boost
+  - [ ] Combine into total JTS
+- [ ] Create `index.ts`
+  - [ ] Export all public APIs
+  - [ ] Add TypeScript types
+- [ ] Complete `api.ts`
+  - [ ] Implement all documented functions
+  - [ ] Add input validation
+  - [ ] Add error handling
+
+### Phase 3: Testing
+- [ ] Unit tests for scoring algorithms
+- [ ] Integration tests with database
+- [ ] Mock API tests
+- [ ] Performance benchmarks
+
+### Phase 4: Integration
+- [ ] Hook into profile update flows
+- [ ] Hook into job creation flows
+- [ ] Update search to use JTS scores
+- [ ] Update discovery feed ranking
+
+### Phase 5: Production
+- [ ] Add monitoring and logging
+- [ ] Set up environment variables
+- [ ] Deploy database migrations
+- [ ] Enable feature flags
+- [ ] Monitor performance and scores
+
+## Dependencies
+
+Required npm packages (add as needed):
+```bash
+# For OpenAI embeddings
+npm install openai
+
+# For Cohere embeddings (alternative)
+npm install cohere-ai
+
+# Already installed in project
+# - @supabase/supabase-js (database access)
+# - zod (input validation - recommended)
+```
 
 ## Support
 
 For issues or questions:
-1. Check this README
+1. Check this README first
 2. Review the migration file: `supabase/migrations/20251108000000_jobtolk_algorithm_system.sql`
-3. Check database logs for errors
-4. Verify all tables exist: `SELECT * FROM pg_tables WHERE schemaname = 'public'`
+3. Verify tables exist:
+   ```sql
+   SELECT tablename FROM pg_tables 
+   WHERE schemaname = 'public' 
+   AND tablename LIKE '%embedding%' OR tablename LIKE '%jts%';
+   ```
+4. Check Supabase logs for errors
+5. Review the implementation checklist above

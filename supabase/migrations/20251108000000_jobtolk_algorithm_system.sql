@@ -1,4 +1,4 @@
--- Migration: Jobtolk Algorithm System (JTS)
+-- Migration: JobTolk Algorithm System (JTS)
 -- Date: 2025-11-08
 -- Description: Core algorithm infrastructure for intelligent matching
 -- Includes: embeddings, JTS scores, engagement tracking, discovery feed support
@@ -403,6 +403,6 @@ $$;
 
 -- Add comments for documentation
 COMMENT ON TABLE public.skill_embeddings IS 'Vector embeddings for semantic skill matching';
-COMMENT ON TABLE public.user_jts_scores IS 'Jobtolk Score (JTS) - comprehensive user ranking metric';
+COMMENT ON TABLE public.user_jts_scores IS 'JobTolk Score (JTS) - comprehensive user ranking metric';
 COMMENT ON TABLE public.ranking_logs IS 'Explainable AI logs for transparency and debugging';
 COMMENT ON TABLE public.feed_rankings IS 'Personalized discovery feed rankings';
