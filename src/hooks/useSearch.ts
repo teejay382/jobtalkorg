@@ -101,15 +101,16 @@ export const useSearch = () => {
           )
         `);
 
-      // Fuzzy search with multiple conditions
+      // Fuzzy search with multiple conditions - search even with single character
       if (searchFilters.query) {
         const searchTerm = searchFilters.query.toLowerCase().trim();
         const searchConditions: string[] = [];
         
-        // Search in title, description, and location
+        // Search in title, description, location, and category
         searchConditions.push(`title.ilike.%${searchTerm}%`);
         searchConditions.push(`description.ilike.%${searchTerm}%`);
         searchConditions.push(`location_city.ilike.%${searchTerm}%`);
+        searchConditions.push(`category.ilike.%${searchTerm}%`);
         
         query = query.or(searchConditions.join(','));
       }
@@ -226,7 +227,7 @@ export const useSearch = () => {
             video_url
           )
         `)
-        .eq('account_type', 'freelancer');
+        .eq('onboarding_completed', true);
 
       // Basic search filters - apply at database level for efficiency
       if (searchFilters.query) {
@@ -359,14 +360,14 @@ export const useSearch = () => {
     setFilters(prev => ({ ...prev, ...newFilters }));
   }, []);
 
-  // Memoize debounced search functions
+  // Memoize debounced search functions - reduced delay for real-time feel
   const debouncedSearchJobs = useMemo(
-    () => debounce(searchJobs, 300),
+    () => debounce(searchJobs, 150),
     []
   );
 
   const debouncedSearchFreelancers = useMemo(
-    () => debounce(searchFreelancers, 300),
+    () => debounce(searchFreelancers, 150),
     []
   );
 

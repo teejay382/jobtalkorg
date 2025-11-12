@@ -27,16 +27,26 @@ const Search = () => {
     updateFilters({ query: searchQuery });
   }, [searchQuery, updateFilters]);
 
-  // Perform search when filters change
+  // Perform search when filters change - search even with partial input
   useEffect(() => {
-    if (filters.query || Object.keys(filters).length > 1) {
+    if (filters.query && filters.query.trim().length > 0) {
       if (activeTab === 'jobs') {
         searchJobs(filters);
       } else {
         searchFreelancers(filters);
       }
+    } else if (Object.keys(filters).length > 1) {
+      // Search if there are other filters even without query
+      if (activeTab === 'jobs') {
+        searchJobs(filters);
+      } else {
+        searchFreelancers(filters);
+      }
+    } else {
+      // Clear results if no search query and no filters
+      clearFilters();
     }
-  }, [filters, activeTab, searchJobs, searchFreelancers]);
+  }, [filters, activeTab, searchJobs, searchFreelancers, clearFilters]);
 
   const handleTabChange = (tab: 'jobs' | 'freelancers') => {
     setActiveTab(tab);
@@ -54,7 +64,7 @@ const Search = () => {
   ];
 
   const hasResults = activeTab === 'jobs' ? jobs.length > 0 : freelancers.length > 0;
-  const hasSearched = filters.query || Object.keys(filters).length > 1;
+  const hasSearched = filters.query && filters.query.trim().length > 0;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-primary/5 to-accent/5">
