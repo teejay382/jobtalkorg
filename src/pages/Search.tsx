@@ -42,11 +42,9 @@ const Search = () => {
       } else {
         searchFreelancers(filters);
       }
-    } else {
-      // Clear results if no search query and no filters
-      clearFilters();
     }
-  }, [filters, activeTab, searchJobs, searchFreelancers, clearFilters]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filters.query, activeTab, filters.category, filters.jobType, filters.serviceType, filters.location]);
 
   const handleTabChange = (tab: 'jobs' | 'freelancers') => {
     setActiveTab(tab);

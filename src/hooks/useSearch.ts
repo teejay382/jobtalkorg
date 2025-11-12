@@ -214,6 +214,7 @@ export const useSearch = () => {
   };
 
   const searchFreelancers = async (searchFilters: SearchFilters) => {
+    console.log('🔍 searchFreelancers called with filters:', searchFilters);
     setLoading(true);
     try {
       let query = supabase
@@ -232,6 +233,7 @@ export const useSearch = () => {
       // Basic search filters - apply at database level for efficiency
       if (searchFilters.query) {
         const searchTerm = searchFilters.query.toLowerCase().trim();
+        console.log('🔍 Searching for:', searchTerm);
         query = query.or(
           `full_name.ilike.%${searchTerm}%,` +
           `username.ilike.%${searchTerm}%,` +
@@ -271,6 +273,8 @@ export const useSearch = () => {
       const { data, error } = await query
         .order('created_at', { ascending: false })
         .limit(100);
+
+      console.log('🔍 Query result:', { data: data?.length, error });
 
       if (error) {
         // If error is about unknown columns, show helpful message
@@ -348,6 +352,7 @@ export const useSearch = () => {
       }
 
       setFreelancers(freelancersWithLimitedVideos);
+      console.log('✅ Search complete. Found:', freelancersWithLimitedVideos.length, 'freelancers');
     } catch (error) {
       console.error('Error searching freelancers:', error);
       setFreelancers([]);
