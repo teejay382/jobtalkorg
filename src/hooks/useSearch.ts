@@ -221,7 +221,7 @@ export const useSearch = () => {
         .from('profiles')
         .select(`
           *,
-          videos:videos!videos_user_id_fkey(
+          videos(
             id,
             title,
             thumbnail_url,
