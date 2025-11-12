@@ -109,7 +109,7 @@ export const useSearch = () => {
         // Search in title, description, location, and category
         searchConditions.push(`title.ilike.%${searchTerm}%`);
         searchConditions.push(`description.ilike.%${searchTerm}%`);
-        searchConditions.push(`location_city.ilike.%${searchTerm}%`);
+        searchConditions.push(`location.ilike.%${searchTerm}%`);
         searchConditions.push(`category.ilike.%${searchTerm}%`);
         
         query = query.or(searchConditions.join(','));
@@ -133,7 +133,7 @@ export const useSearch = () => {
       }
 
       if (searchFilters.location) {
-        query = query.ilike('location_city', `%${searchFilters.location}%`);
+        query = query.ilike('location', `%${searchFilters.location}%`);
       }
 
       // Fetch all matching jobs
@@ -162,7 +162,7 @@ export const useSearch = () => {
             let score = 0;
             const titleLower = (job.title || '').toLowerCase();
             const descriptionLower = (job.description || '').toLowerCase();
-            const locationLower = (job.location_city || '').toLowerCase();
+            const locationLower = (job.location || '').toLowerCase();
             const requiredSkills = (job.required_skills || []).map(s => s.toLowerCase());
             const serviceCategories = (job.service_categories || []).map(s => s.toLowerCase());
             
