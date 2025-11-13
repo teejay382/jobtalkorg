@@ -219,7 +219,15 @@ export const useSearch = () => {
     try {
       let query = supabase
         .from('profiles')
-        .select('*')
+        .select(`
+          *,
+          videos(
+            id,
+            title,
+            thumbnail_url,
+            video_url
+          )
+        `)
         .eq('onboarding_completed', true);
 
       // Only apply specific filters at database level, not text search
@@ -240,33 +248,14 @@ export const useSearch = () => {
         query = query.overlaps('service_categories', searchFilters.serviceCategories);
       }
 
-      // Fetch profiles
-      const { data: profilesData, error: profilesError } = await query
+      // Fetch results for client-side filtering
+      const { data, error } = await query
         .order('created_at', { ascending: false })
         .limit(100);
 
-      console.log('🔍 Profiles query result:', { data: profilesData?.length, error: profilesError });
+      console.log('🔍 Query result:', { data: data?.length, error });
 
-      if (profilesError) throw profilesError;
-      if (!profilesData) {
-        setFreelancers([]);
-        return;
-      }
-
-      // Fetch videos for these profiles
-      const userIds = profilesData.map(p => p.user_id);
-      const { data: videosData } = await supabase
-        .from('videos')
-        .select('id, title, thumbnail_url, video_url, user_id')
-        .in('user_id', userIds);
-
-      // Merge videos into profiles
-      const data = profilesData.map(profile => ({
-        ...profile,
-        videos: (videosData || [])
-          .filter(v => v.user_id === profile.user_id)
-          .map(({ user_id, ...video }) => video)
-      }));
+      if (error) throw error;
 
       // Transform data
       let freelancersWithLimitedVideos = (data || []).map(profile => ({
