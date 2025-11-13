@@ -230,60 +230,32 @@ export const useSearch = () => {
         `)
         .eq('onboarding_completed', true);
 
-      // Basic search filters - apply at database level for efficiency
-      if (searchFilters.query) {
-        const searchTerm = searchFilters.query.toLowerCase().trim();
-        console.log('🔍 Searching for:', searchTerm);
-        query = query.or(
-          `full_name.ilike.%${searchTerm}%,` +
-          `username.ilike.%${searchTerm}%,` +
-          `bio.ilike.%${searchTerm}%,` +
-          `company_name.ilike.%${searchTerm}%,` +
-          `location_city.ilike.%${searchTerm}%`
-        );
-      }
-
+      // Only apply specific filters at database level, not text search
+      // Text search is handled client-side for better fuzzy matching
+      
       // Filter by skills (exact match in array)
       if (searchFilters.skills && searchFilters.skills.length > 0) {
         query = query.overlaps('skills', searchFilters.skills);
       }
 
-      // Try to apply advanced filters (may fail if columns don't exist)
-      try {
-        // Filter by service type (remote/local)
-        if (searchFilters.serviceType && (searchFilters.serviceType === 'remote' || searchFilters.serviceType === 'local')) {
-          query = query.eq('service_type', searchFilters.serviceType as 'remote' | 'local');
-        }
-
-        // Filter by service categories (for local providers)
-        if (searchFilters.serviceCategories && searchFilters.serviceCategories.length > 0) {
-          query = query.overlaps('service_categories', searchFilters.serviceCategories);
-        }
-
-        // Filter by location if specified
-        if (searchFilters.location) {
-          query = query.ilike('location_city', `%${searchFilters.location}%`);
-        }
-      } catch (filterError) {
-        // Ignore filter errors - columns may not exist yet
-        console.warn('Advanced filters not available:', filterError);
+      // Filter by service type (remote/local)
+      if (searchFilters.serviceType && (searchFilters.serviceType === 'remote' || searchFilters.serviceType === 'local')) {
+        query = query.eq('service_type', searchFilters.serviceType as 'remote' | 'local');
       }
 
-      // Fetch more results for client-side filtering
+      // Filter by service categories (for local providers)
+      if (searchFilters.serviceCategories && searchFilters.serviceCategories.length > 0) {
+        query = query.overlaps('service_categories', searchFilters.serviceCategories);
+      }
+
+      // Fetch results for client-side filtering
       const { data, error } = await query
         .order('created_at', { ascending: false })
         .limit(100);
 
       console.log('🔍 Query result:', { data: data?.length, error });
 
-      if (error) {
-        // If error is about unknown columns, show helpful message
-        if (error.message?.includes('column') || error.code === '42703') {
-          console.error('Database migration required. Please run: supabase db push');
-          throw new Error('Please run database migrations to enable local services search');
-        }
-        throw error;
-      }
+      if (error) throw error;
 
       // Transform data
       let freelancersWithLimitedVideos = (data || []).map(profile => ({
