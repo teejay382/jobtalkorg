@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Sparkles, UserPlus, Video, CheckCircle2, Eye, MessageSquare, BadgeCheck, PlayCircle, ArrowRight } from 'lucide-react';
+import { Sparkles, UserPlus, Video, CheckCircle2, Eye, MessageSquare, BadgeCheck, Play, Users } from 'lucide-react';
 import logoImage from '@/assets/logo.png';
 
 const Welcome = () => {
@@ -88,13 +88,23 @@ const Welcome = () => {
 
         
 
-        <footer className="py-10 text-center text-sm text-muted-foreground">
-          <div className="flex items-center justify-center gap-2 mb-2">
-            <Sparkles className="w-4 h-4 text-accent" />
-            <span>Powered by the Jobtolk community</span>
-            <Sparkles className="w-4 h-4 text-primary" />
+        <section className="py-10">
+          <div className="text-center">
+            <div className="text-lg md:text-xl font-semibold bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent animate-pulse">
+              Talent deserves to be seen. Join Jobtolk today.
+            </div>
           </div>
-          <div>© {new Date().getFullYear()} Jobtolk</div>
+        </section>
+
+        <footer className="py-10 text-center text-sm text-muted-foreground">
+          <div className="flex items-center justify-center gap-6 mb-3">
+            <a href="#about" className="hover:text-foreground">About</a>
+            <a href="#how" className="hover:text-foreground">How It Works</a>
+            <a href="/terms" className="hover:text-foreground">Terms</a>
+            <a href="/privacy" className="hover:text-foreground">Privacy</a>
+            <a href="/contact" className="hover:text-foreground">Contact</a>
+          </div>
+          <div>Built with <span className="text-primary">❤️</span> by the Jobtolk Team • © {new Date().getFullYear()} Jobtolk</div>
         </footer>
       </div>
     </div>
