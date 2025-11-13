@@ -234,13 +234,14 @@ export const useSearch = () => {
       if (searchFilters.query) {
         const searchTerm = searchFilters.query.toLowerCase().trim();
         console.log('🔍 Searching for:', searchTerm);
-        query = query.or([
+        const searchConditions = [
           `full_name.ilike.%${searchTerm}%`,
           `username.ilike.%${searchTerm}%`,
           `bio.ilike.%${searchTerm}%`,
           `company_name.ilike.%${searchTerm}%`,
           `location_city.ilike.%${searchTerm}%`
-        ]);
+        ];
+        query = query.or(searchConditions.join(','));
       }
 
       // Filter by skills (exact match in array)
