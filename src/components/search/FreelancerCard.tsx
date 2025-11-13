@@ -18,8 +18,9 @@ export const FreelancerCard = ({ freelancer }: FreelancerCardProps) => {
   };
 
   const handleViewProfile = () => {
-    // Navigate to profile page when implemented
-    console.log('View profile:', freelancer.user_id);
+    const id = freelancer.username || freelancer.user_id;
+    if (!id) return;
+    navigate(`/profile/${encodeURIComponent(id)}`);
   };
 
   const displayName = freelancer.full_name || freelancer.username || 'Freelancer';

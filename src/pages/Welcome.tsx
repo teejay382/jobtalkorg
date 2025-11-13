@@ -1,64 +1,124 @@
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Sparkles } from 'lucide-react';
+import { Sparkles, UserPlus, Video, CheckCircle2, Eye, MessageSquare, BadgeCheck, PlayCircle, ArrowRight } from 'lucide-react';
 import logoImage from '@/assets/logo.png';
 
 const Welcome = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-primary/5 to-accent/5 flex items-center justify-center p-4">
-      <div className="max-w-2xl w-full text-center space-y-12 animate-in fade-in duration-700">
-        {/* Logo Section */}
-        <div className="flex justify-center animate-in zoom-in duration-500">
-          <div className="relative">
-            <div className="absolute inset-0 bg-gradient-to-r from-primary to-accent rounded-full blur-2xl opacity-30 animate-pulse" />
-            <div className="relative p-6 rounded-3xl bg-card shadow-elegant border-2 border-border">
-              <img src={logoImage} alt="JobTolk" className="h-24 w-24 md:h-32 md:w-32" />
+    <div className="min-h-screen bg-gradient-to-br from-background via-primary/5 to-accent/5">
+      <div className="mx-auto max-w-6xl px-4">
+        <section className="min-h-[80vh] flex flex-col items-center justify-center text-center gap-10 py-10">
+          <div className="flex justify-center">
+            <div className="relative">
+              <div className="absolute inset-0 bg-gradient-to-r from-primary to-accent rounded-full blur-2xl opacity-30 animate-pulse" />
+              <div className="relative p-6 rounded-3xl bg-card shadow-elegant border-2 border-border">
+                <img src={logoImage} alt="JobTolk" className="h-20 w-20 md:h-28 md:w-28" />
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* Main Content */}
-        <div className="space-y-6 animate-in slide-in-from-bottom duration-700 delay-150">
-          <h1 className="text-6xl md:text-8xl font-bold">
-            <span className="bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent animate-gradient">
-              JobTolk
-            </span>
-          </h1>
-          
-          <div className="flex items-center justify-center gap-2">
-            <Sparkles className="w-5 h-5 text-accent animate-pulse" />
-            <p className="text-xl md:text-2xl text-muted-foreground font-medium">
-              Find work. Show your skills.
+          <div className="space-y-4">
+            <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight">
+              <span className="bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent animate-gradient">Welcome to Jobtolk</span>
+            </h1>
+            <p className="text-base md:text-xl text-muted-foreground max-w-2xl mx-auto">
+              Where skills meet opportunity — connect, showcase, and get hired.
             </p>
-            <Sparkles className="w-5 h-5 text-primary animate-pulse" />
           </div>
-        </div>
 
-        {/* CTA Buttons */}
-        <div className="flex flex-col sm:flex-row gap-4 justify-center items-center animate-in slide-in-from-bottom duration-700 delay-300">
-          <Button 
-            size="lg" 
-            className="text-lg px-12 py-7 rounded-2xl shadow-glow hover:shadow-strong hover:scale-105 transition-all duration-300 font-bold w-full sm:w-auto"
-            onClick={() => navigate('/auth?signup=true')}
-          >
-            Get Started
-          </Button>
-          <Button 
-            size="lg" 
-            variant="outline" 
-            className="text-lg px-12 py-7 rounded-2xl font-bold border-2 hover:bg-muted hover:scale-105 transition-all duration-300 w-full sm:w-auto"
-            onClick={() => navigate('/auth')}
-          >
-            Sign In
-          </Button>
-        </div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full max-w-4xl">
+            <div className="glass-card-premium rounded-xl p-5 border border-primary/20 hover:border-primary/40 transition-all duration-300">
+              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-3">
+                <UserPlus className="w-5 h-5 text-primary" />
+              </div>
+              <div className="font-semibold">Create Profile</div>
+              <p className="text-sm text-muted-foreground mt-1">Craft a clean profile that highlights your strengths.</p>
+            </div>
+            <div className="glass-card-premium rounded-xl p-5 border border-primary/20 hover:border-primary/40 transition-all duration-300">
+              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-3">
+                <Video className="w-5 h-5 text-primary" />
+              </div>
+              <div className="font-semibold">Post Your Skill</div>
+              <p className="text-sm text-muted-foreground mt-1">Share short videos or posts that show your work.</p>
+            </div>
+            <div className="glass-card-premium rounded-xl p-5 border border-primary/20 hover:border-primary/40 transition-all duration-300">
+              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-3">
+                <CheckCircle2 className="w-5 h-5 text-primary" />
+              </div>
+              <div className="font-semibold">Get Hired</div>
+              <p className="text-sm text-muted-foreground mt-1">Clients discover you and start conversations fast.</p>
+            </div>
+          </div>
 
-        {/* Footer */}
-        <p className="text-sm text-muted-foreground animate-in fade-in duration-700 delay-500">
-          Powered by JobTolk community
-        </p>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <Button size="lg" className="px-10 py-6 rounded-2xl shadow-glow hover:shadow-strong hover:scale-105 transition-all duration-300 font-bold" onClick={() => navigate('/auth?signup=true')}>
+              Get Started
+            </Button>
+            <Button size="lg" variant="outline" className="px-10 py-6 rounded-2xl font-bold border-2 hover:bg-muted hover:scale-105 transition-all duration-300" onClick={() => navigate('/auth')}>
+              Sign In
+            </Button>
+            <Button size="lg" variant="secondary" className="px-10 py-6 rounded-2xl font-semibold hover:scale-105 transition-all duration-300" onClick={() => navigate('/onboarding')}>
+              Learn How to Get Hired Faster
+            </Button>
+          </div>
+        </section>
+
+        <section className="py-14 md:py-20">
+          <div className="text-center mb-8">
+            <h2 className="text-2xl md:text-3xl font-bold">How Jobtolk Works</h2>
+            <p className="text-muted-foreground max-w-2xl mx-auto mt-2">A simpler way to get work: you showcase your skills, clients discover and reach out.</p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-5xl mx-auto">
+            <div className="glass-card-premium rounded-xl p-5 border border-primary/15 hover:border-primary/30 transition-all duration-300">
+              <div className="flex items-center gap-2 font-semibold"><Eye className="w-4 h-4 text-primary" /> Visibility over applications</div>
+              <p className="text-sm text-muted-foreground mt-2">Spend less time applying. Gain traction by being seen for your work.</p>
+            </div>
+            <div className="glass-card-premium rounded-xl p-5 border border-primary/15 hover:border-primary/30 transition-all duration-300">
+              <div className="flex items-center gap-2 font-semibold"><MessageSquare className="w-4 h-4 text-primary" /> Clients find you</div>
+              <p className="text-sm text-muted-foreground mt-2">Your posts start conversations. Clients reach out based on real examples.</p>
+            </div>
+            <div className="glass-card-premium rounded-xl p-5 border border-primary/15 hover:border-primary/30 transition-all duration-300">
+              <div className="flex items-center gap-2 font-semibold"><BadgeCheck className="w-4 h-4 text-primary" /> Build credibility</div>
+              <p className="text-sm text-muted-foreground mt-2">Grow trust with consistent posts and get matched intelligently.</p>
+            </div>
+          </div>
+        </section>
+
+        <section className="py-14 md:py-20">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-xl md:text-2xl font-bold">See real examples</h3>
+            <button onClick={() => navigate('/auth')} className="text-primary hover:underline flex items-center gap-1">
+              See how it works <ArrowRight className="w-4 h-4" />
+            </button>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {[1,2,3].map((i) => (
+              <div key={i} className="glass-card rounded-xl overflow-hidden border border-primary/15 hover:border-primary/30 transition-all">
+                <div className="aspect-[9/16] bg-gradient-to-br from-primary/15 to-accent/15 relative flex items-center justify-center">
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
+                  <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur flex items-center justify-center">
+                    <PlayCircle className="w-7 h-7 text-white" />
+                  </div>
+                </div>
+                <div className="p-4">
+                  <div className="font-semibold">Sample skill showcase #{i}</div>
+                  <p className="text-sm text-muted-foreground mt-1">Short video demonstrating a real project outcome.</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <footer className="py-10 text-center text-sm text-muted-foreground">
+          <div className="flex items-center justify-center gap-2 mb-2">
+            <Sparkles className="w-4 h-4 text-accent" />
+            <span>Powered by the Jobtolk community</span>
+            <Sparkles className="w-4 h-4 text-primary" />
+          </div>
+          <div>© {new Date().getFullYear()} Jobtolk</div>
+        </footer>
       </div>
     </div>
   );

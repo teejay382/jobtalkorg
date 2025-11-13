@@ -20,15 +20,45 @@ const Header = () => {
   };
 
   const handleNotificationClick = async (notification: any) => {
-    // Mark as read
-    if (!notification.is_read) {
-      await markAsRead(notification.id);
-    }
-    
-    // Navigate to link
-    if (notification.link) {
+    if (!notification) return;
+    try {
+      if (!notification.is_read) {
+        await markAsRead(notification.id);
+      }
+
+      let target: string | null = null;
+      if (notification.link) {
+        target = notification.link as string;
+      } else {
+        const type = notification.type as string | undefined;
+        const refId = notification.reference_id as string | undefined;
+        const senderId = notification.sender_id as string | undefined;
+
+        switch (type) {
+          case 'comment':
+          case 'like':
+            target = refId ? `/post/${encodeURIComponent(refId)}` : null;
+            break;
+          case 'message':
+            target = senderId ? `/chat?user=${encodeURIComponent(senderId)}` : null;
+            break;
+          case 'hire':
+          case 'job':
+            target = refId ? `/job/${encodeURIComponent(refId)}` : null;
+            break;
+          case 'follow':
+            target = senderId ? `/profile/${encodeURIComponent(senderId)}` : null;
+            break;
+          default:
+            target = null;
+        }
+      }
+
       setIsPopoverOpen(false);
-      navigate(notification.link);
+      navigate(target || '/');
+    } catch (e) {
+      setIsPopoverOpen(false);
+      navigate('/');
     }
   };
 

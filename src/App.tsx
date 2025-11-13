@@ -27,6 +27,9 @@ const LoginPage = lazy(() => import('./pages/LoginPage'));
 const Callback = lazy(() => import('./pages/auth/callback'));
 const OAuthTest = lazy(() => import('./pages/OAuthTest'));
 const LocalJobs = lazy(() => import('./pages/LocalJobs'));
+const PublicProfile = lazy(() => import('./pages/PublicProfile'));
+const PostDetail = lazy(() => import('./pages/PostDetail'));
+const JobDetail = lazy(() => import('./pages/JobDetail'));
 
 // Lazy-load heavy UI pieces (to reduce initial bundle)
 const Toaster = lazy(() => import('@/components/ui/toaster').then(mod => ({ default: mod.Toaster })));
@@ -135,6 +138,9 @@ const MainApp = () => {
             <Route path="/upload" element={<Upload />} />
             <Route path="/chat" element={<Chat />} />
             <Route path="/profile" element={<Profile />} />
+            <Route path="/profile/:id" element={<PublicProfile />} />
+            <Route path="/post/:id" element={<PostDetail />} />
+            <Route path="/job/:id" element={<JobDetail />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="/profile-settings" element={<ProfileSettings />} />
             <Route path="/auth" element={<Auth />} />
