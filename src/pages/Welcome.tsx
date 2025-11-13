@@ -86,30 +86,7 @@ const Welcome = () => {
           </div>
         </section>
 
-        <section className="py-14 md:py-20">
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="text-xl md:text-2xl font-bold">See real examples</h3>
-            <button onClick={() => navigate('/auth')} className="text-primary hover:underline flex items-center gap-1">
-              See how it works <ArrowRight className="w-4 h-4" />
-            </button>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {[1,2,3].map((i) => (
-              <div key={i} className="glass-card rounded-xl overflow-hidden border border-primary/15 hover:border-primary/30 transition-all">
-                <div className="aspect-[9/16] bg-gradient-to-br from-primary/15 to-accent/15 relative flex items-center justify-center">
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
-                  <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur flex items-center justify-center">
-                    <PlayCircle className="w-7 h-7 text-white" />
-                  </div>
-                </div>
-                <div className="p-4">
-                  <div className="font-semibold">Sample skill showcase #{i}</div>
-                  <p className="text-sm text-muted-foreground mt-1">Short video demonstrating a real project outcome.</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
+        
 
         <footer className="py-10 text-center text-sm text-muted-foreground">
           <div className="flex items-center justify-center gap-2 mb-2">
