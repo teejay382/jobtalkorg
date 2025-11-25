@@ -7,14 +7,19 @@ import { Button } from '@/components/ui/button';
 import { getPublicProfile } from '@/lib/profiles';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { useChat } from '@/hooks/useChat';
+import { useToast } from '@/hooks/use-toast';
 
 const PublicProfile = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { createOrGetConversation } = useChat();
+  const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState<any | null>(null);
   const [videos, setVideos] = useState<any[]>([]);
+  const [isHiring, setIsHiring] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -125,11 +130,79 @@ const PublicProfile = () => {
                 </div>
                 <div className="flex gap-2">
                   {/* Interaction buttons for public view */}
-                  <Button onClick={() => profile.user_id && navigate(`/chat?user=${encodeURIComponent(profile.user_id)}`)} size="sm" className="bg-gradient-to-r from-primary to-accent hover:opacity-90">
+                  <Button 
+                    onClick={async () => {
+                      if (!user) {
+                        toast({
+                          title: "Sign in required",
+                          description: "Please sign in to message users",
+                          variant: "destructive",
+                        });
+                        return;
+                      }
+                      if (profile.user_id) {
+                        navigate(`/chat?user=${encodeURIComponent(profile.user_id)}`);
+                      }
+                    }} 
+                    size="sm" 
+                    className="bg-gradient-to-r from-primary to-accent hover:opacity-90"
+                  >
                     Message
                   </Button>
-                  <Button variant="outline" size="sm">Follow</Button>
-                  <Button variant="outline" size="sm">Hire</Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={async () => {
+                      if (!user) {
+                        toast({
+                          title: "Sign in required",
+                          description: "Please sign in to hire freelancers",
+                          variant: "destructive",
+                        });
+                        return;
+                      }
+                      if (!profile.user_id) return;
+                      
+                      setIsHiring(true);
+                      try {
+                        const conversation = await createOrGetConversation(profile.user_id);
+                        if (conversation) {
+                          const initialMessage = "Hi 👋 I'm interested in hiring you for a project.";
+                          await supabase.from('messages').insert({
+                            conversation_id: conversation.id,
+                            sender_id: user.id,
+                            content: initialMessage,
+                            created_at: new Date().toISOString()
+                          });
+
+                          await supabase
+                            .from('conversations')
+                            .update({ last_message_at: new Date().toISOString() })
+                            .eq('id', conversation.id);
+
+                          navigate(`/chat?user=${profile.user_id}`);
+                        } else {
+                          toast({
+                            title: "Error",
+                            description: "Failed to start conversation. Please try again.",
+                            variant: "destructive",
+                          });
+                        }
+                      } catch (error) {
+                        console.error('Error creating conversation:', error);
+                        toast({
+                          title: "Error",
+                          description: "Failed to start conversation. Please try again.",
+                          variant: "destructive",
+                        });
+                      } finally {
+                        setIsHiring(false);
+                      }
+                    }}
+                    disabled={isHiring}
+                  >
+                    {isHiring ? 'Opening...' : 'Hire'}
+                  </Button>
                 </div>
               </div>
               {profile.bio && (

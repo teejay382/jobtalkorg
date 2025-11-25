@@ -24,6 +24,10 @@
     --primary-foreground: 0 0% 100%;
     --primary-light: 221 83% 63%;
     --primary-glow: 221 83% 73%;
+    --icon-color: var(--foreground);
+    --icon-muted-color: var(--muted-foreground);
+    --icon-accent-color: var(--primary);
+    --icon-destructive-color: var(--destructive);
 
     /* Secondary - Subtle Gray */
     --secondary: 240 4.8% 95.9%;
@@ -124,6 +128,10 @@
 
     --primary: 221 83% 53%;
     --primary-foreground: 0 0% 100%;
+    --icon-color: var(--foreground);
+    --icon-muted-color: var(--muted-foreground);
+    --icon-accent-color: var(--primary);
+    --icon-destructive-color: var(--destructive);
 
     --secondary: 240 3.7% 15.9%;
     --secondary-foreground: 0 0% 98%;
@@ -171,6 +179,43 @@
 
   body {
     @apply bg-background text-foreground font-inter;
+  }
+
+  :where(svg.lucide) {
+    color: hsl(var(--icon-color));
+    stroke: currentColor;
+    stroke-width: 1.9;
+    opacity: 0.96;
+    transition: color 0.2s ease, opacity 0.2s ease, transform 0.2s ease;
+    filter: drop-shadow(0 0 4px hsl(var(--background) / 0.25));
+  }
+
+  .dark :where(svg.lucide) {
+    filter: drop-shadow(0 0 6px hsl(var(--primary) / 0.35));
+  }
+
+  .icon-strong,
+  .icon-strong :where(svg.lucide),
+  [data-icon-tone="strong"] :where(svg.lucide) {
+    color: hsl(var(--icon-color));
+  }
+
+  .icon-muted,
+  .icon-muted :where(svg.lucide),
+  [data-icon-tone="muted"] :where(svg.lucide) {
+    color: hsl(var(--icon-muted-color));
+  }
+
+  .icon-accent,
+  .icon-accent :where(svg.lucide),
+  [data-icon-tone="accent"] :where(svg.lucide) {
+    color: hsl(var(--icon-accent-color));
+  }
+
+  .icon-destructive,
+  .icon-destructive :where(svg.lucide),
+  [data-icon-tone="destructive"] :where(svg.lucide) {
+    color: hsl(var(--icon-destructive-color));
   }
 }
 

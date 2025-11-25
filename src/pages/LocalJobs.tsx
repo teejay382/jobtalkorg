@@ -190,33 +190,57 @@ const LocalJobs = () => {
     }
 
     try {
-      // Create or get conversation with provider
+      // Check if conversation already exists
       const { data: existingConvo } = await supabase
         .from('conversations')
         .select('id')
-        .or(`and(participant_1.eq.${user.id},participant_2.eq.${providerId})`)
-        .or(`and(participant_1.eq.${providerId},participant_2.eq.${user.id})`)
+        .or(`and(participant_1.eq.${user.id},participant_2.eq.${providerId}),and(participant_1.eq.${providerId},participant_2.eq.${user.id})`)
         .maybeSingle();
 
-      if (!existingConvo) {
-        await supabase.from('conversations').insert({
-          participant_1: user.id,
-          participant_2: providerId
-        });
+      let conversationId: string;
+
+      if (existingConvo) {
+        conversationId = existingConvo.id;
+      } else {
+        // Create new conversation
+        const { data: newConvo, error: insertError } = await supabase
+          .from('conversations')
+          .insert({
+            participant_1: user.id,
+            participant_2: providerId
+          })
+          .select()
+          .single();
+
+        if (insertError || !newConvo) {
+          throw new Error('Failed to create conversation');
+        }
+
+        conversationId = newConvo.id;
       }
 
-      toast({
-        title: 'Contact initiated',
-        description: 'You can now message this provider in the Chat tab.'
+      // Send initial hire message
+      const initialMessage = "Hi 👋 I'm interested in hiring you for a project.";
+      await supabase.from('messages').insert({
+        conversation_id: conversationId,
+        sender_id: user.id,
+        content: initialMessage,
+        created_at: new Date().toISOString()
       });
-      
-      // Navigate to chat
-      navigate('/chat');
+
+      // Update conversation timestamp
+      await supabase
+        .from('conversations')
+        .update({ last_message_at: new Date().toISOString() })
+        .eq('id', conversationId);
+
+      // Navigate directly to the chat with this provider
+      navigate(`/chat?user=${providerId}`);
     } catch (error) {
       console.error('Error creating hire:', error);
       toast({
         title: 'Error',
-        description: 'Failed to send hire request',
+        description: 'Failed to start conversation. Please try again.',
         variant: 'destructive'
       });
     }

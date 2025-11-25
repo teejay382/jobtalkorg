@@ -1,12 +1,17 @@
-import { useState } from 'react';
+/**
+ * HireModal - Simplified to only handle in-app chat
+ * This component is kept for backward compatibility but is no longer used
+ * in the main flow. All Hire buttons now directly open chat conversations.
+ * 
+ * @deprecated This modal is deprecated. Use direct chat navigation instead.
+ */
 import { useNavigate } from 'react-router-dom';
-import { X, MessageCircle, Mail, Phone, Briefcase, Star } from 'lucide-react';
+import { MessageCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { useToast } from '@/hooks/use-toast';
 
 interface HireModalProps {
   isOpen: boolean;
@@ -19,46 +24,17 @@ interface HireModalProps {
     bio?: string;
     skills?: string[];
     location?: string;
-    email?: string;
   };
 }
 
 export const HireModal = ({ isOpen, onClose, freelancer }: HireModalProps) => {
-  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const { toast } = useToast();
 
   const displayName = freelancer.full_name || freelancer.username || 'Freelancer';
 
   const handleSendMessage = () => {
     onClose();
     navigate(`/chat?user=${freelancer.id}`);
-  };
-
-  const handleEmailContact = () => {
-    if (freelancer.email) {
-      window.location.href = `mailto:${freelancer.email}?subject=Job Opportunity on JobTolk`;
-    }
-  };
-
-  const handleSaveForLater = async () => {
-    setLoading(true);
-    try {
-      // TODO: Implement save/shortlist functionality
-      toast({
-        title: "Saved!",
-        description: `${displayName} has been added to your shortlist`,
-      });
-      onClose();
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to save freelancer",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
   };
 
   return (
@@ -121,57 +97,17 @@ export const HireModal = ({ isOpen, onClose, freelancer }: HireModalProps) => {
 
           <Separator />
 
-          {/* Action Buttons */}
+          {/* Action Button - Only In-App Chat */}
           <div className="space-y-3">
             <h4 className="text-sm font-semibold">Get in touch</h4>
             
-            <div className="grid gap-3">
-              {/* Send Message */}
-              <Button
-                onClick={handleSendMessage}
-                className="w-full h-12 rounded-xl font-semibold shadow-medium bg-gradient-to-r from-primary to-accent"
-              >
-                <MessageCircle className="w-5 h-5 mr-2" />
-                Send Message
-              </Button>
-
-              {/* Email (if available) */}
-              {freelancer.email && (
-                <Button
-                  onClick={handleEmailContact}
-                  variant="outline"
-                  className="w-full h-12 rounded-xl font-semibold"
-                >
-                  <Mail className="w-5 h-5 mr-2" />
-                  Send Email
-                </Button>
-              )}
-
-              {/* Save for Later */}
-              <Button
-                onClick={handleSaveForLater}
-                variant="outline"
-                className="w-full h-12 rounded-xl font-semibold"
-                disabled={loading}
-              >
-                <Star className="w-5 h-5 mr-2" />
-                {loading ? 'Saving...' : 'Save to Shortlist'}
-              </Button>
-            </div>
-          </div>
-
-          {/* Info Box */}
-          <div className="p-4 rounded-xl bg-primary/5 border border-primary/20">
-            <div className="flex items-start gap-3">
-              <Briefcase className="w-5 h-5 text-primary mt-0.5 shrink-0" />
-              <div>
-                <p className="text-sm font-medium text-foreground">Hiring on JobTolk</p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Connect directly with freelancers and discuss your project requirements. 
-                  All communications are secure and private.
-                </p>
-              </div>
-            </div>
+            <Button
+              onClick={handleSendMessage}
+              className="w-full h-12 rounded-xl font-semibold shadow-medium bg-gradient-to-r from-primary to-accent"
+            >
+              <MessageCircle className="w-5 h-5 mr-2" />
+              Start Conversation
+            </Button>
           </div>
         </div>
       </DialogContent>

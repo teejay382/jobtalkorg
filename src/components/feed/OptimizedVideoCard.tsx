@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 import { CommentSection } from './CommentSection';
-import { HireModal } from '@/components/hire/HireModal';
+import { useChat } from '@/hooks/useChat';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -59,11 +59,11 @@ const OptimizedVideoCard = memo(({ video, isActive, onRefresh, isVisible, isMobi
   const [videoLoaded, setVideoLoaded] = useState(false);
   const [showComments, setShowComments] = useState(false);
   const [videoError, setVideoError] = useState(false);
-  const [showHireModal, setShowHireModal] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const { user, profile } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { createOrGetConversation } = useChat();
 
   // Preload video when visible
   useEffect(() => {
@@ -221,7 +221,7 @@ const OptimizedVideoCard = memo(({ video, isActive, onRefresh, isVisible, isMobi
     }
   }, [video.title, video.description, toast]);
 
-  const handleHire = useCallback(() => {
+  const handleHire = useCallback(async () => {
     if (!user) {
       toast({
         title: "Sign in required",
@@ -241,9 +241,44 @@ const OptimizedVideoCard = memo(({ video, isActive, onRefresh, isVisible, isMobi
       });
       return;
     }
-    
-    setShowHireModal(true);
-  }, [user, profile, toast]);
+
+    try {
+      // Create or get conversation with the freelancer
+      const conversation = await createOrGetConversation(video.user.id);
+      if (conversation) {
+        // Send initial hire message
+        const initialMessage = "Hi 👋 I'm interested in hiring you for a project.";
+        await supabase.from('messages').insert({
+          conversation_id: conversation.id,
+          sender_id: user.id,
+          content: initialMessage,
+          created_at: new Date().toISOString()
+        });
+
+        // Update conversation timestamp
+        await supabase
+          .from('conversations')
+          .update({ last_message_at: new Date().toISOString() })
+          .eq('id', conversation.id);
+
+        // Redirect to chatroom
+        navigate(`/chat?user=${video.user.id}`);
+      } else {
+        toast({
+          title: "Error",
+          description: "Failed to start conversation. Please try again.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error('Error creating conversation:', error);
+      toast({
+        title: "Error",
+        description: "Failed to start conversation. Please try again.",
+        variant: "destructive",
+      });
+    }
+  }, [user, profile, video.user.id, createOrGetConversation, navigate, toast]);
 
   const handleComment = useCallback(() => {
     if (!user) {
@@ -603,19 +638,6 @@ const OptimizedVideoCard = memo(({ video, isActive, onRefresh, isVisible, isMobi
         isOpen={showComments}
         onClose={() => setShowComments(false)}
         onCommentAdded={handleCommentAdded}
-      />
-
-      {/* Hire Modal */}
-      <HireModal
-        isOpen={showHireModal}
-        onClose={() => setShowHireModal(false)}
-        freelancer={{
-          id: video.user.id,
-          full_name: video.user.full_name,
-          username: video.user.username,
-          avatar_url: video.user.avatar_url,
-          email: video.user.email,
-        }}
       />
     </div>
   );

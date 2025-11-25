@@ -197,7 +197,7 @@ const VideoCard = ({ video, isActive, onRefresh }: VideoCardProps) => {
       const conversation = await createOrGetConversation(video.user.id);
       if (conversation) {
         // Send initial hire message
-        const initialMessage = "Hi 👋 I’m interested in hiring you for a project.";
+        const initialMessage = "Hi 👋 I'm interested in hiring you for a project.";
         await supabase.from('messages').insert({
           conversation_id: conversation.id,
           sender_id: user.id,
@@ -205,8 +205,20 @@ const VideoCard = ({ video, isActive, onRefresh }: VideoCardProps) => {
           created_at: new Date().toISOString()
         });
 
+        // Update conversation timestamp
+        await supabase
+          .from('conversations')
+          .update({ last_message_at: new Date().toISOString() })
+          .eq('id', conversation.id);
+
         // Redirect to chatroom
         navigate(`/chat?user=${video.user.id}`);
+      } else {
+        toast({
+          title: "Error",
+          description: "Failed to start conversation. Please try again.",
+          variant: "destructive",
+        });
       }
     } catch (error) {
       console.error('Error creating conversation:', error);

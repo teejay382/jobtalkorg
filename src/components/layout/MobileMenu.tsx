@@ -35,6 +35,7 @@ const MobileMenu = ({ isOpen, onClose }: MobileMenuProps) => {
             <button
               onClick={onClose}
               className="p-2 rounded-full hover:bg-secondary"
+              data-icon-tone="muted"
             >
               <X className="w-5 h-5" />
             </button>
@@ -44,6 +45,7 @@ const MobileMenu = ({ isOpen, onClose }: MobileMenuProps) => {
             <button
               onClick={() => handleNavigation('/settings')}
               className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-secondary transition-colors"
+              data-icon-tone="strong"
             >
               <Settings className="w-5 h-5" />
               <span>Settings</span>
@@ -52,6 +54,7 @@ const MobileMenu = ({ isOpen, onClose }: MobileMenuProps) => {
             <button
               onClick={handleSignOut}
               className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-destructive/10 text-destructive transition-colors"
+              data-icon-tone="destructive"
             >
               <LogOut className="w-5 h-5" />
               <span>Sign Out</span>
